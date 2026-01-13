@@ -28,7 +28,7 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "CONCEPT",
+            "group": "ABOUT",
             "pages": [
               "about",
               "concept/integration-requests"
