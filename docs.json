@@ -6,7 +6,7 @@
       "styles/custom.css"
     ]
   },
-  "name": "Alyra",
+  "name": "Delora",
   "colors": {
     "primary": "#0088FF",
     "light": "#0088FF",
@@ -39,20 +39,28 @@
             "pages": [
               "protocol/protocol-overview",
               "protocol/smart-contract-architecture",
+              "protocol/smart-contract-addresses",
               "protocol/monetize-your-app"
             ]
           },
           {
             "group": "INTEGRATIONS",
             "pages": [
-              "integrations/supported-chains",
-              "integrations/end-to-end-transaction-flow"
+              "integrations/supported-chains"
+            ]
+          },
+          {
+            "group": "EXAMPLES",
+            "pages": [
+              "examples/transaction-flow/ethereum",
+              "examples/transaction-flow/solana",
+              "examples/metadata-api"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
             "group": "API Endpoints",

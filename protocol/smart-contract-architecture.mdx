@@ -3,15 +3,15 @@ title: "Smart Contract Architecture"
 ---
 
 <Danger>
-  The Alyra API is not yet public. For details, please contact our team.
+  The Delora API is not yet public. For details, please contact our team.
 </Danger>
 
 ### Architecture
 
-Alyra contracts are built using the **EIP-2535 Diamond Standard (Multi-facet Proxy)**.\
-All execution flows go through the **Alyra Diamond** — a single-entry-point contract that delegates calls to specialised **Facet Modules**.
+Delora contracts are built using the **EIP-2535 Diamond Standard (Multi-facet Proxy)**.\
+All execution flows go through the **Delora Diamond** — a single-entry-point contract that delegates calls to specialised **Facet Modules**.
 
-This design makes Alyra:
+This design makes Delora:
 
 - **Modular** — new liquidity providers can be added as separate facets without redeploying the core system.
 - **Upgradeable** — business logic evolves without changing the main contract address.
@@ -31,7 +31,7 @@ Business logic lives inside Facet contracts, each responsible for interacting wi
 
 Example: a user swaps USDC on Ethereum for USDT on Arbitrum.
 
-1. The signed **Execution Packet** is submitted to the **Alyra Diamond** contract.
+1. The signed **Execution Packet** is submitted to the **Delora Diamond** contract.
 2. Diamond validates the packet and forwards the call to the appropriate **Bridge Facet**.
 3. The Bridge Facet encodes and forwards the transaction to the chosen bridge (e.g., Stargate).
 4. Settlement completes on the destination chain exactly as specified in the packet, or reverts safely if constraints are violated.
@@ -40,7 +40,7 @@ Example: a user swaps USDC on Ethereum for USDT on Arbitrum.
 
 #### Diamond Helper Contracts
 
-Alongside the main Diamond, Alyra deploys helper facets to support:
+Alongside the main Diamond, Delora deploys helper facets to support:
 
 - **DiamondCutFacet** — add, replace, or remove facet logic.
 - **DiamondLoupeFacet** — query available functions and facet addresses.

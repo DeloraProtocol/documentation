@@ -4,33 +4,5 @@ openapi: "GET /v1/tools"
 ---
 
 <Danger>
-  The Alyra API is not yet public. For details, please contact our team.
+  The Delora API is not yet public. For details, please contact our team.
 </Danger>
-
-## Example requests for `/v1/tools`
-
-### Fetch all tools
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-import axios from "axios";
-
-const response = await axios.get("https://api.alyra.finance/v1/tools");
-
-console.log(response);
-  ```
-</CodeGroup>
-
-### Fetch tools filtered by chain IDs
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-import axios from "axios";
-
-const response = await axios.get("https://api.alyra.finance/v1/tools", {
-  params: { chains: "1,56,10" }
-});
-
-console.log(response);
-  ```
-</CodeGroup>

@@ -1,11 +1,7 @@
 ---
-title: "End-to-End Transaction Flow"
-description: "How to request a quote from Alyra API and execute the returned transaction"
+title: "End-to-End Transaction Flow (Ethereum)"
+description: "How to request a quote from Delora API and execute the returned Ethereum transaction"
 ---
-
-## Endpoint overview
-
-`GET https://api.alyra.finance/v1/quotes`
 
 ### Query parameters
 
@@ -225,7 +221,7 @@ Once you have a transactionRequest compatible with ethers.js, execution is simpl
 
 <CodeGroup>
 ```ts TypeScript theme={"system"}
-const txRequest = quote.transactionRequest;
+const txRequest = quote.calldata.data;
 
 if (!txRequest) {
   throw new Error("transactionRequest is missing in the quote response");

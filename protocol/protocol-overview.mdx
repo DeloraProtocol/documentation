@@ -3,12 +3,12 @@ title: "Protocol Overview"
 ---
 
 <Danger>
-  The Alyra API is not yet public. For details, please contact our team.
+  The Delora API is not yet public. For details, please contact our team.
 </Danger>
 
 ## Introduction
 
-Alyra is an execution layer that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API/SDK, returning deterministic Execution Packets that are safely executed on-chain. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
+Delora is an execution layer that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API/SDK, returning deterministic Execution Packets that are safely executed on-chain. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
 
 <img
   src="/20250844.png"
@@ -17,15 +17,15 @@ Alyra is an execution layer that aggregates liquidity and abstracts away the com
   style={{ width:"100%" }}
 />
 
-### Key Components of Alyra Architecture
+### Key Components of Delora Architecture
 
 #### 1. dApp Integrations
 
 **What it is**: The entry point where users interact.
 
-- **How it works**: dApps plug into Alyra’s API/SDK to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, the dApp packages it into a signed Execution Packet and submits it on-chain for processing.
+- **How it works**: dApps plug into Delora’s API/SDK to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, the dApp packages it into a signed Execution Packet and submits it on-chain for processing.
 
-#### 2. Alyra Router (Off-chain Routing)
+#### 2. Delora Router (Off-chain Routing)
 
 **Purpose**: The off-chain aggregation and routing layer.
 
@@ -33,7 +33,7 @@ Alyra is an execution layer that aggregates liquidity and abstracts away the com
 
 - Collect pricing and routes from integrated bridges and DEXs.
 - Determine the optimal path based on cost, speed, and reliability.
-- After identifying the optimal route, Alyra validates the security of the selected path, ensuring that there are no vulnerabilities or risks before proceeding.
+- After identifying the optimal route, Delora validates the security of the selected path, ensuring that there are no vulnerabilities or risks before proceeding.
 - Encode the chosen route and parameters into an Execution Packet for deterministic settlement.
 
 #### 3. Execution Packet
@@ -46,7 +46,7 @@ Alyra is an execution layer that aggregates liquidity and abstracts away the com
 - Minimum output amounts and deadlines.
 - Fee logic.
 
-#### 4. Alyra Diamond Contract (On-chain Executor)
+#### 4. Delora Diamond Contract (On-chain Executor)
 
 **Role**: The primary smart contract entry point for execution.
 
@@ -57,7 +57,7 @@ Alyra is an execution layer that aggregates liquidity and abstracts away the com
 - Enforce constraints and trigger fallback if conditions are violated.
 - Act as a deterministic state machine for all executions.
 
-#### 5. Alyra Facet Contracts
+#### 5. Delora Facet Contracts
 
 **Feature**: Modular and extensible — new providers can be added without redeploying the system.
 
@@ -68,18 +68,18 @@ Alyra is an execution layer that aggregates liquidity and abstracts away the com
 
 - **Where settlement happens**: Bridges, or DEXs, contracts finalize the trade/transfer.
 
-  **Rule**: Alyra enforces deterministic execution — every step must match the encoded packet.
+  **Rule**: Delora enforces deterministic execution — every step must match the encoded packet.
 
 ---
 
 ### End-to-End Flow
 
-1. **Request** → The user starts a swap or transfer from a dApp integrated with Alyra.
-2. **Quote Discovery** → Alyra Router queries connected bridges and DEXs to gather pricing and route data.
+1. **Request** → The user starts a swap or transfer from a dApp integrated with Delora.
+2. **Quote Discovery** → Delora Router queries connected bridges and DEXs to gather pricing and route data.
 3. **Packet Creation** → The chosen route (with minOut, deadlines, and fee caps) is encoded into a deterministic **Execution Packet**.
 4. **Signature** → The user signs the packet, approving exactly this execution flow.
-5. **On-chain Submission** → The signed packet is sent to the **Alyra Diamond** contract.
-6. **Facet Dispatch** → Alyra Diamond validates the packet and forwards execution to the correct **Facet Module** (bridge or DEX).
+5. **On-chain Submission** → The signed packet is sent to the **Delora Diamond** contract.
+6. **Facet Dispatch** → Delora Diamond validates the packet and forwards execution to the correct **Facet Module** (bridge or DEX).
 7. **Settlement** → The liquidity provider’s contract (bridge/DEX) finalizes the swap or transfer.
 8. **Outcome** → Execution either completes exactly as specified in the packet.
 

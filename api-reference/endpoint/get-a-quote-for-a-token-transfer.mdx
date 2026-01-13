@@ -4,59 +4,13 @@ openapi: "GET /v1/quotes"
 ---
 
 <Danger>
-  The Alyra API is not yet public. For details, please contact our team.
+  The Delora API is not yet public. For details, please contact our team.
 </Danger>
 
 This endpoint enables you to request a quote for transferring tokens, whether across chains or within the same chain. It returns detailed information, including an estimated output amount and a "calldata" that can be directly submitted to your wallet. The estimated output amount can be found in the `outputAmount` field.
 
 <Info>
-  All Alyra APIs don't require an API key by default. An API key is only necessary for accessing higher request limits.
+  All Delora APIs don't require an API key by default. An API key is only necessary for accessing higher request limits.
 </Info>
 
 **Base URL:** `https://api.alyra.finance/v1`
-
-## Example requests for `/v1/quotes`
-
-### Basic quote request
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-import axios from "axios";
-
-const response = await axios.get("https://api.alyra.finance/v1/quotes", {
-  params: {
-    senderAddress: "0xYOUR_SENDER_ADDRESS",
-    receiverAddress: "0xYOUR_RECEIVER_ADDRESS",
-    originChainId: 10,
-    destinationChainId: 42161,
-    amount: "500000000000000000",
-    originCurrency: "0x4200000000000000000000000000000000000042",
-    destinationCurrency: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-  }
-});
-
-console.log(response);
-  ```
-</CodeGroup>
-
-### Cross-environment quote
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-import axios from "axios";
-
-const response = await axios.get("https://api.alyra.finance/v1/quotes", {
-  params: {
-    senderAddress: "0xYOUR_EVM_ADDRESS",
-    receiverAddress: "YOUR_SVM_ADDRESS",
-    originChainId: 8453,
-    destinationChainId: 1329,
-    amount: "2500000",
-    originCurrency: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-    destinationCurrency: "0xe15fC38F6D8c56aF07bbCBe3BAf5708A2Bf42392"
-  }
-});
-
-console.log(response);
-  ```
-</CodeGroup>

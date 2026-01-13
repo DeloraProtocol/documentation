@@ -1,0 +1,174 @@
+---
+title: "End-to-End Transaction Flow (Solana)"
+description: "How to request a quote from Delora API and execute the returned Solana transaction"
+---
+
+### Query parameters
+
+| Parameter             | Type   | Required | Description                                                                 |
+| --------------------- | ------ | -------- | --------------------------------------------------------------------------- |
+| `senderAddress`       | string | ✅       | Solana public key that sends the tokens.                                    |
+| `receiverAddress`     | string | ⚠️       | Solana public key that receives the tokens. Required for cross-chain flows. |
+| `originChainId`       | number | ✅       | Chain ID of the source network (Solana).                                    |
+| `destinationChainId`  | number | ✅       | Chain ID of the target network.                                             |
+| `amount`              | string | ✅       | Amount in the smallest units (including all decimals).                      |
+| `originCurrency`      | string | ✅       | The token address you are sending.                                          |
+| `destinationCurrency` | string | ✅       | The token address you want to receive.                                      |
+
+> 💡 **Solana address rules**
+>
+> - `senderAddress` must be a valid Solana public key.
+> - For Solana → Solana flows, `receiverAddress` may default to `senderAddress`.
+> - For Solana ↔ EVM flows, `receiverAddress` is required and must be explicitly provided.
+
+---
+
+## Quickstart: minimal working example
+
+<CodeGroup>
+```ts TypeScript theme={"system"}
+import axios from "axios";
+import {
+  Connection,
+  VersionedTransaction,
+} from "@solana/web3.js";
+
+const API_URL = "https://api.alyra.finance/v1";
+
+type QuoteResponse = {
+  transaction?: string;
+};
+
+async function fetchQuote(): Promise<QuoteResponse> {
+  const senderAddress = "YOUR_SOLANA_PUBLIC_KEY";
+  const receiverAddress = "YOUR_RECEIVER_PUBLIC_KEY";
+
+  const params = {
+    senderAddress,
+    receiverAddress,
+    originChainId: 1000000001,
+    destinationChainId: 137,
+    amount: "1000000",
+    originCurrency: "So11111111111111111111111111111111111111112",
+    destinationCurrency: "0x...",
+  };
+
+  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`,{ 
+    params }
+  );
+
+  return data;
+}
+
+async function main() {
+  const connection = new Connection(
+    "https://api.mainnet-beta.solana.com",
+    "confirmed"
+  );
+
+  const quote = await fetchQuote();
+
+  if (!quote.calldata.data) {
+    throw new Error("Missing Solana transaction in quote response");
+  }
+
+  const txBuffer = Buffer.from(quote.calldata.data, "base64");
+  const transaction = VersionedTransaction.deserialize(txBuffer);
+
+  const signer = /* your Keypair or wallet adapter */;
+  transaction.sign([signer]);
+
+  const signature = await connection.sendTransaction(transaction);
+  await connection.confirmTransaction(signature, "confirmed");
+
+  console.log("Transaction confirmed:", signature);
+}
+
+main().catch(console.error);
+```
+</CodeGroup>
+
+---
+
+## Breaking it down
+
+### 1. Building the quote request
+
+<CodeGroup>
+```ts TypeScript theme={"system"}
+import axios from "axios";
+
+const API_URL = "https://api.alyra.finance/v1";
+
+type QuoteResponse = any;
+
+export async function getQuote(params: {
+  senderAddress: string;
+  receiverAddress?: string;
+  originChainId: number;
+  destinationChainId: number;
+  amount: string;
+  originCurrency: string;
+  destinationCurrency: string;
+}): Promise<QuoteResponse> {
+  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, { 
+    params }
+  );
+  return data;
+}
+```
+</CodeGroup>
+
+Usage example:
+
+<CodeGroup>
+```ts TypeScript theme={"system"}
+const quote = await getQuote({
+  senderAddress: "YOUR_SOLANA_PUBLIC_KEY",
+  originChainId: 1000000001,
+  destinationChainId: 137,
+  amount: "1000000",
+  originCurrency: "So11111111111111111111111111111111111111112",
+  destinationCurrency: "0x...",
+});
+```
+</CodeGroup>
+
+---
+
+### 2. Wallet & connection layer
+
+<CodeGroup>
+```ts TypeScript theme={"system"}
+import { Connection } from "@solana/web3.js";
+
+const connection = new Connection(
+  "https://api.mainnet-beta.solana.com",
+  "confirmed"
+);
+```
+</CodeGroup>
+
+
+When using wallet adapters, the signer and `signTransaction` method
+are provided by the wallet implementation.
+
+---
+
+### 3. Executing the Solana transaction
+
+<CodeGroup>
+```ts TypeScript theme={"system"}
+import { VersionedTransaction } from "@solana/web3.js";
+
+const txBuffer = Buffer.from(quote.calldata.data, "base64");
+const transaction = VersionedTransaction.deserialize(txBuffer);
+
+await wallet.signTransaction(transaction);
+
+const signature = await connection.sendTransaction(transaction);
+await connection.confirmTransaction(signature, "confirmed");
+
+console.log("Hash:", signature);
+```
+</CodeGroup>

@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Alyra API",
-    "description": "Alyra API",
+    "title": "Delora API",
+    "description": "Delora API",
     "version": "1.0.0"
   },
   "servers": [
@@ -53,7 +53,7 @@
             "name": "receiverAddress",
             "in": "query",
             "required": false,
-            "description": "The receiving wallet address. If none is provided, the fromAddress will be used",
+            "description": "The receiving wallet address. If none is provided, the receiverAddress will be used",
             "schema": { "type": "string" }
           },
           {
@@ -68,6 +68,13 @@
             "in": "query",
             "required": false,
             "description": "A string containing tracking information about the integrator of the API",
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "fee",
+            "in": "query",
+            "required": false,
+            "description": "An optional fee applied to the transaction, expressed as a decimal value. \nSupported range is from 0 to 0.1 (0 – 10%). \nIf this parameter is not specified, no fees are collected.",
             "schema": { "type": "string" }
           }
         ],

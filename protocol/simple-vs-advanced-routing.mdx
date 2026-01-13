@@ -2,7 +2,7 @@
 title: "Simple vs advanced routing"
 ---
 
-Alyra API provides two ways to request execution paths: **`/quote`** and **`/routes`**. Both endpoints use the same routing engine, but they serve different needs depending on how much control and detail an integrator requires.
+Delora API provides two ways to request execution paths: **`/quote`** and **`/routes`**. Both endpoints use the same routing engine, but they serve different needs depending on how much control and detail an integrator requires.
 
 ---
 
@@ -45,7 +45,7 @@ The `/routes` endpoint is designed for **flexibility and transparency**.
 ### Example
 
 - **`With /quote`**:\
-  User wants to send USDC from Solana and receive DAI on Base. Alyra may internally build a route = _USDC (Solana) → Bridge → USDC (Base) → Swap → DAI (Base)_.\
+  User wants to send USDC from Solana and receive DAI on Base. Delora may internally build a route = _USDC (Solana) → Bridge → USDC (Base) → Swap → DAI (Base)_.\
   The integrator only gets **one packaged transaction** for the user to sign.
 - **`With /routes`**:\
   The same request returns **several possible multi-step routes**, e.g.:

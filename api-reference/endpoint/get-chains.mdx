@@ -4,33 +4,5 @@ openapi: "GET /v1/chains"
 ---
 
 <Danger>
-  The Alyra API is not yet public. For details, please contact our team.
+  The Delora API is not yet public. For details, please contact our team.
 </Danger>
-
-## Example requests for `/v1/chains`
-
-### Fetch all chains
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-  import axios from "axios";
-
-  const chains = await axios.get("https://api.alyra.finance/v1/chains");
-
-  console.log(chains);
-  ```
-</CodeGroup>
-
-### Fetch only EVM chains
-
-<CodeGroup>
-  ```ts TypeScript theme={"system"}
-  import axios from "axios";
-
-  const chainsEVM = await axios.get("https://api.alyra.finance/v1/chains", {
-    params: { chainTypes: "EVM" }
-  });
-
-  console.log(chainsEVM);
-  ```
-</CodeGroup>
