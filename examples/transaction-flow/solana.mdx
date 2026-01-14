@@ -7,13 +7,13 @@ description: "How to request a quote from Delora API and execute the returned So
 
 | Parameter             | Type   | Required | Description                                                                 |
 | --------------------- | ------ | -------- | --------------------------------------------------------------------------- |
-| `senderAddress`       | string | ✅       | Solana public key that sends the tokens.                                    |
+| `senderAddress`       | string | ✅        | Solana public key that sends the tokens.                                    |
 | `receiverAddress`     | string | ⚠️       | Solana public key that receives the tokens. Required for cross-chain flows. |
-| `originChainId`       | number | ✅       | Chain ID of the source network (Solana).                                    |
-| `destinationChainId`  | number | ✅       | Chain ID of the target network.                                             |
-| `amount`              | string | ✅       | Amount in the smallest units (including all decimals).                      |
-| `originCurrency`      | string | ✅       | The token address you are sending.                                          |
-| `destinationCurrency` | string | ✅       | The token address you want to receive.                                      |
+| `originChainId`       | number | ✅        | Chain ID of the source network (Solana).                                    |
+| `destinationChainId`  | number | ✅        | Chain ID of the target network.                                             |
+| `amount`              | string | ✅        | Amount in the smallest units (including all decimals).                      |
+| `originCurrency`      | string | ✅        | The token address you are sending.                                          |
+| `destinationCurrency` | string | ✅        | The token address you want to receive.                                      |
 
 > 💡 **Solana address rules**
 >
@@ -26,7 +26,8 @@ description: "How to request a quote from Delora API and execute the returned So
 ## Quickstart: minimal working example
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import axios from "axios";
 import {
   Connection,
@@ -86,6 +87,7 @@ async function main() {
 
 main().catch(console.error);
 ```
+
 </CodeGroup>
 
 ---
@@ -95,7 +97,8 @@ main().catch(console.error);
 ### 1. Building the quote request
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import axios from "axios";
 
 const API_URL = "https://api.alyra.finance/v1";
@@ -117,12 +120,14 @@ export async function getQuote(params: {
   return data;
 }
 ```
+
 </CodeGroup>
 
 Usage example:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 const quote = await getQuote({
   senderAddress: "YOUR_SOLANA_PUBLIC_KEY",
   receiverAddress: "YOUR_RECEIVER_PUBLIC_KEY",
@@ -133,6 +138,7 @@ const quote = await getQuote({
   destinationCurrency: "0x...",
 });
 ```
+
 </CodeGroup>
 
 ---
@@ -140,7 +146,8 @@ const quote = await getQuote({
 ### 2. Wallet & connection layer
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import { Connection } from "@solana/web3.js";
 
 const connection = new Connection(
@@ -148,18 +155,18 @@ const connection = new Connection(
   "confirmed"
 );
 ```
+
 </CodeGroup>
 
-
-When using wallet adapters, the signer and `signTransaction` method
-are provided by the wallet implementation.
+When using wallet adapters, the signer and `signTransaction` method are provided by the wallet implementation.
 
 ---
 
 ### 3. Executing the Solana transaction
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import { VersionedTransaction } from "@solana/web3.js";
 
 const txBuffer = Buffer.from(quote.calldata.data, "base64");
@@ -172,4 +179,5 @@ await connection.confirmTransaction(signature, "confirmed");
 
 console.log("Hash:", signature);
 ```
+
 </CodeGroup>

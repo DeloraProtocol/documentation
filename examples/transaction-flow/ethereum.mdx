@@ -5,15 +5,15 @@ description: "How to request a quote from Delora API and execute the returned Et
 
 ### Query parameters
 
-| Parameter             | Type   | Required | Description                                                                                          |
-| --------------------- | ------ | -------- | ---------------------------------------------------------------------------------------------------- |
-| `senderAddress`       | string | ✅       | Address that sends the tokens (EVM or SVM address).                                                  |
-| `receiverAddress`     | string | ⚠️       | Address that receives the tokens. Can be optional for some flows, see notes below.                   |
-| `originChainId`       | number | ✅       | Chain ID of the source network.                                                                      |
-| `destinationChainId`  | number | ✅       | Chain ID of the target network.                                                                      |
-| `amount`              | string | ✅       | Amount in the smallest units (including all decimals).                                               |
-| `originCurrency`      | string | ✅       | The token address you are sending.                            |
-| `destinationCurrency` | string | ✅       | The token address you want to receive.                        |
+| Parameter             | Type   | Required | Description                                                                        |
+| --------------------- | ------ | -------- | ---------------------------------------------------------------------------------- |
+| `senderAddress`       | string | ✅        | Address that sends the tokens (EVM or SVM address).                                |
+| `receiverAddress`     | string | ⚠️       | Address that receives the tokens. Can be optional for some flows, see notes below. |
+| `originChainId`       | number | ✅        | Chain ID of the source network.                                                    |
+| `destinationChainId`  | number | ✅        | Chain ID of the target network.                                                    |
+| `amount`              | string | ✅        | Amount in the smallest units (including all decimals).                             |
+| `originCurrency`      | string | ✅        | The token address you are sending.                                                 |
+| `destinationCurrency` | string | ✅        | The token address you want to receive.                                             |
 
 > 💡 **Address rules**
 >
@@ -33,70 +33,71 @@ The following example:
 > ⚠️ Replace all placeholder values (`YOUR_SENDER_ADDRESS`, `YOUR_MNEMONIC`, RPC URLs, etc.) with your actual values.
 
 <CodeGroup>
-  ```ts TypeScript theme={"system"}
-  import axios from "axios";
-  import { ethers } from "ethers";
 
-  const API_URL = "https://api.alyra.finance/v1";
+```ts TypeScript
+import axios from "axios";
+import { ethers } from "ethers";
 
-  // Replace with your own type when you define the API response
-  type QuoteResponse = any;
+const API_URL = "https://api.alyra.finance/v1";
 
-  async function fetchQuote(): Promise<QuoteResponse> {
-    const senderAddress = "0xYOUR_SENDER_ADDRESS";
-    const receiverAddress = "0xYOUR_RECEIVER_ADDRESS"; // optional for some EVM→EVM flows
+// Replace with your own type when you define the API response
+type QuoteResponse = any;
 
-    const params = {
-      senderAddress,
-      receiverAddress,
-      originChainId: 1,         // Ethereum Mainnet
-      destinationChainId: 137,  // Polygon PoS
-      amount: "25000000",       // 25 USDT if token has 6 decimals
-      originCurrency: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-      destinationCurrency: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-    };
+async function fetchQuote(): Promise<QuoteResponse> {
+  const senderAddress = "0xYOUR_SENDER_ADDRESS";
+  const receiverAddress = "0xYOUR_RECEIVER_ADDRESS"; // optional for some EVM→EVM flows
 
-    const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, {
-      params,
-    });
+  const params = {
+    senderAddress,
+    receiverAddress,
+    originChainId: 1,         // Ethereum Mainnet
+    destinationChainId: 137,  // Polygon PoS
+    amount: "25000000",       // 25 USDT if token has 6 decimals
+    originCurrency: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+    destinationCurrency: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+  };
 
-    return data;
-  }
-
-  async function main() {
-    // 1. Configure provider and signer for the origin chain
-    const provider = new ethers.JsonRpcProvider(
-      "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
-      1
-    );
-
-    // Do NOT hardcode the mnemonic in real apps – use environment variables / secure storage
-    const wallet = ethers.Wallet.fromPhrase("YOUR_MNEMONIC").connect(provider);
-
-    // 2. Fetch quote
-    const quote = await fetchQuote();
-
-    // 3. (Optional) Check allowance & approve
-    // Use the spender / approval address from the quote response in your own allowance helper.
-
-    // 4. Execute transaction
-    const txRequest = quote.transactionRequest;
-    if (!txRequest) {
-      throw new Error("transactionRequest is missing in the quote response");
-    }
-
-    const tx = await wallet.sendTransaction(txRequest);
-    const receipt = await tx.wait();
-
-    console.log("Transaction confirmed:", receipt.hash);
-  }
-
-  main().catch((error) => {
-    console.error("Quote example failed:", error);
+  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, {
+    params,
   });
-  ```
-</CodeGroup>
 
+  return data;
+}
+
+async function main() {
+  // 1. Configure provider and signer for the origin chain
+  const provider = new ethers.JsonRpcProvider(
+    "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
+    1
+  );
+
+  // Do NOT hardcode the mnemonic in real apps – use environment variables / secure storage
+  const wallet = ethers.Wallet.fromPhrase("YOUR_MNEMONIC").connect(provider);
+
+  // 2. Fetch quote
+  const quote = await fetchQuote();
+
+  // 3. (Optional) Check allowance & approve
+  // Use the spender / approval address from the quote response in your own allowance helper.
+
+  // 4. Execute transaction
+  const txRequest = quote.transactionRequest;
+  if (!txRequest) {
+    throw new Error("transactionRequest is missing in the quote response");
+  }
+
+  const tx = await wallet.sendTransaction(txRequest);
+  const receipt = await tx.wait();
+
+  console.log("Transaction confirmed:", receipt.hash);
+}
+
+main().catch((error) => {
+  console.error("Quote example failed:", error);
+});
+```
+
+</CodeGroup>
 
 ## Breaking it down
 
@@ -105,7 +106,8 @@ The following example:
 You can wrap the HTTP call into a small helper function:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import axios from "axios";
 
 const API_URL = "https://api.alyra.finance/v1";
@@ -127,12 +129,14 @@ export async function getQuote(params: {
   return data;
 }
 ```
+
 </CodeGroup>
 
 Usage example:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 const quote = await getQuote({
   senderAddress: "0xYOUR_SENDER_ADDRESS",
   // receiverAddress can be omitted for some EVM→EVM paths
@@ -143,16 +147,16 @@ const quote = await getQuote({
   destinationCurrency: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
 });
 ```
-</CodeGroup>
 
+</CodeGroup>
 
 ### 2. Plugging into your wallet layer
 
-You can reuse your existing wallet abstraction.
-A typical pattern with ethers.js might look like this:
+You can reuse your existing wallet abstraction. A typical pattern with ethers.js might look like this:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 import { ethers } from "ethers";
 
 const provider = new ethers.JsonRpcProvider(
@@ -163,25 +167,25 @@ const provider = new ethers.JsonRpcProvider(
 // In many real apps you get signer from browser wallet
 const wallet = ethers.Wallet.fromPhrase("YOUR_MNEMONIC").connect(provider);
 ```
+
 </CodeGroup>
 
-If you are using wagmi, RainbowKit or another library,
-you usually obtain the signer from these providers instead of manually.
-
+If you are using wagmi, RainbowKit or another library, you usually obtain the signer from these providers instead of manually.
 
 ### 3. Allowance (optional but common)
 
 Most ERC-20 flows require:
-1. Reading current allowance of `senderAddress` for a `spender`  
-2. Calling `approve` if it's lower than the required amount  
 
-The spender (approval address) is typically provided in the quote response.
-The exact field depends on your API shape (`quote.estimate.approvalAddress`, etc).
+1. Reading current allowance of `senderAddress` for a `spender`
+2. Calling `approve` if it's lower than the required amount
+
+The spender (approval address) is typically provided in the quote response. The exact field depends on your API shape (`quote.estimate.approvalAddress`, etc).
 
 You can reuse your existing helper:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 async function ensureAllowance(args: {
   tokenAddress: string;
   spender: string;
@@ -191,12 +195,14 @@ async function ensureAllowance(args: {
   // read allowance(...) and approve(...) here using your own logic
 }
 ```
+
 </CodeGroup>
 
 Call it before executing the transaction:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 const quote = await getQuote(/* ... */);
 
 // Example: extract fields from your API
@@ -212,15 +218,16 @@ if (tokenAddress && spender) {
   });
 }
 ```
-</CodeGroup>
 
+</CodeGroup>
 
 ### 4. Executing the quote
 
 Once you have a transactionRequest compatible with ethers.js, execution is simple:
 
 <CodeGroup>
-```ts TypeScript theme={"system"}
+
+```ts TypeScript
 const txRequest = quote.calldata.data;
 
 if (!txRequest) {
@@ -232,4 +239,5 @@ const receipt = await tx.wait();
 
 console.log("Hash:", receipt.hash);
 ```
+
 </CodeGroup>
