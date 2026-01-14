@@ -65,6 +65,19 @@
               "examples/transaction-flow/solana",
               "examples/metadata-api"
             ]
+          },
+          {
+            "group": "LEARN MORE",
+            "pages": [
+              {
+                "group": "Getting Integrated with Delora",
+                "pages": [
+                  "overview/learn-more/getting-integrated-with-delora/untitled-page",
+                  "overview/learn-more/getting-integrated-with-delora/for-dexs-and-aggregators",
+                  "overview/learn-more/getting-integrated-with-delora/Bridges"
+                ]
+              }
+            ]
           }
         ]
       },

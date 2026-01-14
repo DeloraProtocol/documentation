@@ -1,0 +1,91 @@
+---
+title: "For DEXs & Aggregators"
+description: "DEX and Aggregator integration requirements"
+---
+
+### As a DEX or Liquidity Aggregator
+
+DEXs and aggregators must provide a **swap flow and user experience** comparable to protocols already integrated into Delora.
+
+Integrations must fit Delora’s existing execution and routing flow and follow patterns that can be handled reliably by the platform.
+
+---
+
+## Architectural Limitations
+
+Currently, Delora does **not** support integrations for:
+
+- limit orders
+- order books
+- RFQ-based execution
+- intent-based execution
+
+These limitations are due to constraints in the current backend and smart contract architecture.\
+There is **no timeline** for adding support for these execution models.
+
+---
+
+## Existing Aggregator Integrations
+
+If your project is already integrated with aggregators supported by Delora\
+(e.g. 1inch, 0x, Paraswap, DODO, OpenOcean), we are **unlikely to integrate it directly**, as your liquidity may already be available through existing routing paths.
+
+---
+
+## DEX & Aggregator Integration Requirements
+
+---
+
+### Uniswap V2 / Uniswap V3 Forks
+
+We can efficiently integrate DEXs and aggregators based on **Uniswap V2 or Uniswap V3–compatible architectures** within a short period of time.
+
+To proceed with the integration, the following information must be provided\
+**for each chain** on which your protocol operates:
+
+```json
+{
+  "name": "ExampleDEX",
+  "chainId": 100,
+  "webUrl": "https://app.exampledex.xyz",
+  "tokenlistUrl": "https://tokens.exampledex.xyz",
+  "routerAddress": "0x...",
+  "factoryAddress": "0x...",
+  "initCodeHash": "0x...",
+  "baseTokens": [
+    {
+      "address": "0x...",
+      "symbol": "TOKEN",
+      "decimals": 18
+    }
+  ]
+}
+```
+
+**Logo requirements:**
+
+- minimum size: **300 × 300 px**
+- white or transparent background
+
+---
+
+### Non-Uniswap-Compatible Protocols
+
+If your DEX or aggregator is **not compatible with Uniswap V2 or V3**, an **API-based integration** is required.
+
+Please provide documentation and ensure the following technical standards are met:
+
+- ability to handle **at least 1 request per second**
+- clear and legible error messages
+- **average API response time below 2 seconds**
+
+---
+
+### Additional Requirements
+
+All DEX and aggregator integrations must:
+
+- maintain an active support channel
+- remain responsive throughout the integration process and beyond
+- provide a **stable API** without breaking changes
+- give at least **3 weeks’ notice** before any updates
