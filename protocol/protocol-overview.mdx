@@ -8,7 +8,7 @@ title: "Protocol Overview"
 
 ## Introduction
 
-Delora is an execution layer that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API/SDK, returning deterministic Execution Packets that are safely executed on-chain. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
+Delora is an execution layer that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API, returning deterministic Execution Packets that are safely executed on-chain. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
 
 <img
   src="/images/image.png"
@@ -23,7 +23,7 @@ Delora is an execution layer that aggregates liquidity and abstracts away the co
 
 **What it is**: The entry point where users interact.
 
-- **How it works**: dApps plug into Delora’s API/SDK to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, the dApp packages it into a signed Execution Packet and submits it on-chain for processing.
+- **How it works**: dApps plug into Delora’s API to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, the dApp packages it into a signed Execution Packet and submits it on-chain for processing.
 
 #### 2. Delora Router (Off-chain Routing)
 
@@ -88,7 +88,7 @@ Delora is an execution layer that aggregates liquidity and abstracts away the co
 ### Key Differentiators
 
 - **Security-first**: Strict execution rules ensure no undefined outcomes.
-- **Unified integration**: One SDK/API replaces dozens of fragmented setups.
+- **Unified integration**: One API replaces dozens of fragmented setups.
 - **Determinism**: Execution is binary — success or safe fail.
 - **Modularity**: Extensible architecture with pluggable facets and providers.
 - **Efficiency**: Faster go-to-market with lower maintenance overhead.
