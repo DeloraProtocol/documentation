@@ -23,6 +23,15 @@
     "dark": "/favicon-dark.png"
   },
   "navigation": {
+    "global": {
+      "anchors": [
+        {
+          "anchor": "GitHub",
+          "icon": "github",
+          "href": "https://github.com/AlyraLabs/"
+        }
+      ]
+    },
     "tabs": [
       {
         "tab": "Overview",
@@ -31,7 +40,7 @@
             "group": "ABOUT",
             "pages": [
               "about",
-              "concept/integration-requests"
+              "concept/partnership-requests"
             ]
           },
           {
@@ -74,16 +83,7 @@
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/AlyraLabs/",
-          "icon": "github"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.png",
