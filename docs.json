@@ -86,8 +86,8 @@
     ]
   },
   "logo": {
-    "light": "/logo/light.png",
-    "dark": "/logo/dark.png"
+    "light": "/logo/EmblemBlack.png",
+    "dark": "/logo/EmblemWhite.png"
   },
   "navbar": {
     "links": [
