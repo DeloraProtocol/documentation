@@ -20,7 +20,7 @@
   },
   "favicon": {
     "light": "/logo/BlackLogo.png",
-    "dark": "/logo/WhiteLogo.png"
+    "dark": "/logo/BlackLogo.png"
   },
   "navigation": {
     "global": {
