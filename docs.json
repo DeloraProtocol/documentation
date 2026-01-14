@@ -49,13 +49,13 @@
               "protocol/protocol-overview",
               "protocol/smart-contract-architecture",
               "protocol/smart-contract-addresses",
-              "protocol/monetize-your-app"
+              "protocol/fee-configuration"
             ]
           },
           {
             "group": "INTEGRATIONS",
             "pages": [
-              "integrations/supported-chains"
+              "integrations/connected-chains"
             ]
           },
           {
