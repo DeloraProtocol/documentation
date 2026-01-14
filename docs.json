@@ -19,8 +19,8 @@
     }
   },
   "favicon": {
-    "light": "/favicon.png",
-    "dark": "/favicon-dark.png"
+    "light": "/logo/BlackLogo.png",
+    "dark": "/logo/WhiteLogo.png"
   },
   "navigation": {
     "global": {
@@ -113,7 +113,7 @@
     "socials": {
       "x": "https://x.com/alyrafinance",
       "github": "https://github.com/AlyraLabs",
-      "linkedin": "https://www.linkedin.com/company/alyrafi"
+      "linkedin": "https://www.linkedin.com/company/deloraprotocol"
     }
   }
 }
