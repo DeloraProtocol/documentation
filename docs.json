@@ -40,30 +40,30 @@
             "group": "ABOUT",
             "pages": [
               "about",
-              "concept/partnership-requests"
+              "partnership-requests"
             ]
           },
           {
             "group": "PROTOCOL",
             "pages": [
-              "protocol/protocol-overview",
-              "protocol/smart-contract-architecture",
-              "protocol/smart-contract-addresses",
-              "protocol/fee-configuration"
+              "protocol-overview",
+              "smart-contract-architecture",
+              "smart-contract-addresses",
+              "fee-configuration"
             ]
           },
           {
             "group": "INTEGRATIONS",
             "pages": [
-              "integrations/connected-chains"
+              "connected-chains"
             ]
           },
           {
             "group": "EXAMPLES",
             "pages": [
-              "examples/transaction-flow/ethereum",
-              "examples/transaction-flow/solana",
-              "examples/metadata-api"
+              "transaction-flow/ethereum",
+              "transaction-flow/solana",
+              "metadata-api"
             ]
           },
           {
@@ -72,9 +72,9 @@
               {
                 "group": "Getting Integrated with Delora",
                 "pages": [
-                  "overview/learn-more/getting-integrated-with-delora/untitled-page",
-                  "overview/learn-more/getting-integrated-with-delora/for-dexs-and-aggregators",
-                  "overview/learn-more/getting-integrated-with-delora/Bridges"
+                  "how-to-get-integrated",
+                  "for-dexs-and-aggregators",
+                  "for-bridges"
                 ]
               }
             ]

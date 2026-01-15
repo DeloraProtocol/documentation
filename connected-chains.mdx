@@ -1,5 +1,7 @@
 ---
-title: "Smart Contract Addresses"
+title: "Connected Chains"
+description: "The Delora is fully compatible with a wide range of blockchains. This section outlines supported networks, their identifiers, and integration requirements for cross-chain requests."
+og:image: "https://docs.alyra.finance/images/OG.png"
 "og:image": "https://docs.alyra.finance/images/OG.png"
 ---
 
@@ -12,7 +14,7 @@ export const SupportedChains = () => {
     const fetchChains = async () => {
       try {
         const res = await fetch(
-          'https://api.alyra.finance/v1/chains?chainTypes=EVM',
+          'https://api.alyra.finance/v1/chains',
           { headers: { accept: 'application/json' }, cache: 'no-store' }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -36,7 +38,8 @@ export const SupportedChains = () => {
           <tr className="border-b border-gray-800 text-left">
             <th className="py-2">Chain Name</th>
             <th className="py-2">Chain ID</th>
-            <th className="py-2">Address</th>
+            <th className="py-2">Key</th>
+            <th className="py-2">Chain Type</th>
           </tr>
         </thead>
 
@@ -59,7 +62,11 @@ export const SupportedChains = () => {
               </td>
 
               <td className="py-2">
-                <code></code>
+                <code>{c.key}</code>
+              </td>
+
+              <td className="py-2 font-medium">
+                {c.chainType}
               </td>
             </tr>
           ))}
@@ -69,12 +76,8 @@ export const SupportedChains = () => {
   );
 };
 
-<Note>
-  The Delora entryway contract address is `0x...` on most supported networks. Please note, on some networks the address is different. You can find the ABI on [Github]().
-</Note>
+<Danger>
+  The Delora API is not yet public. For details, please contact our team.
+</Danger>
 
 <SupportedChains />
-
-More information and open-source code for each facet contract can be found on our [GitHub]().
-
-Contract address of each facet and deployment information can be found in our [GitHub repo]().
