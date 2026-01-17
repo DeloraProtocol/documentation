@@ -99,8 +99,8 @@
     ]
   },
   "logo": {
-    "light": "/logo/EmblemBlack.png",
-    "dark": "/logo/EmblemWhite.png"
+    "light": "/images/docsblack.png",
+    "dark": "/images/docswhite.png"
   },
   "navbar": {
     "links": [
