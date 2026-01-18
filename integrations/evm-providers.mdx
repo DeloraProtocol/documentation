@@ -2,3 +2,155 @@
 title: "EVM Providers"
 description: "Delora provides direct integrations with EVM DEXs and bridges. The following section lists supported providers, their identifiers, and key integration details."
 ---
+
+import { useEffect, useState } from "react";
+
+export const AlyraProviders = () => {
+  const [chains, setChains] = useState(null);
+  const [tools, setTools] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("https://api.alyra.finance/v1/chains")
+      .then(r => r.json())
+      .then(d => setChains(d.chains))
+      .catch(e => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    fetch("https://api.alyra.finance/v1/tools")
+      .then(r => r.json())
+      .then(setTools)
+      .catch(e => setError(e.message));
+  }, []);
+
+  if (error) return <div>Error: {error}</div>;
+  if (!chains || !tools) return <div>Loading...</div>;
+
+  const evmChains = chains.filter(c => c.chainType === "EVM");
+
+  const chainById = id =>
+    chains.find(c => Number(c.id) === Number(id));
+
+  const evmChainById = id =>
+    evmChains.find(c => Number(c.id) === Number(id));
+
+  const renderChains = chains => (
+    <div className="flex flex-wrap gap-3">
+      {chains.map(chain => (
+        <div key={chain.id} className="relative group">
+          <img
+            src={chain.logoURI}
+            alt={chain.name}
+            className="w-6 h-6 rounded-full not-prose"
+          />
+          <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            {chain.name}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const parsedBridges = tools.bridges
+    .map(b => {
+      const fromIds = b.supportedChains.map(c => c.fromChainId);
+      const toIds = b.supportedChains.map(c => c.toChainId);
+
+      const connectedChains = [
+        ...new Set([
+          ...fromIds
+            .map(evmChainById)
+            .filter(Boolean),
+          ...toIds
+            .map(chainById)
+            .filter(Boolean)
+        ])
+      ];
+
+      return { ...b, connectedChains };
+    })
+    .filter(b => b.connectedChains.length)
+    .sort((a, b) => b.connectedChains.length - a.connectedChains.length);
+
+  const hasEvmSupport = exchange =>
+    exchange.supportedChains.some(id =>
+      evmChains.some(c => Number(c.id) === Number(id))
+    );
+
+  const exchangeChains = exchange =>
+    exchange.supportedChains
+      .map(chainById)
+      .filter(Boolean);
+
+  const parsedExchanges = tools.exchanges
+    .filter(hasEvmSupport)
+    .map(exchange => ({
+      ...exchange,
+      supportedChains: exchangeChains(exchange)
+    }))
+    .filter(e => e.supportedChains.length)
+    .sort((a, b) => b.supportedChains.length - a.supportedChains.length);
+
+  return (
+    <>
+      <h2>Supported Bridges</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th />
+            <th>Name</th>
+            <th>Key</th>
+            <th>Supported Chains</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parsedBridges.map(b => (
+            <tr key={b.key}>
+              <td>
+                <img
+                  src={b.logoURI}
+                  className="w-6 h-6 rounded-full not-prose"
+                />
+              </td>
+              <td><strong>{b.name}</strong></td>
+              <td><code>{b.key}</code></td>
+              <td>{renderChains(b.connectedChains)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h2>Supported Exchanges</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th />
+            <th>Name</th>
+            <th>Key</th>
+            <th>Supported Chains</th>
+          </tr>
+        </thead>
+        <tbody>
+          {parsedExchanges.map(e => (
+            <tr key={e.key}>
+              <td>
+                <img
+                  src={e.logoURI}
+                  className="w-6 h-6 rounded-full not-prose"
+                />
+              </td>
+              <td><strong>{e.name}</strong></td>
+              <td><code>{e.key}</code></td>
+              <td>{renderChains(e.supportedChains)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </>
+  );
+};
+
+<AlyraProviders />

@@ -2,3 +2,147 @@
 title: "Solana Providers"
 description: "Delora enables seamless execution on the Solana network by integrating leading DEXs and bridge protocols. Below, you'll find the supported providers along with key integration details for each."
 ---
+
+import { useEffect, useState } from "react";
+
+export const SupportedTools = ({ chainId }) => {
+  const [chains, setChains] = useState(null);
+  const [tools, setTools] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetch("https://api.alyra.finance/v1/chains")
+      .then(r => r.json())
+      .then(d => setChains(d.chains))
+      .catch(e => setError(e.message));
+  }, []);
+
+  useEffect(() => {
+    fetch("https://api.alyra.finance/v1/tools")
+      .then(r => r.json())
+      .then(setTools)
+      .catch(e => setError(e.message));
+  }, []);
+
+  if (error) return <div>Error: {error}</div>;
+  if (!chains || !tools) return <div>Loading...</div>;
+
+  const selectedChainId = Number(chainId);
+
+  const chainById = id =>
+    chains.find(c => Number(c.id) === Number(id));
+
+  const renderChains = chains => (
+    <div className="flex flex-wrap gap-3">
+      {chains.map(chain => (
+        <div key={chain.id} className="relative group">
+          <img
+            src={chain.logoURI}
+            alt={chain.name}
+            className="w-6 h-6 rounded-full not-prose"
+          />
+          <div className="absolute hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap">
+            {chain.name}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  const bridges = tools.bridges
+    .map(bridge => {
+      const connectedChainIds = bridge.supportedChains
+        .filter(
+          c =>
+            c.fromChainId === selectedChainId ||
+            c.toChainId === selectedChainId
+        )
+        .flatMap(c =>
+          c.fromChainId === selectedChainId
+            ? [c.toChainId]
+            : [c.fromChainId]
+        );
+
+      const connectedChains = [
+        ...new Set(connectedChainIds)
+      ]
+        .map(chainById)
+        .filter(Boolean);
+
+      return { ...bridge, connectedChains };
+    })
+    .filter(b => b.connectedChains.length)
+    .sort((a, b) => b.connectedChains.length - a.connectedChains.length);
+
+  const exchanges = tools.exchanges.filter(e =>
+    e.supportedChains.map(Number).includes(selectedChainId)
+  );
+
+  return (
+    <>
+      <h2>Supported Bridges</h2>
+
+      {bridges.length === 0 ? (
+        <p>-</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th />
+              <th>Name</th>
+              <th>Key</th>
+              <th>Connected Chains</th>
+            </tr>
+          </thead>
+          <tbody>
+            {bridges.map(b => (
+              <tr key={b.key}>
+                <td>
+                  <img
+                    src={b.logoURI}
+                    className="w-4 h-4 rounded-full not-prose"
+                  />
+                </td>
+                <td><strong>{b.name}</strong></td>
+                <td><code>{b.key}</code></td>
+                <td>{renderChains(b.connectedChains)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <h2>Supported Exchanges</h2>
+
+      {exchanges.length === 0 ? (
+        <p>-</p>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th />
+              <th>Name</th>
+              <th>Key</th>
+            </tr>
+          </thead>
+          <tbody>
+            {exchanges.map(e => (
+              <tr key={e.key}>
+                <td>
+                  <img
+                    src={e.logoURI}
+                    className="w-4 h-4 rounded-full not-prose"
+                  />
+                </td>
+                <td><strong>{e.name}</strong></td>
+                <td><code>{e.key}</code></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
+  );
+};
+
+<SupportedTools chainId="1000000001" />

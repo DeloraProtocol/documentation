@@ -55,7 +55,9 @@
           {
             "group": "INTEGRATIONS",
             "pages": [
-              "integrations/connected-chains"
+              "integrations/connected-chains",
+              "integrations/evm-providers",
+              "integrations/solana-providers"
             ]
           },
           {
