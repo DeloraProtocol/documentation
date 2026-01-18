@@ -102,8 +102,8 @@
     ]
   },
   "logo": {
-    "light": "/images/docsblack.png",
-    "dark": "/images/docswhite.png"
+    "light": "/images/DeloraDocsBlack.png",
+    "dark": "/images/DeloraDocsWhite.png"
   },
   "navbar": {
     "links": [
