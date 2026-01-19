@@ -22,11 +22,6 @@
     "light": "/logo/BlackLogo.png",
     "dark": "/logo/BlackLogo.png"
   },
-  "seo": {
-    "metatags": {
-        "og:image": "https://docs.delora.build/images/OG.png"
-    }
-  },
   "navigation": {
     "global": {
       "anchors": [
