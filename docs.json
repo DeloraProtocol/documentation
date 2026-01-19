@@ -24,7 +24,7 @@
   },
   "seo": {
     "metatags": {
-        "og:image": "/images/OG.png"
+        "og:image": "https://docs.delora.build/images/OG.png"
     }
   },
   "navigation": {
