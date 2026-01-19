@@ -22,6 +22,11 @@
     "light": "/logo/BlackLogo.png",
     "dark": "/logo/BlackLogo.png"
   },
+  "seo": {
+    "metatags": {
+        "og:image": "/images/OG.png"
+    }
+  },
   "navigation": {
     "global": {
       "anchors": [
