@@ -40,8 +40,8 @@
             "group": "ABOUT",
             "pages": [
               "about",
-              "overview/about/get-started",
-              "concept/partnership-requests"
+              "about/get-started",
+              "about/partnership-requests"
             ]
           },
           {
