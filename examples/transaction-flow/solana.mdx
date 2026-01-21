@@ -1,30 +1,12 @@
 ---
 title: "Solana Transaction Example"
 description: "How to request a quote from Delora API and execute the returned Solana transaction"
-"og:image": "https://docs.delora.build/images/OG.png"
----
-
-### Query parameters
-
-| Parameter             | Type   | Required | Description                                                                 |
-| --------------------- | ------ | -------- | --------------------------------------------------------------------------- |
-| `senderAddress`       | string | ✅        | Solana public key that sends the tokens.                                    |
-| `receiverAddress`     | string | ⚠️       | Solana public key that receives the tokens. Required for cross-chain flows. |
-| `originChainId`       | number | ✅        | Chain ID of the source network (Solana).                                    |
-| `destinationChainId`  | number | ✅        | Chain ID of the target network.                                             |
-| `amount`              | string | ✅        | Amount in the smallest units (including all decimals).                      |
-| `originCurrency`      | string | ✅        | The token address you are sending.                                          |
-| `destinationCurrency` | string | ✅        | The token address you want to receive.                                      |
-
-> 💡 **Solana address rules**
->
-> - `senderAddress` must be a valid Solana public key.
-> - For Solana → Solana flows, `receiverAddress` may default to `senderAddress`.
-> - For Solana ↔ EVM flows, `receiverAddress` is required and must be explicitly provided.
-
+og:image: "https://docs.delora.build/images/OG.png"
 ---
 
 ## Quickstart: minimal working example
+
+---
 
 <CodeGroup>
 

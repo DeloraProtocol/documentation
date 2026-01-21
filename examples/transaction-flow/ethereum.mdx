@@ -1,25 +1,6 @@
 ---
 title: "End-to-end Transaction Example (Ethereum)"
-"og:image": "https://docs.delora.build/images/OG.png"
----
-
-### Query parameters
-
-| Parameter             | Type   | Required | Description                                                                        |
-| --------------------- | ------ | -------- | ---------------------------------------------------------------------------------- |
-| `senderAddress`       | string | ✅        | Address that sends the tokens (EVM or SVM address).                                |
-| `receiverAddress`     | string | ⚠️       | Address that receives the tokens. Can be optional for some flows, see notes below. |
-| `originChainId`       | number | ✅        | Chain ID of the source network.                                                    |
-| `destinationChainId`  | number | ✅        | Chain ID of the target network.                                                    |
-| `amount`              | string | ✅        | Amount in the smallest units (including all decimals).                             |
-| `originCurrency`      | string | ✅        | The token address you are sending.                                                 |
-| `destinationCurrency` | string | ✅        | The token address you want to receive.                                             |
-
-> 💡 **Address rules**
->
-> - For simple EVM → EVM flow, `receiverAddress` can usually be omitted – your backend may default it to `senderAddress`.
-> - For EVM ↔ SVM (or other networks) flows, `receiverAddress` **must** be provided and must be different from `senderAddress`.
-
+og:image: "https://docs.delora.build/images/OG.png"
 ---
 
 ## Quickstart: minimal working example
@@ -81,12 +62,12 @@ async function main() {
   // Use the spender / approval address from the quote response in your own allowance helper.
 
   // 4. Execute transaction
-  const txRequest = quote.transactionRequest;
-  if (!txRequest) {
-    throw new Error("transactionRequest is missing in the quote response");
+  const callData = quote.calldata;
+  if (!callData) {
+    throw new Error("calldata is missing in the quote response");
   }
 
-  const tx = await wallet.sendTransaction(txRequest);
+  const tx = await wallet.sendTransaction(callData);
   const receipt = await tx.wait();
 
   console.log("Transaction confirmed:", receipt.hash);
@@ -223,15 +204,15 @@ if (tokenAddress && spender) {
 
 ### 4. Executing the quote
 
-Once you have a transactionRequest compatible with ethers.js, execution is simple:
+Once you have a callData compatible with ethers.js, execution is simple:
 
 <CodeGroup>
 
 ```ts TypeScript
 const txRequest = quote.calldata.data;
 
-if (!txRequest) {
-  throw new Error("transactionRequest is missing in the quote response");
+if (!callData) {
+  throw new Error("calldata is missing in the quote response");
 }
 
 const tx = await wallet.sendTransaction(txRequest);
