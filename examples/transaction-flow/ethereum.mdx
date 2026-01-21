@@ -5,77 +5,136 @@ og:image: "https://docs.delora.build/images/OG.png"
 
 ## Quickstart: minimal working example
 
-The following example:
+The following example demonstrates a complete transaction flow:
 
-1. Requests a quote from Ethereum Mainnet (1) to Polygon (137)
-2. Uses `USDT` as both origin and destination currency
-3. Sends the returned transaction using `ethers.js`
+1. **Fetches a quote** from delora API for token swap
+2. **Checks and approves** token allowance if needed
+3. **Executes the transaction** using `ethers.js` v5
 
-> ⚠️ Replace all placeholder values (`YOUR_SENDER_ADDRESS`, `YOUR_MNEMONIC`, RPC URLs, etc.) with your actual values.
+> ⚠️ **Security Note**: Never hardcode private keys or mnemonics in production code. Use environment variables or secure key management solutions.
 
 <CodeGroup>
 
 ```ts TypeScript
-import axios from "axios";
-import { ethers } from "ethers";
+import { ethers, BigNumber, Contract } from 'ethers';
 
-const API_URL = "https://api.alyra.finance/v1";
+const API_URL = 'https://api.alyra.finance/v1';
 
-// Replace with your own type when you define the API response
-type QuoteResponse = any;
+const ERC20_ABI = [
+  'function allowance(address owner, address spender) view returns (uint256)',
+  'function approve(address spender, uint256 amount) returns (bool)',
+] as const;
 
-async function fetchQuote(): Promise<QuoteResponse> {
-  const senderAddress = "0xYOUR_SENDER_ADDRESS";
-  const receiverAddress = "0xYOUR_RECEIVER_ADDRESS"; // optional for some EVM→EVM flows
+const getQuote = async (params: {
+  originChainId: number;
+  destinationChainId: number;
+  amount: string;
+  originCurrency: string;
+  destinationCurrency: string;
+  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
+  senderAddress?: string;
+  receiverAddress?: string;
+}) => {
+  const query = new URLSearchParams();
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      query.append(key, String(value));
+    }
+  }
+  
+  const url = `${API_URL}/quotes?${query.toString()}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get quote: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+};
 
-  const params = {
-    senderAddress,
-    receiverAddress,
-    originChainId: 1,         // Ethereum Mainnet
-    destinationChainId: 137,  // Polygon PoS
-    amount: "25000000",       // 25 USDT if token has 6 decimals
-    originCurrency: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    destinationCurrency: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-  };
+export const executeSwap = async (provider: ethers.providers.Web3Provider) => {
+  await provider.send('eth_requestAccounts', []);
+  const wallet = provider.getSigner();
+  const walletAddress = await wallet.getAddress();
 
-  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, {
-    params,
+  const originChainId = 137;
+  const destinationChainId = 137;
+  const originCurrency: string = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359';
+  const destinationCurrency = '0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174';
+  const amount = ethers.utils.parseUnits('100', 6).toString();
+
+  const quote = await getQuote({
+    originChainId,
+    destinationChainId,
+    amount,
+    originCurrency,
+    destinationCurrency,
+    tradeType: 'EXACT_INPUT',
+    senderAddress: walletAddress,
+    receiverAddress: walletAddress,
   });
 
-  return data;
-}
-
-async function main() {
-  // 1. Configure provider and signer for the origin chain
-  const provider = new ethers.JsonRpcProvider(
-    "https://mainnet.infura.io/v3/YOUR_INFURA_KEY",
-    1
-  );
-
-  // Do NOT hardcode the mnemonic in real apps – use environment variables / secure storage
-  const wallet = ethers.Wallet.fromPhrase("YOUR_MNEMONIC").connect(provider);
-
-  // 2. Fetch quote
-  const quote = await fetchQuote();
-
-  // 3. (Optional) Check allowance & approve
-  // Use the spender / approval address from the quote response in your own allowance helper.
-
-  // 4. Execute transaction
-  const callData = quote.calldata;
-  if (!callData) {
-    throw new Error("calldata is missing in the quote response");
+  if (originCurrency !== ethers.constants.AddressZero) {
+    const token = new Contract(originCurrency, ERC20_ABI, wallet);
+    const allowance = await token.allowance(walletAddress, quote.calldata.to);
+    
+    if (allowance.lt(BigNumber.from(quote.inputAmount))) {
+      await (await token.approve(quote.calldata.to, ethers.constants.MaxUint256)).wait();
+    }
   }
 
-  const tx = await wallet.sendTransaction(callData);
-  const receipt = await tx.wait();
+  const tx = await wallet.sendTransaction({
+    to: quote.calldata.to,
+    data: quote.calldata.data,
+    value: quote.calldata.value,
+    ...(quote.gas?.gasLimit && { gasLimit: BigNumber.from(quote.gas.gasLimit) }),
+    ...(quote.gas?.maxFeePerGas && { maxFeePerGas: BigNumber.from(quote.gas.maxFeePerGas) }),
+    ...(quote.gas?.maxPriorityFeePerGas && { maxPriorityFeePerGas: BigNumber.from(quote.gas.maxPriorityFeePerGas) }),
+    ...(quote.gas?.gasPrice && { gasPrice: BigNumber.from(quote.gas.gasPrice) }),
+  });
 
-  console.log("Transaction confirmed:", receipt.hash);
-}
+  await tx.wait();
+  
+  return tx.hash;
+};
+```
 
-main().catch((error) => {
-  console.error("Quote example failed:", error);
-});
+</CodeGroup>
+
+## React Integration Example
+
+For React applications, you can integrate the swap function as follows:
+
+<CodeGroup>
+
+```tsx TypeScript React
+import { ethers } from 'ethers';
+import { executeSwap } from './example';
+
+const SwapButton = () => {
+  const handleSwap = async () => {
+    if (!window.ethereum) {
+      alert('Please install MetaMask or another Web3 wallet');
+      return;
+    }
+    
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    
+    try {
+      const txHash = await executeSwap(provider);
+      console.log('Transaction hash:', txHash);
+    } catch (error) {
+      console.error('Swap failed:', error);
+    }
+  };
+
+  return (
+    <button onClick={handleSwap}>
+      Execute Swap
+    </button>
+  );
+};
 ```
 
 </CodeGroup>
@@ -84,141 +143,120 @@ main().catch((error) => {
 
 ### 1. Building the quote request
 
-You can wrap the HTTP call into a small helper function:
+The `getQuote` function constructs a query string from parameters and fetches the quote from the API:
 
 <CodeGroup>
 
 ```ts TypeScript
-import axios from "axios";
-
-const API_URL = "https://api.alyra.finance/v1";
-
-type QuoteResponse = any; // customize
-
-export async function getQuote(params: {
-  senderAddress: string;
-  receiverAddress?: string;
+const getQuote = async (params: {
   originChainId: number;
   destinationChainId: number;
   amount: string;
   originCurrency: string;
   destinationCurrency: string;
-}): Promise<QuoteResponse> {
-  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, {
-    params,
-  });
-  return data;
+  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
+  senderAddress?: string;
+  receiverAddress?: string;
+}) => {
+  const query = new URLSearchParams();
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      query.append(key, String(value));
+    }
+  }
+  
+  const url = `${API_URL}/quotes?${query.toString()}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get quote: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+```
+
+</CodeGroup>
+
+**Key parameters:**
+
+- `originChainId` / `destinationChainId`: Chain IDs (e.g., `1` for Ethereum, `137` for Polygon)
+- `amount`: Token amount in smallest unit (wei, satoshi, etc.)
+- `originCurrency` / `destinationCurrency`: Token contract addresses (`0x0...0` for native tokens)
+- `tradeType`: `'EXACT_INPUT'`
+- `senderAddress` / `receiverAddress`: Optional wallet addresses
+
+### 2. Wallet provider setup
+
+The function accepts a `Web3Provider` from `ethers.js`, which can be obtained from various sources:
+
+**Browser extension (MetaMask, etc.):**
+
+```ts
+const provider = new ethers.providers.Web3Provider(window.ethereum);
+```
+
+**RPC endpoint:**
+
+```ts
+const provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com', 137);
+```
+
+**With wallet from mnemonic (development only):**
+
+```ts
+const provider = new ethers.providers.JsonRpcProvider('https://polygon-rpc.com', 137);
+const wallet = ethers.Wallet.fromMnemonic(process.env.MNEMONIC!).connect(provider);
+```
+
+> ⚠️ **Never hardcode mnemonics or private keys in production code.**
+
+### 3. Token allowance and approval
+
+For ERC-20 tokens (non-native), the contract must be approved to spend tokens on behalf of the user:
+
+<CodeGroup>
+
+```ts TypeScript
+if (originCurrency !== ethers.constants.AddressZero) {
+  const token = new Contract(originCurrency, ERC20_ABI, wallet);
+  const allowance = await token.allowance(walletAddress, quote.calldata.to);
+  
+  if (allowance.lt(BigNumber.from(quote.inputAmount))) {
+    await (await token.approve(quote.calldata.to, ethers.constants.MaxUint256)).wait();
+  }
 }
 ```
 
 </CodeGroup>
 
-Usage example:
+**Notes:**
+
+- Native tokens (ETH, BNB, etc.) don't require approval
+- The spender address (`quote.calldata.to`) is the contract that will execute the swap
+- Using `MaxUint256` avoids repeated approvals, but you can use the exact amount for better security
+
+### 4. Transaction execution
+
+The quote response includes transaction parameters (`to`, `data`, `value`) and optional gas estimates:
 
 <CodeGroup>
 
 ```ts TypeScript
-const quote = await getQuote({
-  senderAddress: "0xYOUR_SENDER_ADDRESS",
-  // receiverAddress can be omitted for some EVM→EVM paths
-  originChainId: 1,
-  destinationChainId: 137,
-  amount: "25000000",
-  originCurrency: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-  destinationCurrency: "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+const tx = await wallet.sendTransaction({
+  to: quote.calldata.to,      
+  data: quote.calldata.data,  
+  value: quote.calldata.value,
+  ...(quote.gas?.gasLimit && { gasLimit: BigNumber.from(quote.gas.gasLimit) }),
+  ...(quote.gas?.maxFeePerGas && { maxFeePerGas: BigNumber.from(quote.gas.maxFeePerGas) }),
+  ...(quote.gas?.maxPriorityFeePerGas && { maxPriorityFeePerGas: BigNumber.from(quote.gas.maxPriorityFeePerGas) }),
+  ...(quote.gas?.gasPrice && { gasPrice: BigNumber.from(quote.gas.gasPrice) }),
 });
-```
 
-</CodeGroup>
+await tx.wait();
 
-### 2. Plugging into your wallet layer
-
-You can reuse your existing wallet abstraction. A typical pattern with ethers.js might look like this:
-
-<CodeGroup>
-
-```ts TypeScript
-import { ethers } from "ethers";
-
-const provider = new ethers.JsonRpcProvider(
-  "https://polygon-rpc.com",
-  137 // If you want to sign directly on another chain in a different flow
-);
-
-// In many real apps you get signer from browser wallet
-const wallet = ethers.Wallet.fromPhrase("YOUR_MNEMONIC").connect(provider);
-```
-
-</CodeGroup>
-
-If you are using wagmi, RainbowKit or another library, you usually obtain the signer from these providers instead of manually.
-
-### 3. Allowance (optional but common)
-
-Most ERC-20 flows require:
-
-1. Reading current allowance of `senderAddress` for a `spender`
-2. Calling `approve` if it's lower than the required amount
-
-The spender (approval address) is typically provided in the quote response. The exact field depends on your API shape (`quote.estimate.approvalAddress`, etc).
-
-You can reuse your existing helper:
-
-<CodeGroup>
-
-```ts TypeScript
-async function ensureAllowance(args: {
-  tokenAddress: string;
-  spender: string;
-  requiredAmount: bigint;
-  wallet: ethers.Wallet;
-}) {
-  // read allowance(...) and approve(...) here using your own logic
-}
-```
-
-</CodeGroup>
-
-Call it before executing the transaction:
-
-<CodeGroup>
-
-```ts TypeScript
-const quote = await getQuote(/* ... */);
-
-// Example: extract fields from your API
-const tokenAddress = quote.action?.fromToken?.address;
-const spender = quote.estimate?.approvalAddress;
-
-if (tokenAddress && spender) {
-  await ensureAllowance({
-    tokenAddress,
-    spender,
-    requiredAmount: BigInt("25000000"),
-    wallet,
-  });
-}
-```
-
-</CodeGroup>
-
-### 4. Executing the quote
-
-Once you have a callData compatible with ethers.js, execution is simple:
-
-<CodeGroup>
-
-```ts TypeScript
-const txRequest = quote.calldata.data;
-
-if (!callData) {
-  throw new Error("calldata is missing in the quote response");
-}
-
-const tx = await wallet.sendTransaction(txRequest);
-const receipt = await tx.wait();
-
-console.log("Hash:", receipt.hash);
+return tx.hash;
 ```
 
 </CodeGroup>
