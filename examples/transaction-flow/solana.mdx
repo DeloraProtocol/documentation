@@ -1,166 +1,300 @@
 ---
-title: "Solana Transaction Example"
+title: "End-to-end Transaction Example (Solana)"
 description: "How to request a quote from Delora API and execute the returned Solana transaction"
 og:image: "https://docs.delora.build/images/OG.png"
 ---
 
 ## Quickstart: minimal working example
 
----
+The following example demonstrates a complete transaction flow:
+
+1. **Fetches a quote** from delora API for token swap
+2. **Executes the transaction** using `@solana/web3.js`
+
+> ⚠️ **Security Note**: Never hardcode private keys in production code. Use wallet adapters or secure key management solutions.
 
 <CodeGroup>
 
 ```ts TypeScript
-import axios from "axios";
-import {
-  Connection,
-  VersionedTransaction,
-} from "@solana/web3.js";
+import { Connection, PublicKey, VersionedTransaction } from '@solana/web3.js';
 
-const API_URL = "https://api.alyra.finance/v1";
+const API_URL = 'https://api.alyra.finance/v1';
+const SOLANA_RPC_URL = 'https://solana-rpc.publicnode.com';
 
-type QuoteResponse = {
-  transaction?: string;
-};
-
-async function fetchQuote(): Promise<QuoteResponse> {
-  const senderAddress = "YOUR_SOLANA_PUBLIC_KEY";
-  const receiverAddress = "YOUR_RECEIVER_PUBLIC_KEY";
-
-  const params = {
-    senderAddress,
-    receiverAddress,
-    originChainId: 1000000001,
-    destinationChainId: 137,
-    amount: "1000000",
-    originCurrency: "So11111111111111111111111111111111111111112",
-    destinationCurrency: "0x...",
-  };
-
-  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`,{ 
-    params }
-  );
-
-  return data;
+interface SolanaProvider {
+  publicKey: PublicKey;
+  signTransaction: (transaction: VersionedTransaction) => Promise<VersionedTransaction>;
+  connect: () => Promise<{ publicKey: PublicKey }>;
 }
 
-async function main() {
-  const connection = new Connection(
-    "https://api.mainnet-beta.solana.com",
-    "confirmed"
-  );
-
-  const quote = await fetchQuote();
-
-  if (!quote.calldata.data) {
-    throw new Error("Missing Solana transaction in quote response");
-  }
-
-  const txBuffer = Buffer.from(quote.calldata.data, "base64");
-  const transaction = VersionedTransaction.deserialize(txBuffer);
-
-  const signer = /* your Keypair or wallet adapter */;
-  transaction.sign([signer]);
-
-  const signature = await connection.sendTransaction(transaction);
-  await connection.confirmTransaction(signature, "confirmed");
-
-  console.log("Transaction confirmed:", signature);
-}
-
-main().catch(console.error);
-```
-
-</CodeGroup>
-
----
-
-## Breaking it down
-
-### 1. Building the quote request
-
-<CodeGroup>
-
-```ts TypeScript
-import axios from "axios";
-
-const API_URL = "https://api.alyra.finance/v1";
-
-type QuoteResponse = any;
-
-export async function getQuote(params: {
-  senderAddress: string;
-  receiverAddress?: string;
+const getQuote = async (params: {
   originChainId: number;
   destinationChainId: number;
   amount: string;
   originCurrency: string;
   destinationCurrency: string;
-}): Promise<QuoteResponse> {
-  const { data } = await axios.get<QuoteResponse>(`${API_URL}/quotes`, { 
-    params }
+  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
+  senderAddress?: string;
+  receiverAddress?: string;
+}) => {
+  const query = new URLSearchParams();
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      query.append(key, String(value));
+    }
+  }
+  
+  const url = `${API_URL}/quotes?${query.toString()}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get quote: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+
+export const executeSwap = async (provider: SolanaProvider, connection: Connection) => {
+  await provider.connect();
+  const walletAddress = provider.publicKey.toString();
+
+  const originChainId = 1000000001;
+  const destinationChainId = 1000000001;
+  const originCurrency: string = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+  const destinationCurrency = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+  const amount = (100 * 1e6).toString();
+
+  const quote = await getQuote({
+    originChainId,
+    destinationChainId,
+    amount,
+    originCurrency,
+    destinationCurrency,
+    tradeType: 'EXACT_INPUT',
+    senderAddress: walletAddress,
+    receiverAddress: walletAddress,
+  });
+
+  if (!quote.calldata?.data) {
+    throw new Error('Transaction data is missing in quote response');
+  }
+
+  const transactionBuffer = Uint8Array.from(atob(quote.calldata.data), c => c.charCodeAt(0));
+  let transaction: VersionedTransaction;
+  
+  try {
+    transaction = VersionedTransaction.deserialize(transactionBuffer);
+  } catch (error: any) {
+    throw new Error(`Failed to deserialize transaction: ${error.message}`);
+  }
+
+  const signedTransaction = await provider.signTransaction(transaction);
+
+  const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+    skipPreflight: false,
+    maxRetries: 3,
+  });
+
+  const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+  const confirmation = await connection.confirmTransaction({
+    signature,
+    blockhash: latestBlockhash.blockhash,
+    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+  }, 'confirmed');
+  
+  if (confirmation.value.err) {
+    throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+  }
+  
+  return signature;
+};
+```
+
+</CodeGroup>
+
+## React Integration Example
+
+For React applications, you can integrate the swap function as follows:
+
+<CodeGroup>
+
+```tsx TypeScript React
+import { Connection } from '@solana/web3.js';
+import { executeSwap } from './example';
+
+const SwapButton = () => {
+  const handleSwap = async () => {
+    if (!window.solana) {
+      alert('Please install Phantom or another Solana wallet');
+      return;
+    }
+    
+    const connection = new Connection('https://solana-rpc.publicnode.com', 'confirmed');
+    
+    try {
+      const signature = await executeSwap(window.solana, connection);
+      console.log('Transaction signature:', signature);
+    } catch (error) {
+      console.error('Swap failed:', error);
+    }
+  };
+
+  return (
+    <button onClick={handleSwap}>
+      Execute Swap
+    </button>
   );
-  return data;
+};
+```
+
+</CodeGroup>
+
+## Breaking it down
+
+### 1. Building the quote request
+
+The `getQuote` function constructs a query string from parameters and fetches the quote from the API:
+
+<CodeGroup>
+
+```ts TypeScript
+const getQuote = async (params: {
+  originChainId: number;
+  destinationChainId: number;
+  amount: string;
+  originCurrency: string;
+  destinationCurrency: string;
+  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
+  senderAddress?: string;
+  receiverAddress?: string;
+}) => {
+  const query = new URLSearchParams();
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) {
+      query.append(key, String(value));
+    }
+  }
+  
+  const url = `${API_URL}/quotes?${query.toString()}`;
+  const response = await fetch(url);
+  
+  if (!response.ok) {
+    throw new Error(`Failed to get quote: ${response.status} ${response.statusText}`);
+  }
+  
+  return response.json();
+};
+```
+
+</CodeGroup>
+
+**Key parameters:**
+
+- `originChainId` / `destinationChainId`: Chain IDs (`1000000001` for Solana)
+- `amount`: Token amount in smallest unit (e.g., `"100000000"` for 100 USDC with 6 decimals)
+- `originCurrency` / `destinationCurrency`: SPL token mint addresses (e.g., `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` for USDC)
+- `tradeType`: `'EXACT_INPUT'` or `'EXACT_OUTPUT'`
+- `senderAddress` / `receiverAddress`: Optional Solana wallet addresses (base58 encoded)
+
+### 2. Wallet provider setup
+
+The function accepts a `SolanaProvider` interface, which can be obtained from various sources:
+
+**Browser extension (Phantom, Solflare, etc.):**
+
+```ts
+const provider = window.solana; // Phantom or other wallet adapter
+await provider.connect();
+```
+
+**Wallet adapter (React):**
+
+```ts
+import { useWallet } from '@solana/wallet-adapter-react';
+
+const { wallet, publicKey, signTransaction } = useWallet();
+const provider = {
+  publicKey,
+  signTransaction,
+  connect: async () => ({ publicKey }),
+};
+```
+
+**Keypair (development only):**
+
+```ts
+import { Keypair } from '@solana/web3.js';
+
+const keypair = Keypair.fromSecretKey(/* your secret key */);
+const provider = {
+  publicKey: keypair.publicKey,
+  signTransaction: async (tx: VersionedTransaction) => {
+    tx.sign([keypair]);
+    return tx;
+  },
+  connect: async () => ({ publicKey: keypair.publicKey }),
+};
+```
+
+> ⚠️ **Never hardcode private keys or secret keys in production code.**
+
+### 3. Transaction deserialization
+
+The quote response contains a base64-encoded `VersionedTransaction` that needs to be decoded:
+
+<CodeGroup>
+
+```ts TypeScript
+if (!quote.calldata?.data) {
+  throw new Error('Transaction data is missing in quote response');
+}
+
+const transactionBuffer = Uint8Array.from(atob(quote.calldata.data), c => c.charCodeAt(0));
+let transaction: VersionedTransaction;
+
+try {
+  transaction = VersionedTransaction.deserialize(transactionBuffer);
+} catch (error: any) {
+  throw new Error(`Failed to deserialize transaction: ${error.message}`);
 }
 ```
 
 </CodeGroup>
 
-Usage example:
+**Notes:**
+
+- Use `Uint8Array.from(atob(...))` instead of `Buffer.from()` for browser compatibility
+- The transaction is already prepared with all necessary instructions
+- Always wrap deserialization in try-catch for error handling
+
+### 4. Transaction signing and execution
+
+Sign the transaction with the wallet provider and send it to the network:
 
 <CodeGroup>
 
 ```ts TypeScript
-const quote = await getQuote({
-  senderAddress: "YOUR_SOLANA_PUBLIC_KEY",
-  receiverAddress: "YOUR_RECEIVER_PUBLIC_KEY",
-  originChainId: 1000000001,
-  destinationChainId: 137,
-  amount: "1000000",
-  originCurrency: "So11111111111111111111111111111111111111112",
-  destinationCurrency: "0x...",
+const signedTransaction = await provider.signTransaction(transaction);
+
+const signature = await connection.sendRawTransaction(signedTransaction.serialize(), {
+  skipPreflight: false,
+  maxRetries: 3,
 });
-```
 
-</CodeGroup>
+const latestBlockhash = await connection.getLatestBlockhash('confirmed');
+const confirmation = await connection.confirmTransaction({
+  signature,
+  blockhash: latestBlockhash.blockhash,
+  lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+}, 'confirmed');
 
----
+if (confirmation.value.err) {
+  throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+}
 
-### 2. Wallet & connection layer
-
-<CodeGroup>
-
-```ts TypeScript
-import { Connection } from "@solana/web3.js";
-
-const connection = new Connection(
-  "https://api.mainnet-beta.solana.com",
-  "confirmed"
-);
-```
-
-</CodeGroup>
-
-When using wallet adapters, the signer and `signTransaction` method are provided by the wallet implementation.
-
----
-
-### 3. Executing the Solana transaction
-
-<CodeGroup>
-
-```ts TypeScript
-import { VersionedTransaction } from "@solana/web3.js";
-
-const txBuffer = Buffer.from(quote.calldata.data, "base64");
-const transaction = VersionedTransaction.deserialize(txBuffer);
-
-await wallet.signTransaction(transaction);
-
-const signature = await connection.sendTransaction(transaction);
-await connection.confirmTransaction(signature, "confirmed");
-
-console.log("Hash:", signature);
+return signature;
 ```
 
 </CodeGroup>
