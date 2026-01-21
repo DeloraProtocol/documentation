@@ -53,7 +53,7 @@
             "name": "receiverAddress",
             "in": "query",
             "required": false,
-            "description": "The receiving wallet address. If none is provided, the receiverAddress will be used",
+            "description": "The receiving wallet address. If none is provided, the senderAddress will be used",
             "schema": { "type": "string" }
           },
           {
