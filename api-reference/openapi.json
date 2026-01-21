@@ -90,7 +90,7 @@
                     "value": {
                       "inputAmount": "1000000",
                       "outputAmount": "998400",
-                      "adapter": "relay-router",
+                      "adapter": "RELAY",
                       "calldata": {
                           "to": "0xRouterContract",
                           "data": "0xabcdef...",
