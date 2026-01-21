@@ -5,6 +5,10 @@ description: "The Delora is fully compatible with a wide range of blockchains. T
 ---
 
 export const SupportedChains = () => {
+  const PRIORITY_ORDER = {
+    eth: 0,
+    sol: 1,
+  };
   const [chains, setChains] = useState(null);
   const [error, setError] = useState(null);
 
@@ -43,7 +47,19 @@ export const SupportedChains = () => {
         </thead>
 
         <tbody>
-          {chains.sort((a, b) => a.id - b.id).map((c) => (
+          {chains
+            .slice()
+            .sort((a, b) => {
+              const aPriority = PRIORITY_ORDER[a.key] ?? 100;
+              const bPriority = PRIORITY_ORDER[b.key] ?? 100;
+
+              if (aPriority !== bPriority) {
+                return aPriority - bPriority;
+              }
+
+              return a.id - b.id;
+            })
+          .map((c) => (
             <tr key={c.key} className="border-b border-gray-800">
               <td className="py-2">
                 <div className="flex items-center gap-2">
