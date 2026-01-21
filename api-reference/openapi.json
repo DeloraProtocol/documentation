@@ -90,28 +90,46 @@
                     "value": {
                       "inputAmount": "1000000",
                       "outputAmount": "998400",
-                      "tool": "relay-router",
-                      "calldata": [
-                        {
-                          "chainId": 1,
+                      "adapter": "relay-router",
+                      "calldata": {
                           "to": "0xRouterContract",
                           "data": "0xabcdef...",
-                          "value": "0",
-                          "gasLimit": "210000"
-                        }
-                      ],
-                      "fees": [
-                        {
-                          "name": "Bridge fee",
-                          "amount": "1200",
-                          "currency": "USDC"
+                          "value": "0"
+                      },
+                      "fees": {
+                        "total": {
+                          "amount": "534942",
+                          "currencySymbol": "USDC",
+                          "currencyAddress": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+                          "chainId": 42161,
+                          "decimals": 6
                         },
-                        {
-                          "name": "Service fee",
-                          "amount": "300",
-                          "currency": "USDC"
-                        }
-                      ]
+                        "breakdown": [
+                          {
+                            "type": "gas",
+                            "amount": "494502800000",
+                            "currencySymbol": "ETH",
+                            "currencyAddress": "0x0000000000000000000000000000000000000000",
+                            "chainId": 42161,
+                            "decimals": 18,
+                            "amountUsd": "0.001475"
+                          },
+                          {
+                            "type": "relayer",
+                            "amount": "267471",
+                            "currencySymbol": "USDC",
+                            "currencyAddress": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+                            "chainId": 42161,
+                            "decimals": 6,
+                            "amountUsd": "0.267404"
+                          }
+                        ],
+                        "totalUsd": "0.536283"
+                      },
+                      "gas": {
+                        "gasPrice": "0x018e2d98",
+                        "gasLimit": "0x0dbba0"
+                      }
                     }
                   }
                 }
@@ -211,7 +229,8 @@
                             "coinKey": "ETH",
                             "name": "ETH",
                             "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png"
-                          }
+                          },
+                          "DeloraDiamond": "0x8FE04AcCD609b7Aa08a03Ef7cfa2B04E2A1A5d3d"
                         }
                       ]
                     }
