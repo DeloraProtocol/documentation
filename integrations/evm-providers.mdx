@@ -95,40 +95,47 @@ export const AlyraProviders = () => {
 
   return (
     <>
-      <h2>Supported Bridges</h2>
+      <h2>Supported Bridges</h2> 
 
-      <table>
-        <thead>
-          <tr>
-            <th />
-            <th>Name</th>
-            <th>Key</th>
-            <th>Supported Chains</th>
-          </tr>
-        </thead>
-        <tbody>
-          {parsedBridges.map(b => (
-            <tr key={b.key}>
-              <td>
-                <img
-                  src={b.logoURI}
-                  className="w-6 h-6 rounded-full not-prose"
-                />
-              </td>
-              <td><strong>{b.name}</strong></td>
-              <td><code>{b.key}</code></td>
-              <td>{renderChains(b.connectedChains)}</td>
+        <table>
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Key</th>
+              <th>Connected Chains</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {parsedBridges.map(b => (
+              <tr key={b.key}>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={b.logoURI}
+                      className="w-4 h-4 rounded-full not-prose"
+                      alt={b.name}
+                    />
+                    <strong>{b.name}</strong>
+                  </div>
+                </td>
+
+                <td>
+                  <code>{b.key}</code>
+                </td>
+
+                <td>
+                  {renderChains(b.connectedChains)}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
 
       <h2>Supported Exchanges</h2>
 
       <table>
         <thead>
           <tr>
-            <th />
             <th>Name</th>
             <th>Key</th>
             <th>Supported Chains</th>
@@ -138,14 +145,23 @@ export const AlyraProviders = () => {
           {parsedExchanges.map(e => (
             <tr key={e.key}>
               <td>
-                <img
-                  src={e.logoURI}
-                  className="w-6 h-6 rounded-full not-prose"
-                />
+                <div className="flex items-center gap-2">
+                  <img
+                    src={e.logoURI}
+                    className="w-4 h-4 rounded-full not-prose"
+                    alt={e.name}
+                  />
+                  <strong>{e.name}</strong>
+                </div>
               </td>
-              <td><strong>{e.name}</strong></td>
-              <td><code>{e.key}</code></td>
-              <td>{renderChains(e.supportedChains)}</td>
+
+              <td>
+                <code>{e.key}</code>
+              </td>
+
+              <td>
+                {renderChains(e.supportedChains)}
+              </td>
             </tr>
           ))}
         </tbody>

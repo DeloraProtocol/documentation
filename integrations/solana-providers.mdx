@@ -89,7 +89,6 @@ export const SupportedTools = ({ chainId }) => {
         <table>
           <thead>
             <tr>
-              <th />
               <th>Name</th>
               <th>Key</th>
               <th>Connected Chains</th>
@@ -99,14 +98,23 @@ export const SupportedTools = ({ chainId }) => {
             {bridges.map(b => (
               <tr key={b.key}>
                 <td>
-                  <img
-                    src={b.logoURI}
-                    className="w-4 h-4 rounded-full not-prose"
-                  />
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={b.logoURI}
+                      className="w-4 h-4 rounded-full not-prose"
+                      alt={b.name}
+                    />
+                    <strong>{b.name}</strong>
+                  </div>
                 </td>
-                <td><strong>{b.name}</strong></td>
-                <td><code>{b.key}</code></td>
-                <td>{renderChains(b.connectedChains)}</td>
+
+                <td>
+                  <code>{b.key}</code>
+                </td>
+
+                <td>
+                  {renderChains(b.connectedChains)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -121,7 +129,6 @@ export const SupportedTools = ({ chainId }) => {
         <table>
           <thead>
             <tr>
-              <th />
               <th>Name</th>
               <th>Key</th>
             </tr>
@@ -130,13 +137,19 @@ export const SupportedTools = ({ chainId }) => {
             {exchanges.map(e => (
               <tr key={e.key}>
                 <td>
-                  <img
-                    src={e.logoURI}
-                    className="w-4 h-4 rounded-full not-prose"
-                  />
+                  <div className="flex items-center gap-2">
+                    <img
+                      src={e.logoURI}
+                      className="w-4 h-4 rounded-full not-prose"
+                      alt={e.name}
+                    />
+                    <strong>{e.name}</strong>
+                  </div>
                 </td>
-                <td><strong>{e.name}</strong></td>
-                <td><code>{e.key}</code></td>
+
+                <td>
+                  <code>{e.key}</code>
+                </td>
               </tr>
             ))}
           </tbody>
