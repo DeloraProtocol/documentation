@@ -12,7 +12,7 @@ og:image: "https://docs.delora.build/images/OG.png"
 ```ts TypeScript
 import axios from "axios";
 
-const chains = await axios.get("https://api.alyra.finance/v1/chains");
+const chains = await axios.get("https://api.delora.build/v1/chains");
 
 console.log(chains);
 ```
@@ -26,7 +26,7 @@ console.log(chains);
 ```ts TypeScript
 import axios from "axios";
 
-const chainsEVM = await axios.get("https://api.alyra.finance/v1/chains", {
+const chainsEVM = await axios.get("https://api.delora.build/v1/chains", {
   params: { chainTypes: "EVM" }
 });
 
@@ -44,7 +44,7 @@ console.log(chainsEVM);
 ```ts TypeScript
 import axios from "axios";
 
-const tokens = await axios.get("https://api.alyra.finance/v1/tokens");
+const tokens = await axios.get("https://api.delora.build/v1/tokens");
 
 console.log(tokens);
 ```
@@ -58,7 +58,7 @@ console.log(tokens);
 ```ts TypeScript
 import axios from "axios";
 
-const tokens = await axios.get("https://api.alyra.finance/v1/tokens", {
+const tokens = await axios.get("https://api.delora.build/v1/tokens", {
 params: { chains: "1,56,10" }
 });
 
@@ -74,7 +74,7 @@ console.log(tokens);
 ```ts TypeScript
 import axios from "axios";
 
-const tokensEVM = await axios.get("https://api.alyra.finance/v1/tokens", {
+const tokensEVM = await axios.get("https://api.delora.build/v1/tokens", {
 params: { chainTypes: "EVM" }
 });
 
@@ -92,7 +92,7 @@ console.log(tokensEVM);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/token", {
+const response = await axios.get("https://api.delora.build/v1/token", {
 params: { chain: "1", token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" }
 });
 
@@ -108,7 +108,7 @@ console.log(response);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/token", {
+const response = await axios.get("https://api.delora.build/v1/token", {
 params: { chain: "1", token: "WETH" }
 });
 
@@ -124,7 +124,7 @@ console.log(response);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/token", {
+const response = await axios.get("https://api.delora.build/v1/token", {
 params: { chain: "eth", token: "WETH" }
 });
 
@@ -140,7 +140,7 @@ console.log(response);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/token", {
+const response = await axios.get("https://api.delora.build/v1/token", {
 params: { chain: "eth", token: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" }
 });
 
@@ -158,7 +158,7 @@ console.log(response);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/tools");
+const response = await axios.get("https://api.delora.build/v1/tools");
 
 console.log(response);
 ```
@@ -172,7 +172,7 @@ console.log(response);
 ```ts TypeScript
 import axios from "axios";
 
-const response = await axios.get("https://api.alyra.finance/v1/tools", {
+const response = await axios.get("https://api.delora.build/v1/tools", {
 params: { chains: "1,56,10" }
 });
 
