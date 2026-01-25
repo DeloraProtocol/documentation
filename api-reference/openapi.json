@@ -6,7 +6,7 @@
     "version": "1.0.0"
   },
   "servers": [
-    { "url": "https://api.alyra.finance" }
+    { "url": "https://api.delora.build" }
   ],
   "paths": {
     "/v1/quotes": {

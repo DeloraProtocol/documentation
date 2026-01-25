@@ -12,14 +12,14 @@ export const SupportedTools = ({ chainId }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch("https://api.alyra.finance/v1/chains")
+    fetch("https://api.delora.build/v1/chains")
       .then(r => r.json())
       .then(d => setChains(d.chains))
       .catch(e => setError(e.message));
   }, []);
 
   useEffect(() => {
-    fetch("https://api.alyra.finance/v1/tools")
+    fetch("https://api.delora.build/v1/tools")
       .then(r => r.json())
       .then(setTools)
       .catch(e => setError(e.message));
