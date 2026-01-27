@@ -305,18 +305,23 @@
                           "name": "Across",
                           "logoURI": "https://raw.githubusercontent.com/AlyraLabs/types/main/src/assets/icons/bridges/across.svg",
                           "supportedChains": [
-                            {
-                              "fromChainId": 1,
-                              "toChainId": 10
-                            },
-                            {
-                              "fromChainId": 1,
-                              "toChainId": 56
-                            },
-                            {
-                              "fromChainId": 1,
-                              "toChainId": 137
-                            }
+                            "1",
+                            "10",
+                            "56",
+                            "137",
+                            "59144",
+                            "8453",
+                            "42161",
+                            "130",
+                            "324",
+                            "480",
+                            "999",
+                            "1135",
+                            "34443",
+                            "534352",
+                            "81457",
+                            "9745",
+                            "1868"
                           ]
                         }
                       ]
@@ -645,25 +650,11 @@
           },
           "supportedChains": {
             "type": "array",
-            "description": "List of supported routes fromChainId -> toChainId",
-            "items": { "$ref": "#/components/schemas/BridgeRoute" }
+            "description": "List of chain IDs as strings this bridge supports",
+            "items": { "type": "string" }
           }
         },
         "required": ["key", "name", "supportedChains"]
-      },
-      "BridgeRoute": {
-        "type": "object",
-        "properties": {
-          "fromChainId": {
-            "type": "integer",
-            "description": "Source chain ID"
-          },
-          "toChainId": {
-            "type": "integer",
-            "description": "Destination chain ID"
-          }
-        },
-        "required": ["fromChainId", "toChainId"]
       },
       "Token": {
         "type": "object",
