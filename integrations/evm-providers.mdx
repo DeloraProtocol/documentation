@@ -53,56 +53,45 @@ export const AlyraProviders = () => {
     </div>
   );
 
-  const parsedBridges = tools.bridges
-    .map(b => {
-      const fromIds = b.supportedChains.map(c => c.fromChainId);
-      const toIds = b.supportedChains.map(c => c.toChainId);
-
-      const connectedChains = [
-        ...new Set([
-          ...fromIds
-            .map(evmChainById)
-            .filter(Boolean),
-          ...toIds
-            .map(chainById)
-            .filter(Boolean)
-        ])
-      ];
-
-      return { ...b, connectedChains };
-    })
-    .filter(b => b.connectedChains.length)
-    .sort((a, b) => b.connectedChains.length - a.connectedChains.length);
-
-  const hasEvmSupport = exchange =>
-    exchange.supportedChains.some(id =>
+  const hasEvmSupport = tool =>
+    tool.supportedChains.some(id =>
       evmChains.some(c => Number(c.id) === Number(id))
     );
 
-  const exchangeChains = exchange =>
-    exchange.supportedChains
+  const toolChains = tool =>
+    tool.supportedChains
       .map(chainById)
-      .filter(Boolean);
+      .filter(Boolean)
+      .sort((a, b) => Number(a.id) - Number(b.id));
+
+  const parsedBridges = tools.bridges
+    .filter(hasEvmSupport)
+    .map(bridge => ({
+      ...bridge,
+      supportedChains: toolChains(bridge),
+    }))
+    .filter(b => b.supportedChains.length)
+    .sort((a, b) => b.supportedChains.length - a.supportedChains.length);
 
   const parsedExchanges = tools.exchanges
     .filter(hasEvmSupport)
     .map(exchange => ({
       ...exchange,
-      supportedChains: exchangeChains(exchange)
+      supportedChains: toolChains(exchange)
     }))
     .filter(e => e.supportedChains.length)
     .sort((a, b) => b.supportedChains.length - a.supportedChains.length);
 
   return (
     <>
-      <h2>Supported Bridges</h2> 
+        <h2>Supported Bridges</h2>
 
         <table>
           <thead>
             <tr>
               <th>Name</th>
               <th>Key</th>
-              <th>Connected Chains</th>
+              <th>Supported Chains</th>
             </tr>
           </thead>
           <tbody>
@@ -124,7 +113,7 @@ export const AlyraProviders = () => {
                 </td>
 
                 <td>
-                  {renderChains(b.connectedChains)}
+                  {renderChains(b.supportedChains)}
                 </td>
               </tr>
             ))}

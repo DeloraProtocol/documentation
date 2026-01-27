@@ -50,34 +50,36 @@ export const SupportedTools = ({ chainId }) => {
     </div>
   );
 
+  const toolChains = tool =>
+    tool.supportedChains
+      .map(chainById)
+      .filter(Boolean)
+      .sort((a, b) => Number(a.id) - Number(b.id));
+
   const bridges = tools.bridges
-    .map(bridge => {
-      const connectedChainIds = bridge.supportedChains
-        .filter(
-          c =>
-            c.fromChainId === selectedChainId ||
-            c.toChainId === selectedChainId
-        )
-        .flatMap(c =>
-          c.fromChainId === selectedChainId
-            ? [c.toChainId]
-            : [c.fromChainId]
-        );
-
-      const connectedChains = [
-        ...new Set(connectedChainIds)
-      ]
-        .map(chainById)
-        .filter(Boolean);
-
-      return { ...bridge, connectedChains };
-    })
+    .filter(bridge =>
+      bridge.supportedChains
+        .map(Number)
+        .includes(selectedChainId)
+    )
+    .map(bridge => ({
+      ...bridge,
+      connectedChains: toolChains(bridge).filter(
+        c => Number(c.id) !== selectedChainId
+      ),
+    }))
     .filter(b => b.connectedChains.length)
     .sort((a, b) => b.connectedChains.length - a.connectedChains.length);
 
-  const exchanges = tools.exchanges.filter(e =>
-    e.supportedChains.map(Number).includes(selectedChainId)
-  );
+  const exchanges = tools.exchanges
+    .filter(e =>
+      e.supportedChains
+        .map(Number)
+        .includes(selectedChainId)
+    )
+    .sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
 
   return (
     <>
@@ -91,7 +93,7 @@ export const SupportedTools = ({ chainId }) => {
             <tr>
               <th>Name</th>
               <th>Key</th>
-              <th>Connected Chains</th>
+              <th>Supported Chains</th>
             </tr>
           </thead>
           <tbody>
