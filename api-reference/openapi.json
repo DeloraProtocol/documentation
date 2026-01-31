@@ -550,7 +550,9 @@
       "Gas": {
         "type": "object",
         "properties": {
-          "gasPrice": { "type": "hex", "description": "Estimated gas price" }
+          "gasPrice": { "type": "hex", "description": "Legacy gas price in wei used for non-EIP-1559 transactions" },
+          "maxFeePerGas": { "type": "hex", "description": "Maximum total gas fee in wei the sender is willing to pay (base fee + priority fee)" },
+          "maxPriorityFeePerGas": { "type": "hex", "description": "Priority fee in wei (tip) paid to validators to incentivize faster transaction inclusion" }
         },
         "additionalProperties": true
       },
