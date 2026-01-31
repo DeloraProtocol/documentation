@@ -127,8 +127,7 @@
                         "totalUsd": "0.536283"
                       },
                       "gas": {
-                        "gasPrice": "0x018e2d98",
-                        "gasLimit": "0x0dbba0"
+                        "gasPrice": "0x018e2d98"
                       }
                     }
                   }
@@ -526,6 +525,11 @@
             "type": "array",
             "description": "Fees included in the transfer",
             "items": { "$ref": "#/components/schemas/Fee" }
+          },
+          "gas": {
+            "type": "array",
+            "description": "Gas included in the transfer",
+            "items": { "$ref": "#/components/schemas/Gas" }
           }
         }
       },
@@ -541,6 +545,13 @@
       },
       "Fee": {
         "type": "object",
+        "additionalProperties": true
+      },
+      "Gas": {
+        "type": "object",
+        "properties": {
+          "gasPrice": { "type": "hex", "description": "Estimated gas price" }
+        },
         "additionalProperties": true
       },
       "Error": {
