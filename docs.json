@@ -29,6 +29,11 @@
           "anchor": "GitHub",
           "icon": "github",
           "href": "https://github.com/deloraprotocol/"
+        },
+        {
+          "anchor": "Partner Portal",
+          "icon": "globe",
+          "href": "https://portal.delora.build/"
         }
       ]
     },
@@ -106,11 +111,12 @@
     "dark": "/images/DeloraDocsWhite.png"
   },
   "navbar": {
+    "primary":{
+      "type": "button",
+      "label": "Get Started",
+      "href": "https://portal.delora.build"
+    },
     "links": [
-      {
-        "label": "Get Started",
-        "href": "https://portal.delora.build"
-      },
       {
         "label": "Support",
         "href": "https://t.me/whoisfedelya"
