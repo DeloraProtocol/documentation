@@ -76,6 +76,13 @@
             "required": false,
             "description": "An optional fee applied to the transaction, expressed as a decimal value. \nSupported range is from 0 to 0.1 (0 – 10%). \nIf this parameter is not specified, no fees are collected.",
             "schema": { "type": "string" }
+          },
+          {
+            "name": "slippage",
+            "in": "query",
+            "required": false,
+            "description": "Specifies the maximum permissible slippage for a transaction, expressed as a decimal value. For example, 0.005 corresponds to a slippage of 0.5%.\n Allowed range: 0 ≤ x ≤ 1",
+            "schema": { "type": "number" }
           }
         ],
         "responses": {
