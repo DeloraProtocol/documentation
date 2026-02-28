@@ -93,6 +93,12 @@
         "tab": "API Reference",
         "groups": [
           {
+            "group": "About APIs",
+            "pages": [
+              "api-reference/rate-limits"
+            ]
+          },
+          {
             "group": "API Endpoints",
             "pages": [
               "api-reference/endpoint/get-a-quote-for-a-token-transfer",

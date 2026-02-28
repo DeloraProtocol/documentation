@@ -1,0 +1,56 @@
+---
+title: Rate Limits and API Authentication
+description: Rate limits apply to requests made using your x-api-key and are calculated per API key across all endpoints.
+---
+
+## Current Rate Limits
+
+The default rate limits:
+
+#### Unauthenticated
+
+| Endpoint Scope            | Rate Limit                     |
+|---------------------------|--------------------------------|
+| <Tooltip tip="Consists of the /quote endpoint"> Quote-related endpoints</Tooltip>   | 200 requests per two hours     |
+| Rest of endpoints         | 200 requests per two hours     |
+
+#### Authenticated (with API key specified)
+
+| Endpoint Scope            | Rate Limit              |
+|---------------------------|-------------------------|
+| <Tooltip tip="Consists of the /quote endpoint"> Quote-related endpoints</Tooltip>   | 200 requests per minute |
+| Rest of endpoints         | 200 requests per minute |
+
+> Higher limits may be available for clients in the custom terms. Please [Contact Us](https://t.me/whoisfedelya) for more information.
+
+If you exceed your rate limits, you’ll receive a `429 Too Many Requests` HTTP response.
+
+## Best Practices
+
+To avoid hitting rate limits:
+* Cache results from `GET /tokens`, `GET /chains`, and static endpoints
+* Avoid polling frequently for the same data
+* Batch or debounce user input that triggers API calls
+
+## Using the API key
+
+<Note>
+Delora API do not require API key. API key is only needed for higher rate limits
+</Note>
+Authentication to Delora API is performed via the custom HTTP header x-api-key with an API key.
+
+Example:
+
+``` javascript
+curl --location 'https://api.delora.build/v1/quotes?senderAddress=0x26f1AA7356Fc05db2CdF6bE4C404dcE00e82Fe47&receiverAddress=0x26f1AA7356Fc05db2CdF6bE4C404dcE00e82Fe47&originChainId=1&destinationChainId=1&amount=1000000000000000000&originCurrency=0x0000000000000000000000000000000000000000&destinationCurrency=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48' \
+--header 'x-api-key: YOUR_CUSTOM_KEY'
+```
+
+<Danger>
+Never expose your x-api-key in client-side environments such as browser-based JavaScript. Using the API key on the client side can lead to unauthorized usage or abuse of your key, as it becomes publicly accessible in the browser’s developer tools or network tab. For server-side integrations (e.g. API requests from your backend), always keep your key secret and secure.
+</Danger>
+
+## Need Higher Limits?
+
+If you’re building a high-volume integration or a production-grade product, we’re happy to support your scaling needs.
+Please [Contact Us](https://t.me/whoisfedelya) for more details.
