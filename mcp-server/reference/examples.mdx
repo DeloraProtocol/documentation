@@ -1,0 +1,270 @@
+---
+title: "Examples"
+description: "Example prompts, tool calls, and response shapes for the Delora MCP Server."
+"og:image": "https://docs.delora.build/images/OG.png"
+---
+
+These examples show how to use the Delora MCP tools: typical prompts, tool arguments, and response structures. They are based on the [Delora API](https://api.delora.build) and the MCP server implementation.
+
+## Example Prompts & Tool Calls
+
+### Get Chain Information
+
+**Prompt:** "What chains does Delora support?"
+
+**Tool called:** `get_chains` (no arguments), or `get_chains` with `chainTypes: "EVM"` to filter.
+
+**Response (key structure):**
+
+```json
+{
+  "chains": [
+    {
+      "key": "eth",
+      "name": "Ethereum",
+      "chainType": "EVM",
+      "id": 1,
+      "idHex": "0x1",
+      "mainnet": true,
+      "rpcUrls": ["https://ethereum-rpc.publicnode.com", "https://eth.drpc.org"],
+      "blockExplorerUrls": "https://etherscan.io/",
+      "nativeToken": {
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "symbol": "ETH",
+        "chainId": 1,
+        "coinKey": "ETH",
+        "name": "ETH"
+      }
+    }
+  ]
+}
+```
+
+### Get Token Details
+
+**Prompt:** "Get USDC token info on Ethereum"
+
+**Tool called:** `get_token` with `chain: "1"`, `token: "USDC"`
+
+**Response (example):**
+
+```json
+{
+  "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "symbol": "USDC",
+  "decimals": 6,
+  "chainId": 1,
+  "name": "USD Coin",
+  "coinKey": "USDC",
+  "priceUSD": "1.00",
+  "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png"
+}
+```
+
+### List Tokens by Chain
+
+**Prompt:** "What tokens are supported on chain 1?"
+
+**Tool called:** `get_tokens` with `chains: "1"` or `chainTypes: "EVM"`
+
+**Response (key structure):** Object keyed by chain ID, each value an array of token objects (address, symbol, decimals, chainId, name, coinKey, priceUSD, logoURI).
+
+### Get a Cross-Chain Quote
+
+**Prompt:** "Get a quote to transfer 1 USDC from Ethereum to Arbitrum"
+
+**Tool called:** `get_quote` with:
+
+```json
+{
+  "originChainId": 1,
+  "destinationChainId": 42161,
+  "amount": "1000000",
+  "originCurrency": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+  "destinationCurrency": "0xaf88d065e77c8cC2239327c5EDb3a432268e5831",
+  "senderAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+  "receiverAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+  "slippage": 0.005
+}
+```
+
+**Response (example from Delora API):**
+
+```json
+{
+  "inputAmount": "1000000",
+  "outputAmount": "998400",
+  "adapter": "RELAY",
+  "calldata": {
+    "to": "0x12B797D9d7947c4cb97e87178182835e31530597",
+    "data": "0x736eac0b...",
+    "value": "0"
+  },
+  "fees": {
+    "total": { "amount": "534942", "currencySymbol": "USDC", "chainId": 42161, "decimals": 6 },
+    "breakdown": [
+      { "type": "gas", "amount": "494502800000", "currencySymbol": "ETH", "amountUsd": "0.001475" },
+      { "type": "relayer", "amount": "267471", "currencySymbol": "USDC", "amountUsd": "0.267404" }
+    ],
+    "totalUsd": "0.536283"
+  },
+  "gas": { "gasPrice": "0x018e2d98" }
+}
+```
+
+Key points:
+
+* **`outputAmount`**: Estimated amount on the destination chain (in smallest units).
+* **`calldata`**: Transaction payload to sign and submit with your wallet.
+* **`fees`**: Total and breakdown (gas, relayer, etc.) in USD and token amounts.
+
+### Same-Chain Swap Quote (1 ETH on Arbitrum via OpenOcean)
+
+**Prompt:** "Quote swapping 1 ETH to WETH on Arbitrum"
+
+**Tool called:** `get_quote` with:
+
+```json
+{
+  "originChainId": 42161,
+  "destinationChainId": 42161,
+  "amount": "1000000000000000000",
+  "originCurrency": "0x0000000000000000000000000000000000000000",
+  "destinationCurrency": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+  "senderAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+  "receiverAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+  "slippage": 0.005
+}
+```
+
+**Response (real example):**
+
+```json
+{
+  "inputAmount": "1000000000000000000",
+  "outputAmount": "1000000000000000000",
+  "adapter": "OPENOCEAN",
+  "calldata": {
+    "to": "0x12B797D9d7947c4cb97e87178182835e31530597",
+    "data": "0x736eac0be10f54fae4480b1105d487e4e9f1d48f45d05a4083b63923992d8ad49893307a...",
+    "value": "0x0de0b6b3a7640000"
+  },
+  "fees": {
+    "total": {
+      "amount": "534942",
+      "currencySymbol": "USDC",
+      "currencyAddress": "0xaf88d065e77c8cC2239327c5EDb3a432268e5831",
+      "chainId": 42161,
+      "decimals": 6
+    },
+    "breakdown": [
+      { "type": "gas", "amount": "494502800000", "currencySymbol": "ETH", "currencyAddress": "0x0000000000000000000000000000000000000000", "chainId": 42161, "decimals": 18, "amountUsd": "0.001475" },
+      { "type": "relayer", "amount": "267471", "currencySymbol": "USDC", "currencyAddress": "0xaf88d065e77c8cC2239327c5EDb3a432268e5831", "chainId": 42161, "decimals": 6, "amountUsd": "0.267404" }
+    ]
+  },
+  "gas": {
+    "gasPrice": "0x016ec2a0"
+  }
+}
+```
+
+Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amount is in wei (18 decimals); `0x82af49447d8a07e3bd95bd0d56f35241523fbab1` is WETH on Arbitrum.
+
+### List Available Bridges and Exchanges
+
+**Prompt:** "What bridges and DEXes does Delora support?"
+
+**Tool called:** `get_tools` (no arguments), or `get_tools` with `chains: "1,42161"` to filter.
+
+**Response (key structure):**
+
+```json
+{
+  "exchanges": [
+    {
+      "key": "OPENOCEAN",
+      "name": "OpenOcean",
+      "logoURI": "https://raw.githubusercontent.com/AlyraLabs/types/main/src/assets/icons/bridges/openocean.png",
+      "supportedChains": ["1", "56", "10", "137", "42161", "8453", "130", "146", "999", "9745", "1329", "43114", "59144", "80094"]
+    }
+  ],
+  "bridges": [
+    {
+      "key": "ACROSS",
+      "name": "Across",
+      "logoURI": "https://raw.githubusercontent.com/AlyraLabs/types/main/src/assets/icons/bridges/across.svg",
+      "supportedChains": ["1", "10", "56", "137", "59144", "8453", "42161", "130", "324", "480", "999", "1135", "34443", "534352", "81457", "9745", "1868"]
+    }
+  ]
+}
+```
+
+## Code Samples
+
+Connect to the Delora MCP server programmatically.
+
+### TypeScript (MCP SDK, streamable HTTP)
+
+```typescript
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+
+const transport = new StreamableHTTPClientTransport(
+  new URL("https://mcp.delora.build/mcp")
+);
+
+const client = new Client({
+  name: "delora-client",
+  version: "1.0.0",
+});
+await client.connect(transport);
+
+// List tools
+const { tools } = await client.listTools();
+console.log("Available tools:", tools.map((t) => t.name));
+
+// Get chains
+const chainsResult = await client.callTool({
+  name: "get_chains",
+  arguments: { chainTypes: "EVM" },
+});
+console.log("Chains:", chainsResult.content);
+
+// Get quote (1 USDC Ethereum → Arbitrum)
+const quoteResult = await client.callTool({
+  name: "get_quote",
+  arguments: {
+    originChainId: 1,
+    destinationChainId: 42161,
+    amount: "1000000",
+    originCurrency: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    destinationCurrency: "0xaf88d065e77c8cC2239327c5EDb3a432268e5831",
+    senderAddress: "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+    receiverAddress: "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+    slippage: 0.005,
+  },
+});
+console.log("Quote:", quoteResult.content);
+
+await client.close();
+```
+
+### Call get_instructions First
+
+**Prompt:** "How do I use the Delora MCP server?"
+
+**Tool called:** `get_instructions` (no arguments)
+
+Returns the server’s built-in guide (workflow: get_chains → get_tokens/get_token → get_quote). Use this at the start of a session so the AI follows the recommended flow.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Available Tools" icon="wrench" href="/mcp-server/reference/available-tools">
+    Full list of MCP tools and parameters.
+  </Card>
+  <Card title="API Reference" icon="book" href="/api-reference/alyra-api-v1">
+    Delora REST API endpoints and schemas.
+  </Card>
+</CardGroup>

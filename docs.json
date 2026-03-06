@@ -119,6 +119,13 @@
               "mcp-server/overview",
               "mcp-server/installation"
             ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "mcp-server/reference/available-tools",
+              "mcp-server/reference/examples"
+            ]
           }
         ]
       }

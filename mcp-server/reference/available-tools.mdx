@@ -1,0 +1,88 @@
+---
+title: "Available Tools"
+description: "Complete reference for all tools exposed by the Delora MCP Server."
+"og:image": "https://docs.delora.build/images/OG.png"
+---
+
+The Delora MCP Server exposes the following tools. Each tool maps to a corresponding [Delora API](/api-reference/alyra-api-v1) endpoint (`https://api.delora.build/v1`).
+
+## Workflow & Instructions
+
+### get_instructions
+
+Call this first. Returns the guide for using the Delora MCP server: how to get quotes, chains, tokens, and tools.
+
+*No parameters required.*
+
+<Tip>
+  Use `get_instructions` at the start of a session to understand the recommended workflow (get_chains → get_tokens/get_token → get_quote).
+</Tip>
+
+## Quote & Routing
+
+### get_quote
+
+Get a cross-chain quote: best route, estimated output amount, calldata, and gas. Use `get_chains` and `get_tokens` (or `get_token`) first to resolve chain IDs and token addresses.
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| `originChainId` | Yes | Origin chain ID (e.g. 1 for Ethereum, 42161 for Arbitrum) |
+| `destinationChainId` | Yes | Destination chain ID |
+| `amount` | Yes | Amount in smallest units (wei/smallest decimals) |
+| `originCurrency` | Yes | Token address on origin chain; use `0x0...` for native currency |
+| `destinationCurrency` | Yes | Token address on destination chain; use `0x0...` for native |
+| `senderAddress` | No | Sender wallet address |
+| `receiverAddress` | No | Receiver wallet address (defaults to sender) |
+| `integrator` | No | Integrator identifier for tracking |
+| `fee` | No | Fee 0–0.1 (only with integrator) |
+| `slippage` | No | Slippage tolerance 0–1 (e.g. 0.005 for 0.5%) |
+
+The response includes `inputAmount`, `outputAmount`, `tool`, `calldata` (transaction data for the wallet), and optional `fees` and `gas` details.
+
+## Chain Information
+
+### get_chains
+
+List supported chains. Returns chain IDs, names, chain types, RPC URLs, block explorer links, and native token info.
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| `chainTypes` | No | Comma-separated chain types (e.g. `EVM`, `SOLANA`) |
+
+## Token Information
+
+### get_tokens
+
+List supported tokens. Use this to discover available tokens before requesting quotes. Optionally filter by chains and/or chain types.
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| `chains` | No | Comma-separated chain IDs or identifiers |
+| `chainTypes` | No | Chain types (e.g. `EVM`, `SOLANA`) |
+
+### get_token
+
+Get details about a single token by chain and token address or symbol (price, decimals, name, etc.).
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| `chain` | Yes | Chain ID or chain identifier (e.g. `1` or `eth`) |
+| `token` | Yes | Token address or symbol (e.g. `USDC`, `WETH`) |
+
+## Discovery & Tools
+
+### get_tools
+
+List available tools (bridges, DEXes). Returns keys and names; you can filter by supported chains.
+
+| Parameter | Required | Description |
+| --------- | -------- | ----------- |
+| `chains` | No | Comma-separated chain IDs or identifiers to filter results |
+
+<Tip>
+  Use the `key` values returned by `get_tools` when interpreting quote responses (e.g. which bridge or exchange was selected).
+</Tip>
+
+## API Base URL
+
+All tools call the Delora API at `https://api.delora.build/v1`. The MCP server can be configured with a different base URL via the `DELORA_API_URL` environment variable when self-hosting.
