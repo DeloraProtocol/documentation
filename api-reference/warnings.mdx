@@ -1,0 +1,44 @@
+---
+title: "Warnings"
+description: "Non-critical issues that do not block quote generation. A quote is still returned, but some features may be skipped."
+"og:image": "https://docs.delora.build/images/OG.png"
+---
+
+<Note>
+Notes about warnings:
+* Warnings are optional
+* Multiple warnings may be returned
+* Warnings do not indicate failure
+</Note>
+
+## Format
+
+```TypeScript
+type QuoteWarning = {
+  code: string;
+  message: string;
+};
+```
+
+------------------------------------------------------------------------
+
+## Fee-related warnings
+
+`INTEGRATOR_SOLANA_WALLET_NOT_ACTIVATED_FEE_SKIPPED`: Integrator’s Solana wallet is not activated on-chain.
+
+`INTEGRATOR_WALLET_NOT_CONFIGURED_FEE_SKIPPED`: Integrator has no wallet configured for the required chain.
+
+### Example
+
+```TypeScript
+{
+  "warnings": [
+    {
+      "code": "INTEGRATOR_SOLANA_WALLET_NOT_ACTIVATED_FEE_SKIPPED",
+      "message": "Integrator \"integrator\" Solana wallet 9xQ...abc is not activated on-chain. Transaction will continue without integrator fee."
+    }
+  ]
+}
+```
+
+------------------------------------------------------------------------

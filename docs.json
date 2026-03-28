@@ -95,7 +95,14 @@
           {
             "group": "About APIs",
             "pages": [
-              "api-reference/rate-limits"
+              "api-reference/rate-limits",
+              {
+                "group": "Error responses",
+                "pages": [
+                  
+                  "api-reference/warnings"
+                ]
+              }
             ]
           },
           {
