@@ -28,6 +28,12 @@ type QuoteWarning = {
 
 `INTEGRATOR_WALLET_NOT_CONFIGURED_FEE_SKIPPED`: Integrator has no wallet configured for the required chain.
 
+`SOLANA_SYSTEM_ACCOUNT_SKIPPED`: `senderAddress` or `receiverAddress` uses the placeholder Solana System Program address `11111111111111111111111111111111`. The quote is still returned, but wallet-dependent checks and transaction simulation are skipped.
+
+`SOLANA_INSUFFICIENT_BALANCE`: Solana simulation indicates that the sender does not have enough balance to execute the route. This can mean insufficient SOL for rent or fees, or insufficient token balance for the swap. The quote is still returned for UI display.
+
+`SOLANA_SIMULATION_FAILED`: Solana simulation failed for a reason other than a recognized insufficient-balance case. The quote is still returned for UI display, but the route should be treated as a soft warning.
+
 ### Example
 
 ```TypeScript
@@ -36,6 +42,10 @@ type QuoteWarning = {
     {
       "code": "INTEGRATOR_SOLANA_WALLET_NOT_ACTIVATED_FEE_SKIPPED",
       "message": "Integrator \"integrator\" Solana wallet 9xQ...abc is not activated on-chain. Transaction will continue without integrator fee."
+    },
+    {
+      "code": "SOLANA_INSUFFICIENT_BALANCE",
+      "message": "Insufficient SOL for JUPITER route: need ~0.002 SOL for rent/fees."
     }
   ]
 }

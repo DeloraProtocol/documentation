@@ -21,12 +21,12 @@ Fees are accumulated in the Fee Pool smart contract. Only the designated fee wal
 
 On Solana, integrator fees are transferred directly to the configured integrator wallet as part of the transaction. There is no need to manually claim or withdraw fees from a separate portal — funds are received immediately on-chain.
 
-<Note>
+<Danger>
 Make sure that:
 
 * A Solana wallet is configured for your integrator.
 * The wallet is activated on-chain (i.e., it has been initialized and can receive tokens).
-</Note>
+</Danger>
 
 If these conditions are not met, the transaction will still proceed, but the integrator fee may be skipped. In such cases, the API will return a warning. See [Warnings](/api-reference/warnings) for more details.
 
