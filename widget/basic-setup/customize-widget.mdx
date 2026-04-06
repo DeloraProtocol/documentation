@@ -1,5 +1,95 @@
 ---
 title: "Customize Widget"
-description: ""
+description: "Theme tokens and styling options for the Delora widget UI."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+`TradeWidget` supports the following appearance props:
+
+- `theme`
+- `vars`
+- `className`
+- `style`
+
+## Built-in themes
+
+```tsx
+<TradeWidget theme="dark" config={{}} />
+<TradeWidget theme="light" config={{}} />
+```
+
+Theme defaults:
+
+- `TradeWidget`: `"dark"`
+
+## Override theme variables
+
+Use `vars` to override the widget's CSS variables.
+
+```tsx
+<TradeWidget
+  theme="dark"
+  config={{}}
+  vars={{
+    accent: "#22c55e",
+    border: "#1f2937",
+    surface: "#050816",
+    surfaceAlt: "#0b1220",
+    radius: "18px",
+    fontFamily: "'IBM Plex Mono', monospace",
+    fontSize: "14px",
+  }}
+/>
+```
+
+The `vars` object supports these fields:
+
+| Field | Description |
+| --- | --- |
+| `bg` | Root background color |
+| `fg` | Primary text color |
+| `accent` | Main interactive accent |
+| `border` | Border color |
+| `muted` | Muted text and icon color |
+| `surface` | Main surface color |
+| `surfaceAlt` | Secondary surface color |
+| `surfaceHover` | Hover surface color |
+| `textSubtle` | Subtle text and placeholder color |
+| `accentHover` | Hover state for accent styling |
+| `success` | Success color |
+| `danger` | Error or danger color |
+| `overlay` | Overlay tint used in layered UI |
+| `modalBackdrop` | Full-screen modal scrim color |
+| `shadow` | Box shadow token for elevated surfaces |
+| `radius` | Shared border radius token |
+| `fontFamily` | Root font family |
+| `fontSize` | Root font size |
+| `lineHeight` | Root line height |
+| `letterSpacing` | Root letter spacing |
+
+The bundled themes use `Roboto Mono` and the stylesheet imports that font from Google Fonts. If you want to keep typography fully local to your app, override `fontFamily`.
+
+## Use host styling props
+
+`className` and `style` are applied to the widget root.
+
+```tsx
+<TradeWidget
+  className="mx-auto max-w-[640px]"
+  style={{ marginTop: "2rem" }}
+  theme="dark"
+  config={{}}
+/>
+```
+
+`style` is merged after the generated CSS variables, so it is the last inline layer applied to the root element.
+
+## Style isolation
+
+The widget does not use Shadow DOM. Instead, it relies on scoped CSS:
+
+- all widget styles live under `[data-delora-widget-root]`
+- the package does not ship Tailwind preflight
+- the widget sets its own typography and box model under the scoped root
+
+This greatly reduces leakage between the host app and the widget, but extreme global host rules can still affect embedded content.

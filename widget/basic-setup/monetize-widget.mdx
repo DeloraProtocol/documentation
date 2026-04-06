@@ -1,5 +1,47 @@
 ---
 title: "Monetize Widget"
-description: ""
+description: "How integrator and fee values are forwarded from the widget to quote requests."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+The widget exposes two quote-level monetization inputs: `integrator` and `fee`.
+
+```tsx
+<TradeWidget
+  config={{
+    integrator: "my-dapp",
+    fee: 0.03,
+  }}
+/>
+```
+
+## How it works
+
+Both values are forwarded to Delora `/v1/quotes` requests:
+
+- `integrator` is sent as the `integrator` query parameter
+- `fee` is sent as the `fee` query parameter
+
+The widget itself does not calculate payouts locally. It simply forwards the values to the Delora API and executes the quote it receives back.
+
+## Supported fields
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `integrator` | `string` | Optional integrator identifier attached to quote requests |
+| `fee` | `number` | Optional fee value in the range `0..0.1` |
+
+Example: `fee: 0.03` means a 3% fee value is sent to the quote API.
+
+## Validation
+
+The widget validates `fee` before requesting quotes.
+
+- valid range: `0..0.1`
+- invalid values are ignored
+- invalid values trigger `onError({ source: "configuration" })`
+
+## Related docs
+
+- [Protocol fee configuration](/protocol/fee-configuration)
+- [Widget Events](/widget/advanced-setup/widget-events)

@@ -1,5 +1,67 @@
 ---
 title: "Widget Events"
-description: ""
+description: "Callback hooks emitted by TradeWidget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+`TradeWidget` exposes a small set of callbacks for analytics, orchestration, and error reporting.
+
+## Example
+
+```tsx
+<TradeWidget
+  config={{}}
+  onQuote={(payload) => {
+    console.log("quote", payload);
+  }}
+  onConnect={(payload) => {
+    console.log("wallet connected", payload);
+  }}
+  onTxSubmitted={(payload) => {
+    console.log("submitted", payload.action, payload.txHash);
+  }}
+  onTxConfirmed={(payload) => {
+    console.log("confirmed", payload.action, payload.txHash);
+  }}
+  onError={(payload) => {
+    console.error(payload.source, payload.message);
+  }}
+/>
+```
+
+## Supported callbacks
+
+| Callback | When it fires | Payload |
+| --- | --- | --- |
+| `onQuote` | After a new quote is resolved | `TradeWidgetQuotePayload` |
+| `onConnect` | After a wallet connection succeeds | `TradeWidgetConnectPayload` |
+| `onApprove` | When the widget submits a standalone approval transaction | `TradeWidgetTransactionPayload` |
+| `onSwap` | When the widget submits a swap transaction | `TradeWidgetTransactionPayload` |
+| `onTxSubmitted` | When any approval or swap transaction is submitted | `TradeWidgetTransactionPayload` |
+| `onTxConfirmed` | When a submitted transaction is confirmed | `TradeWidgetTransactionPayload` |
+| `onError` | When metadata, configuration, quote, wallet, balance, or execution errors occur | `TradeWidgetErrorPayload` |
+
+## Event behavior notes
+
+- `onQuote` is deduplicated, so identical resolved quotes are not emitted repeatedly
+- `onConnect` only reports `namespace`, `address`, and `walletName`; it does not identify whether the connection came from the origin or destination side
+- `onApprove` and `onSwap` are submission hooks, not simple button-click hooks
+- `onTxSubmitted` is the generic submission event for both `approve` and `swap`
+- `onTxConfirmed` is the generic confirmation event for both `approve` and `swap`
+
+In batched EVM flows that combine approval and swap into a single EIP-5792 call, the widget may only emit the swap-side transaction event because there is no separate approval transaction hash.
+
+## Error sources
+
+`onError` can report the following `source` values:
+
+- `metadata`
+- `configuration`
+- `quote`
+- `selection`
+- `wallet`
+- `balances`
+- `execution`
+- `unsupported`
+
+The payload can also include `status`, `statusCode`, and the original error object.

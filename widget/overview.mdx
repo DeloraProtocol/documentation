@@ -1,5 +1,55 @@
 ---
 title: "Overview"
-description: ""
+description: "Core capabilities and integration entry points for the Delora widget package."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+Delora Widget lets you embed Delora trading flows into a React application. The package is published as `@deloraprotocol/widget`, and its main export is `TradeWidget`, which loads chain and token metadata, requests quotes from `/v1/quotes`, and lets users execute trades from the same UI.
+
+The package also includes:
+
+- `TradeWidgetWalletProvider` for host-managed wallet integrations
+- TypeScript types for configuration, events, filters, tokens, networks, and wallet management
+
+## What the widget supports
+
+- Delora metadata loading from `/v1/chains` and `/v1/tokens`
+- Quote requests to `/v1/quotes`
+- Internal wallet connection UI for EVM and Solana wallets
+- External wallet integration through `TradeWidgetWalletProvider`
+- Side-specific network and token filters
+- Initial token and network selection
+- Locking sell or buy tokens and networks
+- Theme customization through `theme`, `vars`, `className`, and `style`
+- Event hooks for quotes, wallet connections, transaction submission, confirmation, and errors
+
+## Quick start
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+export function App() {
+  return (
+    <TradeWidget
+      theme="dark"
+      config={{}}
+    />
+  );
+}
+```
+
+Passing `config.apiUrl` is not required. If it is omitted, the widget falls back to `https://api.delora.build`.
+
+## Built for embedded use
+
+The widget ships compiled CSS, so host applications do not need Tailwind or PostCSS configuration. Styles are scoped under the widget root instead of using global Tailwind preflight rules, which keeps the widget isolated from most host styling.
+
+## Next steps
+
+- [Install Widget](/widget/basic-setup/install-widget)
+- [Select Widget Variants](/widget/basic-setup/select-widget-variants)
+- [Configure Widget](/widget/basic-setup/configure-widget)
+- [Customize Widget](/widget/basic-setup/customize-widget)
+- [Wallet Management](/widget/advanced-setup/wallet-management)
+- [Widget API Reference](/widget/advanced-setup/widget-api-reference)

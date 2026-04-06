@@ -1,5 +1,48 @@
 ---
 title: "Install Widget"
-description: ""
+description: "Package installation and first render steps for the Delora widget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+Start by installing the package and importing its stylesheet once in your application entrypoint.
+
+## Install the package
+
+```bash
+npm install @deloraprotocol/widget react react-dom
+```
+
+`react` and `react-dom` are peer dependencies. The package expects React 18 or newer.
+
+## Import the widget styles
+
+```ts
+import "@deloraprotocol/widget/styles.css";
+```
+
+The package ships compiled CSS, so the host app does not need Tailwind.
+
+## Render the trade widget
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+export function App() {
+  return (
+    <TradeWidget
+      theme="dark"
+      config={{}}
+    />
+  );
+}
+```
+
+The `config` prop is required, but all fields inside `TradeWidgetConfig` are optional. This means `config={{}}` is valid when you want to use the default Delora API base.
+
+## Minimal install notes
+
+- Default API base: `https://api.delora.build`
+- Metadata endpoints used by the widget: `/v1/chains` and `/v1/tokens`
+- Quote endpoint used by the widget: `/v1/quotes`
+- If your app already manages wallets, see [Wallet Management](/widget/advanced-setup/wallet-management)

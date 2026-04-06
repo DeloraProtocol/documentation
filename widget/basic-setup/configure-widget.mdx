@@ -1,5 +1,146 @@
 ---
 title: "Configure Widget"
-description: ""
+description: "Props and runtime settings for configuring TradeWidget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+Use `TradeWidget` props to control the widget's runtime behavior, preselected assets, and available networks or tokens.
+
+## Runtime configuration
+
+All runtime options live under the required `config` prop.
+
+```tsx
+<TradeWidget
+  config={{
+    apiKey: "your-api-key",
+    integrator: "my-dapp",
+    fee: 0.03,
+    slippage: 0.005,
+    walletConnectProjectId: "your-walletconnect-project-id",
+    termsUrl: "/legal/terms",
+    privacyPolicyUrl: "/legal/privacy",
+  }}
+/>
+```
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `apiUrl` | `string` | Delora API base used for `/v1/chains`, `/v1/tokens`, and `/v1/quotes` |
+| `apiKey` | `string` | Optional `x-api-key` header for Delora API requests |
+| `rpcUrls` | `Record<number, string[]>` | Per-chain RPC override map used for on-chain reads and execution helpers |
+| `integrator` | `string` | Forwarded to quote requests |
+| `fee` | `number` | Forwarded to quote requests. Valid range: `0..0.1` |
+| `slippage` | `number` | Initial slippage value. Valid range: `0..1` |
+| `excludeBridges` | `string[]` | Quote denylist for bridges |
+| `excludeExchanges` | `string[]` | Quote denylist for exchanges |
+| `assetBaseUrl` | `string` | Base URL for resolving relative token and network image paths |
+| `termsUrl` | `string` | URL used in the wallet consent footer |
+| `privacyPolicyUrl` | `string` | URL used in the wallet consent footer |
+| `walletConnectProjectId` | `string` | WalletConnect Cloud project id for the EVM QR flow |
+
+If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to the default Delora API base.
+
+If you pass `apiKey` from a browser application, that key is exposed to the client. Treat it as a public integration key, not as a secret.
+
+## Initial selections
+
+You can preselect both networks and tokens.
+
+```tsx
+<TradeWidget
+  config={{}}
+  initialSellNetworkId={1}
+  initialBuyNetworkId={1000000001}
+  initialSellToken={{
+    chainId: 1,
+    address: "0x0000000000000000000000000000000000000000",
+  }}
+  initialBuyToken={{
+    chainId: 1000000001,
+    address: "11111111111111111111111111111111",
+  }}
+/>
+```
+
+If an initial network or token is not available in loaded metadata, the widget reports it through `onError`. The same happens when a host-provided initial selection becomes invalid after filters are applied.
+
+## Lock tokens or networks
+
+Use lock props when you want the host app to keep part of the form fixed.
+
+```tsx
+<TradeWidget
+  config={{}}
+  initialBuyToken={{ chainId: 1, address: "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }}
+  lockBuyToken
+/>
+```
+
+Supported lock props:
+
+- `lockSellToken`
+- `lockBuyToken`
+- `lockSellNetwork`
+- `lockBuyNetwork`
+
+Behavior:
+
+- Locking a token also locks its network, because the token already implies a chain
+- Locking a network still allows token changes inside that network
+- Any lock disables the center "swap sides" button to avoid breaking host-provided constraints
+
+## Filter available networks and tokens
+
+Use `filters` to restrict the sell and buy sides independently.
+
+```tsx
+<TradeWidget
+  config={{}}
+  filters={{
+    sell: {
+      includeNetworkIds: [1, 8453],
+      excludeTokens: [
+        {
+          chainId: 1,
+          address: "0x0000000000000000000000000000000000000000",
+        },
+      ],
+    },
+    buy: {
+      includeTokens: [
+        {
+          chainId: 1000000001,
+          address: "11111111111111111111111111111111",
+        },
+      ],
+    },
+  }}
+/>
+```
+
+Each side supports:
+
+- `includeNetworkIds`
+- `excludeNetworkIds`
+- `includeTokens`
+- `excludeTokens`
+
+Important filter behavior:
+
+- Filters are applied per side, so sell and buy restrictions can be different
+- Networks that end up with no available tokens are removed automatically
+- Conflicting filters produce `onError` events with `source: "configuration"`
+- If no networks remain on a side after filtering, the widget enters a configuration error state
+
+## Custom token lookup
+
+When a side does not use `includeTokens`, the token selector can import a token by contract or mint address if the address is valid for the active network. Imported tokens become part of the current browser session and can also be restored from persisted selection state.
+
+When `includeTokens` is set for a side, custom token import is disabled on that side.
+
+## Persistence
+
+The widget stores the latest selected sell and buy networks and tokens in browser `localStorage`, so the next mount can restore the previous selection when the host app does not explicitly override it.
+
+Slippage and internal wallet choices are also persisted separately.

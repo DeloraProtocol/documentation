@@ -1,5 +1,207 @@
 ---
 title: "Widget API Reference"
-description: ""
+description: "Reference for exported components, props, and types in @deloraprotocol/widget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
+
+This page summarizes the public API exported by `@deloraprotocol/widget`.
+
+## Main exports
+
+Components and hooks:
+
+- `TradeWidget`
+- `TradeWidgetWalletProvider`
+- `useTradeWidgetWalletManagement`
+
+Trade widget types:
+
+- `TradeWidgetProps`
+- `TradeWidgetConfig`
+- `TradeWidgetRpcUrlsByChainId`
+- `WalletNamespace`
+- `TradeWidgetStatus`
+- `TradeWidgetFilters`
+- `TradeWidgetSideFilters`
+- `TradeWidgetTokenSelection`
+- `TradeWidgetQuotePayload`
+- `TradeWidgetActionPayload`
+- `TradeWidgetConnectPayload`
+- `TradeWidgetTransactionPayload`
+- `TradeWidgetErrorPayload`
+- `Token`
+- `Network`
+
+Wallet-management and provider types:
+
+- `TradeWidgetManagedWallet`
+- `TradeWidgetManagedWalletConnectParams`
+- `TradeWidgetWalletManagement`
+- `TradeWidgetWalletProviderProps`
+- `Eip1193Provider`
+- `KnownWalletOptionId`
+- `SolanaInjectedProvider`
+- `SolanaProvider`
+- `WalletConnectionStatus`
+- `WalletOptionDescriptor`
+- `WalletOptionId`
+- `WalletOptionType`
+- `WalletVisualId`
+- `WalletStandardSolanaAccount`
+- `WalletStandardSolanaProvider`
+
+## `TradeWidgetProps`
+
+`TradeWidgetProps` extends normal root `div` props, except the DOM `onError` prop is replaced by the widget error callback.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `config` | `TradeWidgetConfig` | Required widget runtime config object |
+| `filters` | `TradeWidgetFilters` | Optional sell-side and buy-side filtering rules |
+| `theme` | `"light" \| "dark"` | Built-in theme. Default: `"dark"` |
+| `vars` | `object` | Theme token overrides |
+| `initialSellToken` | `TradeWidgetTokenSelection` | Preselect sell token |
+| `initialBuyToken` | `TradeWidgetTokenSelection` | Preselect buy token |
+| `initialSellNetworkId` | `number` | Preselect sell network |
+| `initialBuyNetworkId` | `number` | Preselect buy network |
+| `lockSellToken` | `boolean` | Prevent changing the sell token |
+| `lockBuyToken` | `boolean` | Prevent changing the buy token |
+| `lockSellNetwork` | `boolean` | Prevent changing the sell network |
+| `lockBuyNetwork` | `boolean` | Prevent changing the buy network |
+| `onQuote` | `(payload) => void` | Quote resolved callback |
+| `onConnect` | `(payload) => void` | Wallet connected callback |
+| `onApprove` | `(payload) => void` | Approval transaction submitted callback |
+| `onSwap` | `(payload) => void` | Swap transaction submitted callback |
+| `onTxSubmitted` | `(payload) => void` | Generic transaction submitted callback |
+| `onTxConfirmed` | `(payload) => void` | Generic transaction confirmed callback |
+| `onError` | `(payload) => void` | Error callback |
+
+## `TradeWidgetConfig`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `apiUrl` | `string` | Delora API base |
+| `rpcUrls` | `Record<number, string[]>` | RPC override map by chain id |
+| `integrator` | `string` | Quote request integrator id |
+| `apiKey` | `string` | Optional Delora API key sent as `x-api-key` |
+| `fee` | `number` | Quote fee value, range `0..0.1` |
+| `slippage` | `number` | Initial slippage, range `0..1` |
+| `excludeBridges` | `string[]` | Bridge denylist for quote requests |
+| `excludeExchanges` | `string[]` | Exchange denylist for quote requests |
+| `assetBaseUrl` | `string` | Base URL for relative image paths |
+| `termsUrl` | `string` | Terms of Use link in the connect modal |
+| `privacyPolicyUrl` | `string` | Privacy Policy link in the connect modal |
+| `walletConnectProjectId` | `string` | WalletConnect Cloud project id |
+
+`apiKey` is sent from the browser as an `x-api-key` header. Do not treat it as a secret.
+
+## Filters
+
+```ts
+interface TradeWidgetFilters {
+  sell?: TradeWidgetSideFilters;
+  buy?: TradeWidgetSideFilters;
+}
+
+interface TradeWidgetSideFilters {
+  includeNetworkIds?: number[];
+  excludeNetworkIds?: number[];
+  includeTokens?: TradeWidgetTokenSelection[];
+  excludeTokens?: TradeWidgetTokenSelection[];
+}
+
+interface TradeWidgetTokenSelection {
+  chainId: number;
+  address: string;
+}
+```
+
+## Event payloads
+
+```ts
+interface TradeWidgetQuotePayload {
+  namespace: "EVM" | "SVM";
+  senderAddress: string;
+  receiverAddress: string;
+  sellNetwork: Network;
+  buyNetwork: Network;
+  sellToken: Token;
+  buyToken: Token;
+  sellAmount: string;
+  buyAmount: string;
+  slippage: number;
+  quote: Record<string, unknown>;
+}
+
+interface TradeWidgetTransactionPayload {
+  action: "approve" | "swap";
+  namespace: "EVM" | "SVM";
+  walletAddress: string;
+  receiverAddress: string;
+  sellNetwork: Network;
+  buyNetwork: Network;
+  sellToken: Token;
+  buyToken: Token;
+  sellAmount: string;
+  buyAmount: string;
+  slippage: number;
+  quote: Record<string, unknown> | null;
+  txData: {
+    to?: string;
+    data?: string;
+    value?: string;
+  } | null;
+  price: number;
+  gasCostUSD: string | null;
+  txHash?: string;
+  receipt?: unknown;
+}
+
+interface TradeWidgetConnectPayload {
+  namespace: "EVM" | "SVM";
+  address: string;
+  walletName?: string;
+}
+
+interface TradeWidgetErrorPayload {
+  source:
+    | "metadata"
+    | "configuration"
+    | "quote"
+    | "selection"
+    | "wallet"
+    | "balances"
+    | "execution"
+    | "unsupported";
+  message: string;
+  status?: number;
+  statusCode?: number;
+  error?: unknown;
+}
+```
+
+## Wallet management types
+
+```ts
+interface TradeWidgetWalletManagement {
+  origin?: TradeWidgetManagedWallet | null;
+  destination?: TradeWidgetManagedWallet | null;
+}
+
+interface TradeWidgetManagedWallet {
+  status?: WalletConnectionStatus;
+  namespace: "EVM" | "SVM" | null;
+  address: string | null;
+  walletName?: string;
+  connectedWalletId?: WalletOptionId | null;
+  connectedWalletVisualId?: WalletVisualId | null;
+  connectedWalletIconUrl?: string | null;
+  walletOptions?: WalletOptionDescriptor[];
+  evmProvider?: Eip1193Provider | null;
+  solanaProvider?: SolanaProvider | null;
+  connect?: (params?) => Promise<boolean | void> | boolean | void;
+  connectPreferred?: (namespace?) => Promise<boolean | void> | boolean | void;
+  connectWalletOption?: (walletId, namespace?) => Promise<boolean | void> | boolean | void;
+  disconnect?: () => Promise<void> | void;
+}
+```
