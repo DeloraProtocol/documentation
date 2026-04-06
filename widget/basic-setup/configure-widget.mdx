@@ -43,6 +43,13 @@ If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBas
 
 If you pass `apiKey` from a browser application, that key is exposed to the client. Treat it as a public integration key, not as a secret.
 
+If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
+
+- `${window.location.origin}/documentation/termsofuse`
+- `${window.location.origin}/documentation/privacypolicy`
+
+For third-party embeds, it is usually better to set both URLs explicitly.
+
 ## Initial selections
 
 You can preselect both networks and tokens.
@@ -144,3 +151,13 @@ When `includeTokens` is set for a side, custom token import is disabled on that 
 The widget stores the latest selected sell and buy networks and tokens in browser `localStorage`, so the next mount can restore the previous selection when the host app does not explicitly override it.
 
 Slippage and internal wallet choices are also persisted separately.
+
+## Quote refresh cooldown
+
+The widget applies a small local cooldown around quote refreshes to avoid excessive request loops:
+
+- more than 5 quote requests within 5 seconds starts a local cooldown
+- the cooldown lasts 5 seconds
+- during that window, the widget can emit `onError({ source: "quote", statusCode: 429 })` even if the backend did not return 429
+
+If you build analytics or retry logic around quote errors, treat this as widget-side throttling as well as possible API-side rate limiting.

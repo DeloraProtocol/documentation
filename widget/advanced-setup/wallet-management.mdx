@@ -54,6 +54,8 @@ Built-in behavior:
 - the connect modal requires the user to accept Terms and Privacy Policy before connection
 - wallet selection is persisted in browser `localStorage`
 
+If `config.termsUrl` or `config.privacyPolicyUrl` is omitted, the modal falls back to same-origin `/documentation/termsofuse` and `/documentation/privacypolicy` links. For embedded third-party apps, passing explicit URLs is recommended.
+
 `walletConnectProjectId` can be set through `config` to override the WalletConnect Cloud project id used by the EVM QR flow.
 
 ## Host-managed wallets
@@ -98,6 +100,12 @@ Its job is to expose two optional wallet adapters to `TradeWidget`:
 
 When `TradeWidget` mounts, it reads that context and passes `origin` and `destination` into its wallet hooks. If one side is present, that side switches into externally managed mode. If one side is missing, the widget falls back to its built-in wallet flow for that side.
 
+This is presence-based, not connection-based.
+
+If you pass an `origin` or `destination` object at all, that side is considered externally managed even when `namespace` and `address` are currently `null`.
+
+If you want the widget to keep its built-in wallet flow for a side, omit that side from the provider value entirely.
+
 ## What the widget reads from your wallet adapter
 
 For each externally managed side, the widget reads values such as:
@@ -122,23 +130,35 @@ If one side is omitted, the widget falls back to its internal wallet flow for th
 
 ## Managed wallet shape
 
-At minimum, a managed wallet needs:
+At minimum, a managed wallet can expose:
 
 - `namespace`
 - `address`
+
+That is enough when your host app already controls the full connection lifecycle and the wallet is already connected when the widget renders.
+
+If that side may need to connect from inside the widget UI, also provide at least one connect handler:
+
+- `connectWalletOption`
+- `connectPreferred`
+- `connect`
 
 Depending on your integration, you can also pass:
 
 - `evmProvider` or `solanaProvider`
 - `evmBrowserProvider`
+- `walletStandardSolanaAccount`
 - `connect` and `disconnect`
 - `connectPreferred`
 - `connectWalletOption`
 - `walletOptions` for a widget-owned selection modal backed by host logic
 - `connectedWalletId`, `connectedWalletVisualId`, and `connectedWalletIconUrl` for custom wallet branding
-- getter helpers such as `getEvmProvider` or `getSolanaProvider`
+- `errorMessage`, `clearError`, and `peekLastConnectionError` for host-controlled error UX
+- getter helpers such as `getEvmProvider`, `getEvmBrowserProvider`, `getSolanaProvider`, or `getConnectedWalletStandardSolanaAccount`
 
 This allows the host app to keep wallet ownership while still letting the widget render a coherent UI.
+
+If a side is marked as externally managed but no connect handler is provided, the widget cannot fall back to its built-in connect flow for that side.
 
 ## How connect is delegated
 
@@ -177,6 +197,13 @@ For EVM, it resolves providers in this order:
 
 If only a raw EIP-1193 provider is available, the widget wraps it into an `ethers` `BrowserProvider` when needed.
 
+For an externally managed EVM side that should execute trades, you should provide at least one of these:
+
+- `evmBrowserProvider`
+- `getEvmBrowserProvider()`
+- `getEvmProvider()`
+- `evmProvider`
+
 For Solana, it resolves providers in this order:
 
 1. `getSolanaProvider()`
@@ -186,6 +213,11 @@ If you use a Wallet Standard Solana wallet, you can also provide:
 
 - `walletStandardSolanaAccount`
 - `getConnectedWalletStandardSolanaAccount()`
+
+For an externally managed Solana side that should execute trades, you should provide:
+
+- `getSolanaProvider()` or `solanaProvider`
+- and, for Wallet Standard flows, `walletStandardSolanaAccount` or `getConnectedWalletStandardSolanaAccount()`
 
 ## Partial management
 

@@ -4,15 +4,19 @@ description: "Reference for exported components, props, and types in @deloraprot
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-This page summarizes the public API exported by `@deloraprotocol/widget`.
+This page summarizes the supported third-party integration API for `@deloraprotocol/widget`.
 
-## Main exports
-
-Components and hooks:
+It intentionally focuses on the main embeddable widget surface:
 
 - `TradeWidget`
 - `TradeWidgetWalletProvider`
-- `useTradeWidgetWalletManagement`
+
+## Main exports
+
+Components:
+
+- `TradeWidget`
+- `TradeWidgetWalletProvider`
 
 Trade widget types:
 
@@ -95,6 +99,13 @@ Wallet-management and provider types:
 
 `apiKey` is sent from the browser as an `x-api-key` header. Do not treat it as a secret.
 
+If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
+
+- `${window.location.origin}/documentation/termsofuse`
+- `${window.location.origin}/documentation/privacypolicy`
+
+For third-party embeds, it is usually better to set both links explicitly.
+
 ## Filters
 
 ```ts
@@ -116,6 +127,23 @@ interface TradeWidgetTokenSelection {
 }
 ```
 
+## `TradeWidgetStatus`
+
+```ts
+type TradeWidgetStatus =
+  | "idle"
+  | "connecting-wallet"
+  | "loading-metadata"
+  | "finding-quote"
+  | "checking-allowance"
+  | "awaiting-approve-signature"
+  | "approve-pending"
+  | "awaiting-swap-signature"
+  | "swap-pending"
+  | "success"
+  | "error";
+```
+
 ## Event payloads
 
 ```ts
@@ -133,7 +161,7 @@ interface TradeWidgetQuotePayload {
   quote: Record<string, unknown>;
 }
 
-interface TradeWidgetTransactionPayload {
+interface TradeWidgetActionPayload {
   action: "approve" | "swap";
   namespace: "EVM" | "SVM";
   walletAddress: string;
@@ -156,6 +184,8 @@ interface TradeWidgetTransactionPayload {
   txHash?: string;
   receipt?: unknown;
 }
+
+interface TradeWidgetTransactionPayload extends TradeWidgetActionPayload {}
 
 interface TradeWidgetConnectPayload {
   namespace: "EVM" | "SVM";
@@ -188,6 +218,11 @@ interface TradeWidgetWalletManagement {
   destination?: TradeWidgetManagedWallet | null;
 }
 
+interface TradeWidgetManagedWalletConnectParams {
+  namespace?: "EVM" | "SVM" | null;
+  walletId?: WalletOptionId;
+}
+
 interface TradeWidgetManagedWallet {
   status?: WalletConnectionStatus;
   namespace: "EVM" | "SVM" | null;
@@ -196,12 +231,23 @@ interface TradeWidgetManagedWallet {
   connectedWalletId?: WalletOptionId | null;
   connectedWalletVisualId?: WalletVisualId | null;
   connectedWalletIconUrl?: string | null;
+  errorMessage?: string;
   walletOptions?: WalletOptionDescriptor[];
   evmProvider?: Eip1193Provider | null;
+  evmBrowserProvider?: BrowserProvider;
   solanaProvider?: SolanaProvider | null;
+  walletStandardSolanaAccount?: WalletStandardSolanaAccount | null;
   connect?: (params?) => Promise<boolean | void> | boolean | void;
   connectPreferred?: (namespace?) => Promise<boolean | void> | boolean | void;
   connectWalletOption?: (walletId, namespace?) => Promise<boolean | void> | boolean | void;
   disconnect?: () => Promise<void> | void;
+  clearError?: () => void;
+  peekLastConnectionError?: () => string | undefined;
+  getEvmProvider?: () => Eip1193Provider;
+  getEvmBrowserProvider?: () => Promise<BrowserProvider>;
+  getSolanaProvider?: () => SolanaProvider;
+  getConnectedWalletStandardSolanaAccount?: () => WalletStandardSolanaAccount | null;
 }
 ```
+
+If you pass an `origin` or `destination` object into `TradeWidgetWalletProvider`, that side is treated as externally managed. To keep the built-in wallet flow for a side, omit that side from the provider value entirely.

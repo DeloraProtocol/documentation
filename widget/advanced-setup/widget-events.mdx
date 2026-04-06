@@ -48,8 +48,15 @@ description: "Callback hooks emitted by TradeWidget."
 - `onApprove` and `onSwap` are submission hooks, not simple button-click hooks
 - `onTxSubmitted` is the generic submission event for both `approve` and `swap`
 - `onTxConfirmed` is the generic confirmation event for both `approve` and `swap`
+- `onError` with `source: "quote"` and `statusCode: 429` can come either from the Delora API or from the widget's own local quote cooldown
 
 In batched EVM flows that combine approval and swap into a single EIP-5792 call, the widget may only emit the swap-side transaction event because there is no separate approval transaction hash.
+
+The widget also applies a local quote cooldown to avoid excessive refresh loops:
+
+- more than 5 quote requests within 5 seconds triggers a local cooldown
+- the cooldown lasts 5 seconds
+- during that window, `onError` can emit a quote error with `statusCode: 429` even if the backend did not return 429
 
 ## Error sources
 
