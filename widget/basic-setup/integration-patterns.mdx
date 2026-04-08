@@ -1,0 +1,77 @@
+---
+title: "Integration Patterns"
+description: "Choose between the built-in wallet flow and host-managed wallet integration."
+"og:image": "https://docs.delora.build/images/OG.png"
+---
+
+The widget exposes one main trading UI and two practical integration patterns.
+
+These patterns do not change the widget layout. They change who owns wallet state and provider access.
+
+- `TradeWidget`
+- `TradeWidgetWalletProvider`
+
+| Pattern | Use when | Notes |
+| --- | --- | --- |
+| `TradeWidget` | You want the full trading widget with the built-in wallet flow | Best default for standalone embeds |
+| `TradeWidget` + `TradeWidgetWalletProvider` | Your app already owns wallet connection and providers | Lets the widget reuse host-managed wallets |
+
+## 1. `TradeWidget`
+
+Use `TradeWidget` when you want the complete Delora trading experience, including token selection, network selection, quote loading, slippage control, wallet connection, and transaction execution.
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+<TradeWidget
+  theme="dark"
+  config={{}}
+/>;
+```
+
+## 2. `TradeWidget` with external wallet management
+
+Use this pattern when the host app already manages wallet state and providers.
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import {
+  TradeWidget,
+  TradeWidgetWalletProvider,
+} from "@deloraprotocol/widget";
+
+<TradeWidgetWalletProvider
+  value={{
+    origin: {
+      namespace: connected ? "EVM" : null,
+      address: connectedAddress ?? null,
+      walletName: "My App Wallet",
+      evmProvider,
+      connect: async ({ namespace }) => {
+        await openWalletModal(namespace);
+        return true;
+      },
+      disconnect: async () => {
+        await disconnectWallet();
+      },
+    },
+  }}
+>
+  <TradeWidget config={{}} />
+</TradeWidgetWalletProvider>;
+```
+
+You can manage `origin`, `destination`, or both sides. If one side is omitted, that side falls back to the widget's built-in wallet flow.
+
+In the widget UI, `origin` maps to the sell-side wallet and `destination` maps to the receiver-side wallet.
+
+## Receiver handling
+
+The widget also supports receiver-side selection at runtime:
+
+- reuse the origin wallet when the buy-side namespace matches
+- connect a separate destination wallet
+- paste a receiver address directly in the UI
+
+If you need more control over those flows, continue with [Wallet & Receiver Management](../advanced-setup/wallet-management).

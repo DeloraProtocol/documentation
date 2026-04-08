@@ -1,10 +1,10 @@
 ---
-title: "Wallet Management"
-description: "Internal and host-managed wallet connection patterns for TradeWidget."
+title: "Wallet & Receiver Management"
+description: "Internal and host-managed wallet and receiver flows for TradeWidget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-The widget can either manage wallets on its own or consume wallet state from the host application.
+The widget can either manage wallets on its own or consume wallet state from the host application. That applies both to the sell-side wallet (`origin`) and the optional receiver-side wallet (`destination`).
 
 Current wallet connection and execution flows are implemented for:
 
@@ -184,6 +184,23 @@ This lets you choose between:
 - fully host-owned connect UX
 - widget-owned wallet picker backed by host-owned wallet logic
 
+## Receiver and destination behavior
+
+The widget has a separate receiver flow on the buy side.
+
+At runtime, users can:
+
+- receive to the origin wallet when the buy-side namespace matches
+- connect a separate destination wallet
+- paste a receiver address directly in the UI
+
+Pasted receiver addresses are validated and normalized for the active buy-side chain before execution. If a separate destination wallet is connected, it can also be disconnected independently from the origin wallet.
+
+This receiver-side behavior works with both integration patterns:
+
+- fully built-in wallet management
+- host-managed `destination` wallet adapters through `TradeWidgetWalletProvider`
+
 ## How provider access works
 
 After a wallet is connected, the widget still needs provider access to execute transactions.
@@ -231,10 +248,6 @@ Examples:
 
 When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can still show its own wallet chooser and call the host's `connectWalletOption` logic.
 
-## Receiver behavior
-
-The widget supports a separate destination wallet. When no separate destination wallet is connected, it can also reuse the origin wallet address when the buy-side namespace matches. Users can additionally paste a receiver address directly in the UI.
-
 ## Execution details
 
 Even in externally managed mode, transaction orchestration still lives inside `TradeWidget`.
@@ -270,4 +283,4 @@ The easiest way to think about it is:
 
 If you want the widget to feel native inside an app that already has its own wallet architecture, use `TradeWidgetWalletProvider`. If you just want an embeddable trading widget with built-in wallet handling, use plain `TradeWidget`.
 
-For the full list of exported wallet-management types, see [Widget API Reference](/widget/advanced-setup/widget-api-reference).
+For the full list of exported wallet-management types, see [Widget API Reference](./widget-api-reference).

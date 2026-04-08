@@ -6,17 +6,28 @@ description: "Reference for exported components, props, and types in @deloraprot
 
 This page summarizes the supported third-party integration API for `@deloraprotocol/widget`.
 
-It intentionally focuses on the main embeddable widget surface:
+Most integrations center on the trading widget surface:
 
 - `TradeWidget`
 - `TradeWidgetWalletProvider`
+- `useTradeWidgetWalletManagement`
+
+The package also exports a smaller `MyWidget` demo component and shared theming props.
 
 ## Main exports
 
-Components:
+Components and hooks:
 
+- `MyWidget`
 - `TradeWidget`
 - `TradeWidgetWalletProvider`
+- `useTradeWidgetWalletManagement`
+
+Shared widget props and theme types:
+
+- `MyWidgetProps`
+- `MyWidgetTheme`
+- `MyWidgetVars`
 
 Trade widget types:
 
@@ -54,6 +65,21 @@ Wallet-management and provider types:
 - `WalletStandardSolanaAccount`
 - `WalletStandardSolanaProvider`
 
+## `MyWidget` and `MyWidgetProps`
+
+`MyWidget` is a minimal example export that shares the same root theming surface as `TradeWidget`.
+
+If you are embedding the production trade experience, use `TradeWidget`. If you need the lightweight demo component that ships with the package, use `MyWidget`.
+
+`MyWidgetProps` extends normal root `div` props.
+
+| Prop | Type | Description |
+| --- | --- | --- |
+| `theme` | `"light" \| "dark"` | Built-in theme. Default: `"light"` |
+| `vars` | `Partial<MyWidgetVars>` | Theme token overrides |
+| `className` | `string` | Applied to the widget root element |
+| `style` | `React.CSSProperties` | Inline root styles applied after generated CSS variables |
+
 ## `TradeWidgetProps`
 
 `TradeWidgetProps` extends normal root `div` props, except the DOM `onError` prop is replaced by the widget error callback.
@@ -63,7 +89,9 @@ Wallet-management and provider types:
 | `config` | `TradeWidgetConfig` | Required widget runtime config object |
 | `filters` | `TradeWidgetFilters` | Optional sell-side and buy-side filtering rules |
 | `theme` | `"light" \| "dark"` | Built-in theme. Default: `"dark"` |
-| `vars` | `object` | Theme token overrides |
+| `vars` | `Partial<MyWidgetVars>` | Theme token overrides |
+| `className` | `string` | Applied to the widget root element |
+| `style` | `React.CSSProperties` | Inline root styles applied after generated CSS variables |
 | `initialSellToken` | `TradeWidgetTokenSelection` | Preselect sell token |
 | `initialBuyToken` | `TradeWidgetTokenSelection` | Preselect buy token |
 | `initialSellNetworkId` | `number` | Preselect sell network |
@@ -85,7 +113,7 @@ Wallet-management and provider types:
 | Field | Type | Description |
 | --- | --- | --- |
 | `apiUrl` | `string` | Delora API base |
-| `rpcUrls` | `Record<number, string[]>` | RPC override map by chain id |
+| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | RPC override map by chain id |
 | `integrator` | `string` | Quote request integrator id |
 | `apiKey` | `string` | Optional Delora API key sent as `x-api-key` |
 | `fee` | `number` | Quote fee value, range `0..0.1` |
@@ -158,7 +186,7 @@ interface TradeWidgetQuotePayload {
   sellAmount: string;
   buyAmount: string;
   slippage: number;
-  quote: Record<string, unknown>;
+  quote: QuoteResponse;
 }
 
 interface TradeWidgetActionPayload {
@@ -173,7 +201,7 @@ interface TradeWidgetActionPayload {
   sellAmount: string;
   buyAmount: string;
   slippage: number;
-  quote: Record<string, unknown> | null;
+  quote: QuoteResponse | null;
   txData: {
     to?: string;
     data?: string;
@@ -251,3 +279,5 @@ interface TradeWidgetManagedWallet {
 ```
 
 If you pass an `origin` or `destination` object into `TradeWidgetWalletProvider`, that side is treated as externally managed. To keep the built-in wallet flow for a side, omit that side from the provider value entirely.
+
+`useTradeWidgetWalletManagement` is a thin helper hook for reading the same wallet-management context that powers `TradeWidgetWalletProvider`.

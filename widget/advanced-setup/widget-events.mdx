@@ -4,7 +4,7 @@ description: "Callback hooks emitted by TradeWidget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-`TradeWidget` exposes a small set of callbacks for analytics, orchestration, and error reporting.
+`TradeWidget` exposes callbacks for quote resolution, wallet connections, transaction lifecycle reporting, and error handling.
 
 ## Example
 
@@ -39,11 +39,12 @@ description: "Callback hooks emitted by TradeWidget."
 | `onSwap` | When the widget submits a swap transaction | `TradeWidgetTransactionPayload` |
 | `onTxSubmitted` | When any approval or swap transaction is submitted | `TradeWidgetTransactionPayload` |
 | `onTxConfirmed` | When a submitted transaction is confirmed | `TradeWidgetTransactionPayload` |
-| `onError` | When metadata, configuration, quote, wallet, balance, or execution errors occur | `TradeWidgetErrorPayload` |
+| `onError` | When metadata, configuration, selection, quote, wallet, balances, execution, or unsupported errors occur | `TradeWidgetErrorPayload` |
 
 ## Event behavior notes
 
 - `onQuote` is deduplicated, so identical resolved quotes are not emitted repeatedly
+- `onQuote` can fire after the initial quote load, a manual refresh, or an auto-refresh when the resolved quote changed
 - `onConnect` only reports `namespace`, `address`, and `walletName`; it does not identify whether the connection came from the origin or destination side
 - `onApprove` and `onSwap` are submission hooks, not simple button-click hooks
 - `onTxSubmitted` is the generic submission event for both `approve` and `swap`
@@ -52,8 +53,10 @@ description: "Callback hooks emitted by TradeWidget."
 
 In batched EVM flows that combine approval and swap into a single EIP-5792 call, the widget may only emit the swap-side transaction event because there is no separate approval transaction hash.
 
-The widget also applies a local quote cooldown to avoid excessive refresh loops:
+The widget also applies a local quote lifecycle around refreshes:
 
+- successful quotes auto-refresh every 60 seconds while the selection stays stable
+- auto-refresh stops after 5 consecutive refresh cycles
 - more than 5 quote requests within 5 seconds triggers a local cooldown
 - the cooldown lasts 5 seconds
 - during that window, `onError` can emit a quote error with `statusCode: 429` even if the backend did not return 429
