@@ -78,6 +78,60 @@ After receiving the quote:
 * If required, approve tokens using your wallet.
 * Sign and broadcast the returned transaction data externally.
 
+## API Key Configuration
+
+Delora MCP does not take an API key as a tool argument.
+
+For HTTP MCP clients that support custom headers, you can pass your Delora API key directly to the MCP endpoint using either:
+
+* `x-api-key: YOUR_API_KEY`
+* `Authorization: Bearer YOUR_API_KEY`
+
+The MCP server resolves the key and forwards it to Delora API as `x-api-key`.
+
+Example hosted MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "delora": {
+      "type": "http",
+      "url": "https://mcp.delora.build/mcp",
+      "headers": {
+        "x-api-key": "YOUR_API_KEY"
+      }
+    }
+  }
+}
+```
+
+If your client does not support custom HTTP headers, or if you run Delora MCP in `stdio` mode, configure the MCP server process with `DELORA_API_KEY` instead:
+
+```bash
+# macOS / Linux
+DELORA_API_KEY=YOUR_API_KEY npx -y @deloraprotocol/mcp@latest
+```
+
+```powershell
+# Windows PowerShell
+$env:DELORA_API_KEY="YOUR_API_KEY"
+npx -y @deloraprotocol/mcp@latest
+```
+
+<Info>
+For HTTP requests, incoming `x-api-key` / `Authorization` headers take priority over `DELORA_API_KEY`. For `stdio`, `DELORA_API_KEY` is the supported way to provide the key.
+</Info>
+
+## Integrator String & Fees
+
+`get_quote` supports the optional `integrator` and `fee` parameters:
+
+* `integrator` should be the same integrator string configured for your Delora integration.
+* `fee` is optional, but it is only valid when `integrator` is also provided.
+* If you only need attribution or tracking, you can send `integrator` without `fee`.
+
+For fee wallet setup and payout behavior, see [Fee Configuration](/protocol/fee-configuration).
+
 ## Next Steps
 
 <CardGroup cols={2}>

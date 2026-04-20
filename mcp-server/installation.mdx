@@ -4,9 +4,9 @@ description: "Installation instructions how to connect Delora to your AI environ
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-You can either run the MCP server locally using the Delora package or connect directly to the hosted MCP endpoint.
+You can either run the MCP server locally using the official Delora MCP npm package or connect directly to the hosted MCP endpoint.
 
-## 1. Use the Delora SDK or Hosted Package
+## 1. Run the Delora MCP Package Locally
 
 Run the Delora MCP server locally using the official package.
 
@@ -20,6 +20,35 @@ npx -y @deloraprotocol/mcp@latest
 
 <Info>
 This starts the server in stdio mode (default), which is suitable for most local AI agent integrations.
+</Info>
+
+### Optional Environment Variables
+
+Use environment variables when you want the MCP server to forward your Delora API key or use a custom upstream API URL.
+
+| Variable | Description |
+| -------- | ----------- |
+| `DELORA_API_KEY` | Optional Delora API key forwarded upstream as `x-api-key` |
+| `DELORA_API_URL` | Optional override for the Delora API base URL |
+| `MCP_TRANSPORT` | `stdio` (default) or `http` |
+| `PORT` | HTTP port when `MCP_TRANSPORT=http` |
+| `HOST` | HTTP bind address when `MCP_TRANSPORT=http` |
+
+Example:
+
+```bash
+# macOS / Linux
+DELORA_API_KEY=YOUR_API_KEY npx -y @deloraprotocol/mcp@latest
+```
+
+```powershell
+# Windows PowerShell
+$env:DELORA_API_KEY="YOUR_API_KEY"
+npx -y @deloraprotocol/mcp@latest
+```
+
+<Info>
+`DELORA_API_KEY` is the correct way to provide a key in `stdio` mode. In HTTP mode, you can also send `x-api-key` or `Authorization: Bearer ...` as incoming request headers when your MCP client supports custom headers.
 </Info>
 
 ### Installation from Source
@@ -63,19 +92,39 @@ stdio configuration (local agents):
   "delora": {
     "type": "stdio",
     "command": "npx",
-    "args": ["-y", "@deloraprotocol/mcp@latest"]
+    "args": ["-y", "@deloraprotocol/mcp@latest"],
+    "env": {
+      "DELORA_API_KEY": "YOUR_API_KEY"
+    }
   }
 }
 ```
+
+<Info>
+If your MCP client supports per-server environment variables, set `DELORA_API_KEY` there. This keeps the key on the MCP server side and works for both local `stdio` usage and self-hosted MCP servers.
+</Info>
 
 Streamable HTTP:
 
 ``` json
 "delora": {
   "type": "streamable-http",
-  "url": "http://localhost:3000/mcp"
+  "url": "http://localhost:3000/mcp",
+  "headers": {
+    "x-api-key": "YOUR_API_KEY"
+  }
 }
 ```
+
+You can also use:
+
+```json
+"headers": {
+  "Authorization": "Bearer YOUR_API_KEY"
+}
+```
+
+if your MCP client supports custom HTTP headers.
 
 #### Claude Code (CLI & IDE plugins)
 
@@ -145,11 +194,11 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 # Run in dev mode (no build needed)
 npm run dev
 
-# Test with MCP Inspector
-npm run inspect
+# Run local HTTP mode in dev
+npm run dev:http
 
-# Run tests
-npm test
+# Build production output
+npm run build
 ```
 
 ## 2. Use the Delora Hosted MCP Server
@@ -161,6 +210,10 @@ MCP endpoint:
 ```
 https://mcp.delora.build/mcp
 ```
+
+<Info>
+The hosted endpoint works without local setup. If your MCP client supports custom HTTP headers, you can pass `x-api-key` or `Authorization: Bearer ...` directly to `https://mcp.delora.build/mcp`. If your client does not support headers, use a local or self-hosted Delora MCP server with `DELORA_API_KEY`.
+</Info>
 
 Below are setup instructions for supported AI tools.
 

@@ -33,11 +33,15 @@ Get a cross-chain quote: best route, estimated output amount, calldata, and gas.
 | `destinationCurrency` | Yes | Token address on destination chain; use `0x0...` for native |
 | `senderAddress` | No | Sender wallet address |
 | `receiverAddress` | No | Receiver wallet address (defaults to sender) |
-| `integrator` | No | Integrator identifier for tracking |
-| `fee` | No | Fee 0–0.1 (only with integrator) |
+| `integrator` | No | Integrator string configured for your Delora integration; used for attribution and fee handling |
+| `fee` | No | Fee 0–0.1; only valid when `integrator` is also provided |
 | `slippage` | No | Slippage tolerance 0–1 (e.g. 0.005 for 0.5%) |
 
-The response includes `inputAmount`, `outputAmount`, `tool`, `calldata` (transaction data for the wallet), and optional `fees` and `gas` details.
+The response includes `inputAmount`, `outputAmount`, `adapter`, `calldata` (transaction data for the wallet), and optional `fees` and `gas` details.
+
+<Tip>
+Use the same `integrator` string that is configured for your Delora integration. If you want Delora to apply an integrator fee, send both `integrator` and `fee`. The Delora API key is not passed as a tool parameter; configure it on the MCP server with `DELORA_API_KEY` or send it to the HTTP MCP endpoint via `x-api-key` / `Authorization` when your client supports custom headers.
+</Tip>
 
 ## Chain Information
 
