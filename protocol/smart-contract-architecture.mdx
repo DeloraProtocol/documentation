@@ -16,6 +16,8 @@ This design makes Delora:
 
 Business logic lives inside Facet contracts, each responsible for interacting with a specific type of liquidity provider (e.g., bridges, DEXs).
 
+For API and MCP integrations, Delora exposes this execution path as unsigned transaction payload data (`calldata`). Integrators do not assemble facet calls manually; they request a quote, receive the execution-ready payload, and then sign and broadcast it from their own wallet or backend.
+
 ---
 
 <img

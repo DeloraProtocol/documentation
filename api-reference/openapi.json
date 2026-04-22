@@ -46,14 +46,14 @@
             "name": "senderAddress",
             "in": "query",
             "required": true,
-            "description": "The sending wallet address",
+            "description": "The sending wallet address. Required for quote generation and execution payload construction. It is validated against the origin chain type.",
             "schema": { "type": "string" }
           },
           {
             "name": "receiverAddress",
             "in": "query",
             "required": false,
-            "description": "The receiving wallet address. If none is provided, the senderAddress will be used",
+            "description": "The receiving wallet address. It is validated against the destination chain type. If omitted and the origin/destination chain types match, senderAddress will be used. If the chain types differ, receiverAddress is required.",
             "schema": { "type": "string" }
           },
           {
@@ -101,7 +101,7 @@
             "description": "List of exchange adapters that should be excluded from the `/quotes`. Exchange tool identifiers must be provided as a comma-separated list. Retrieve current exchange keys from the `/v1/tools` endpoint.",
             "schema": { 
               "type": "string",
-              "examples": ["jupiter", "okx, across"]
+              "examples": ["OPENOCEAN", "OPENOCEAN,OKX"]
             }
           }
         ],
@@ -172,6 +172,12 @@
                     "value": {
                       "error": 400,
                       "message": "originCurrency is required"
+                    }
+                  },
+                  "receiverRequiredForCrossType": {
+                    "value": {
+                      "error": 400,
+                      "message": "`receiverAddress` is required when origin and destination chain types differ."
                     }
                   }
                 }
@@ -529,7 +535,7 @@
     "schemas": {
       "QuoteResponse": {
         "type": "object",
-        "required": ["inputAmount", "outputAmount", "tool", "calldata"],
+        "required": ["inputAmount", "outputAmount", "adapter", "calldata"],
         "properties": {
           "inputAmount": {
             "type": "string",
@@ -539,24 +545,26 @@
             "type": "string",
             "description": "The estimated resulting amount of the destinationCurrency including all decimals"
           },
-          "tool": {
+          "adapter": {
             "type": "string",
-            "description": "The tool used for the transaction"
+            "description": "The adapter or route selected for the transaction"
           },
           "calldata": {
-            "type": "array",
-            "description": "The transaction data that can be triggered using a wallet provider",
-            "items": { "$ref": "#/components/schemas/CalldataItem" }
+            "$ref": "#/components/schemas/CalldataItem",
+            "description": "Execution-ready transaction payload returned by Delora"
           },
           "fees": {
-            "type": "array",
-            "description": "Fees included in the transfer",
-            "items": { "$ref": "#/components/schemas/Fee" }
+            "$ref": "#/components/schemas/ParsedFees",
+            "description": "Structured fee summary, including the dominant total currency and raw fee breakdown"
           },
           "gas": {
+            "$ref": "#/components/schemas/Gas",
+            "description": "Suggested gas values for EVM execution when available"
+          },
+          "warnings": {
             "type": "array",
-            "description": "Gas included in the transfer",
-            "items": { "$ref": "#/components/schemas/Gas" }
+            "description": "Optional non-blocking warnings returned with the quote",
+            "items": { "$ref": "#/components/schemas/QuoteWarning" }
           }
         }
       },
@@ -570,18 +578,61 @@
         },
         "additionalProperties": true
       },
-      "Fee": {
+      "ParsedFees": {
         "type": "object",
-        "additionalProperties": true
+        "properties": {
+          "total": { "$ref": "#/components/schemas/ParsedFeesTotalCurrency" },
+          "breakdown": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ParsedFeesBreakdownItem" }
+          },
+          "totalUsd": {
+            "type": "string",
+            "description": "Optional USD sum of fee breakdown items when available"
+          }
+        },
+        "required": ["total", "breakdown"]
+      },
+      "ParsedFeesTotalCurrency": {
+        "type": "object",
+        "properties": {
+          "amount": { "type": "string", "description": "Total amount in minimal units" },
+          "currencySymbol": { "type": "string" },
+          "currencyAddress": { "type": "string" },
+          "chainId": { "type": "integer" },
+          "decimals": { "type": "integer" }
+        },
+        "required": ["amount", "currencySymbol", "currencyAddress", "chainId"]
+      },
+      "ParsedFeesBreakdownItem": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "description": "Fee category such as gas, relayer, protocol, or integrator" },
+          "amount": { "type": "string", "description": "Fee amount in minimal units" },
+          "currencySymbol": { "type": "string" },
+          "currencyAddress": { "type": "string" },
+          "chainId": { "type": "integer" },
+          "decimals": { "type": "integer" },
+          "amountUsd": { "type": "string", "description": "Optional USD representation of this fee item" }
+        },
+        "required": ["type", "amount", "currencySymbol", "currencyAddress", "chainId"]
       },
       "Gas": {
         "type": "object",
         "properties": {
-          "gasPrice": { "type": "hex", "description": "Legacy gas price in wei used for non-EIP-1559 transactions" },
-          "maxFeePerGas": { "type": "hex", "description": "Maximum total gas fee in wei the sender is willing to pay (base fee + priority fee)" },
-          "maxPriorityFeePerGas": { "type": "hex", "description": "Priority fee in wei (tip) paid to validators to incentivize faster transaction inclusion" }
+          "gasPrice": { "type": "string", "description": "Legacy gas price in wei, encoded as a hex string" },
+          "maxFeePerGas": { "type": "string", "description": "Maximum total gas fee in wei, encoded as a hex string" },
+          "maxPriorityFeePerGas": { "type": "string", "description": "Priority fee in wei, encoded as a hex string" }
         },
         "additionalProperties": true
+      },
+      "QuoteWarning": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string", "description": "Machine-readable warning code" },
+          "message": { "type": "string", "description": "Human-readable warning message" }
+        },
+        "required": ["code", "message"]
       },
       "Error": {
         "type": "object",
@@ -605,7 +656,7 @@
         "properties": {
           "key": { "type": "string", "description": "Short chain key (e.g., eth, opt)" },
           "name": { "type": "string", "description": "Full name of the blockchain network"},
-          "chainType": { "type": "string", "description": "Type of chain: EVM, SVM" },
+          "chainType": { "type": "string", "description": "Type of chain: EVM or SVM" },
           "id": { "type": "integer", "description": "Numeric chain ID used in RPC and contracts" },
           "idHex": { "type": "string", "description": "Hexadecimal representation of the chain ID" },
           "mainnet": { "type": "boolean", "description": "Indicates whether the chain is a mainnet" },

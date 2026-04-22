@@ -54,6 +54,10 @@ Cross-chain routing engine
 
 This approach ensures consistent tool discovery and predictable integration behavior across supported AI environments.
 
+<Note>
+  The protocol documentation describes the underlying signed Execution Packet and Delora Diamond execution path. MCP exposes the execution-ready transaction payload (`calldata`) produced for that route so your wallet or backend can sign and broadcast it. These are the same flow at different abstraction layers.
+</Note>
+
 ## Example Workflow
 
 A typical cross-chain routing flow using the Delora MCP server:
@@ -63,7 +67,7 @@ A typical cross-chain routing flow using the Delora MCP server:
     Read how to use the server (chains, tokens, quote).
   </Step>
   <Step title="get_chains">
-    Get chain IDs and filter by chainTypes (EVM, SOLANA) if necessary.
+    Get chain IDs and filter by chainTypes (EVM, SVM) if necessary.
   </Step>
   <Step title="get_token (chain, symbol) or get_tokens (chains)">
     Get token addresses on the source and destination networks.

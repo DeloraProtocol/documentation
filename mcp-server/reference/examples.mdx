@@ -4,7 +4,7 @@ description: "Example prompts, tool calls, and response shapes for the Delora MC
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-These examples show how to use the Delora MCP tools: typical prompts, tool arguments, and response structures. They are based on the [Delora API](https://api.delora.build) and the MCP server implementation.
+These examples show how to use the Delora MCP tools: typical prompts, tool arguments, and response structures. They are based on the [Delora API](https://api.delora.build) and the MCP server implementation. Quote responses use `adapter` plus a single `calldata` object, and may also include optional `warnings`.
 
 ## Example Prompts & Tool Calls
 
@@ -118,6 +118,7 @@ Key points:
 * **`outputAmount`**: Estimated amount on the destination chain (in smallest units).
 * **`calldata`**: Transaction payload to sign and submit with your wallet.
 * **`fees`**: Total and breakdown (gas, relayer, etc.) in USD and token amounts.
+* **`warnings`**: Optional non-blocking issues that do not prevent Delora from returning a quote.
 
 ### Same-Chain Swap Quote (1 ETH on Arbitrum via OpenOcean)
 
@@ -264,7 +265,7 @@ Returns the server’s built-in guide (workflow: get_chains → get_tokens/get_t
   <Card title="Available Tools" icon="wrench" href="./available-tools">
     Full list of MCP tools and parameters.
   </Card>
-  <Card title="API Reference" icon="book" href="/api-reference/alyra-api-v1">
+  <Card title="API Reference" icon="book" href="/api-reference/endpoint/get-a-quote-for-a-token-transfer">
     Delora REST API endpoints and schemas.
   </Card>
 </CardGroup>

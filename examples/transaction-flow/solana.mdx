@@ -33,8 +33,7 @@ const getQuote = async (params: {
   amount: string;
   originCurrency: string;
   destinationCurrency: string;
-  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
-  senderAddress?: string;
+  senderAddress: string;
   receiverAddress?: string;
 }) => {
   const query = new URLSearchParams();
@@ -71,7 +70,6 @@ export const executeSwap = async (provider: SolanaProvider, connection: Connecti
     amount,
     originCurrency,
     destinationCurrency,
-    tradeType: 'EXACT_INPUT',
     senderAddress: walletAddress,
     receiverAddress: walletAddress,
   });
@@ -156,6 +154,8 @@ const SwapButton = () => {
 
 The `getQuote` function constructs a query string from parameters and fetches the quote from the API:
 
+`/v1/quotes` currently uses exact-input semantics by default, so `tradeType` is intentionally not passed in this example. `senderAddress` is required, while `receiverAddress` is optional for same-type routes like this one and defaults to `senderAddress`.
+
 <CodeGroup>
 
 ```ts TypeScript
@@ -165,8 +165,7 @@ const getQuote = async (params: {
   amount: string;
   originCurrency: string;
   destinationCurrency: string;
-  tradeType: 'EXACT_INPUT' | 'EXACT_OUTPUT';
-  senderAddress?: string;
+  senderAddress: string;
   receiverAddress?: string;
 }) => {
   const query = new URLSearchParams();
@@ -195,8 +194,8 @@ const getQuote = async (params: {
 - `originChainId` / `destinationChainId`: Chain IDs (`1000000001` for Solana)
 - `amount`: Token amount in smallest unit (e.g., `"100000000"` for 100 USDC with 6 decimals)
 - `originCurrency` / `destinationCurrency`: SPL token mint addresses (e.g., `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` for USDC)
-- `tradeType`: `'EXACT_INPUT'` or `'EXACT_OUTPUT'`
-- `senderAddress` / `receiverAddress`: Optional Solana wallet addresses (base58 encoded)
+- `senderAddress`: Required Solana wallet address (base58 encoded)
+- `receiverAddress`: Optional for same-type routes; defaults to `senderAddress`. For routes across different chain types, provide it explicitly.
 
 ### 2. Wallet provider setup
 

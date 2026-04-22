@@ -4,10 +4,43 @@ openapi: "GET /v1/quotes"
 og:image: "https://docs.delora.build/images/OG.png"
 ---
 
-This endpoint enables you to request a quote for transferring tokens, whether across chains or within the same chain. It returns detailed information, including an estimated output amount and a "calldata" that can be directly submitted to your wallet. The estimated output amount can be found in the `outputAmount` field.
+This endpoint enables you to request a quote for transferring tokens, whether across chains or within the same chain. It returns detailed information, including an estimated output amount, an execution-ready `calldata` payload, and optional non-blocking `warnings`. The estimated output amount can be found in the `outputAmount` field.
 
 <Info>
   All Delora APIs don't require an API key by default. An API key is only necessary for accessing higher request limits.
 </Info>
+
+<Note>
+  `/v1/quotes` currently uses exact-input semantics. `tradeType` is not part of the public query contract and should not be sent by new integrations.
+</Note>
+
+<Note>
+  `senderAddress` is required. `receiverAddress` is optional only when the origin and destination chain types match; otherwise it must be provided explicitly.
+</Note>
+
+<Note>
+  Address validation is chain-specific: `senderAddress` is validated against the origin chain type, and `receiverAddress` is validated against the destination chain type. Invalid or incompatible addresses return `400 Bad Request`.
+</Note>
+
+### Address Behavior
+
+| Route type | `senderAddress` | `receiverAddress` |
+| ---------- | --------------- | ----------------- |
+| Same chain type (`EVM -> EVM`, `SVM -> SVM`) | Required | Optional. Defaults to `senderAddress` if omitted. |
+| Different chain types (`EVM -> SVM`, `SVM -> EVM`) | Required | Required |
+
+Example:
+
+```http
+GET /v1/quotes?originChainId=1&destinationChainId=42161&originCurrency=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&destinationCurrency=0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8&senderAddress=0xYourSenderAddr&amount=1000000
+```
+
+This is valid because the route stays within the same chain type (`EVM -> EVM`), so `receiverAddress` can default to `senderAddress`.
+
+```http
+GET /v1/quotes?originChainId=1&destinationChainId=1000000001&originCurrency=0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48&destinationCurrency=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&senderAddress=0xYourSenderAddr&amount=1000000
+```
+
+This returns `400 Bad Request` because the route is `EVM -> SVM`, so `receiverAddress` must be provided explicitly.
 
 **Base URL:** `https://api.delora.build/v1`

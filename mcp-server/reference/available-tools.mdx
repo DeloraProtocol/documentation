@@ -4,7 +4,7 @@ description: "Complete reference for all tools exposed by the Delora MCP Server.
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-The Delora MCP Server exposes the following tools. Each tool maps to a corresponding [Delora API](/api-reference/alyra-api-v1) endpoint (`https://api.delora.build/v1`).
+The Delora MCP Server exposes the following tools. Each tool maps to a corresponding Delora API endpoint under `https://api.delora.build/v1`.
 
 ## Workflow & Instructions
 
@@ -31,17 +31,25 @@ Get a cross-chain quote: best route, estimated output amount, calldata, and gas.
 | `amount` | Yes | Amount in smallest units (wei/smallest decimals) |
 | `originCurrency` | Yes | Token address on origin chain; use `0x0...` for native currency |
 | `destinationCurrency` | Yes | Token address on destination chain; use `0x0...` for native |
-| `senderAddress` | No | Sender wallet address |
-| `receiverAddress` | No | Receiver wallet address (defaults to sender) |
+| `senderAddress` | Yes | Sender wallet address |
+| `receiverAddress` | No | Receiver wallet address. Defaults to sender only when origin/destination chain types match; otherwise required |
 | `integrator` | No | Integrator string configured for your Delora integration; used for attribution and fee handling |
 | `fee` | No | Fee 0–0.1; only valid when `integrator` is also provided |
 | `slippage` | No | Slippage tolerance 0–1 (e.g. 0.005 for 0.5%) |
 
-The response includes `inputAmount`, `outputAmount`, `adapter`, `calldata` (transaction data for the wallet), and optional `fees` and `gas` details.
+The response includes `inputAmount`, `outputAmount`, `adapter`, a single `calldata` object (transaction data for the wallet), and optional `fees`, `gas`, and `warnings` details.
 
 <Tip>
-Use the same `integrator` string that is configured for your Delora integration. If you want Delora to apply an integrator fee, send both `integrator` and `fee`. The Delora API key is not passed as a tool parameter; configure it on the MCP server with `DELORA_API_KEY` or send it to the HTTP MCP endpoint via `x-api-key` / `Authorization` when your client supports custom headers.
+Use the same `integrator` string that is configured for your Delora integration. If you want Delora to apply an integrator fee, send both `integrator` and `fee`. The Delora API key is not passed as a tool parameter; configure it on the MCP server with `DELORA_API_KEY` or send it to the HTTP MCP endpoint via `x-api-key` / `Authorization` when your client supports custom headers. `tradeType` is intentionally not exposed here because `/v1/quotes` currently uses exact-input semantics.
 </Tip>
+
+<Note>
+  Address behavior follows the REST API contract:
+
+  - `senderAddress` is always required.
+  - `receiverAddress` is optional only when the origin and destination chain types match.
+  - If the chain types differ, `receiverAddress` must be provided explicitly.
+</Note>
 
 ## Chain Information
 
@@ -51,7 +59,7 @@ List supported chains. Returns chain IDs, names, chain types, RPC URLs, block ex
 
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
-| `chainTypes` | No | Comma-separated chain types (e.g. `EVM`, `SOLANA`) |
+| `chainTypes` | No | Comma-separated chain types (e.g. `EVM`, `SVM`) |
 
 ## Token Information
 
@@ -62,7 +70,7 @@ List supported tokens. Use this to discover available tokens before requesting q
 | Parameter | Required | Description |
 | --------- | -------- | ----------- |
 | `chains` | No | Comma-separated chain IDs or identifiers |
-| `chainTypes` | No | Chain types (e.g. `EVM`, `SOLANA`) |
+| `chainTypes` | No | Chain types (e.g. `EVM`, `SVM`) |
 
 ### get_token
 
