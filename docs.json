@@ -7,6 +7,12 @@
     ]
   },
   "name": "Delora",
+  "redirects": [
+    {
+      "source": "/widget/basic-setup/select-widget-variants",
+      "destination": "/widget/basic-setup/integration-patterns"
+    }
+  ],
   "colors": {
     "primary": "#0088FF",
     "light": "#0088FF",

@@ -55,7 +55,7 @@ Cross-chain routing engine
 This approach ensures consistent tool discovery and predictable integration behavior across supported AI environments.
 
 <Note>
-  The protocol documentation describes the underlying signed Execution Packet and Delora Diamond execution path. MCP exposes the execution-ready transaction payload (`calldata`) produced for that route so your wallet or backend can sign and broadcast it. These are the same flow at different abstraction layers.
+  Delora API returns an execution-ready transaction payload (`calldata`). The user or integrator wallet signs and broadcasts the blockchain transaction. Internally, the payload encodes the selected route, constraints, fee logic, deadlines, and adapter-specific execution data.
 </Note>
 
 ## Example Workflow

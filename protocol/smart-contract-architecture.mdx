@@ -12,7 +12,7 @@ This design makes Delora:
 
 - **Modular** — new liquidity providers can be added as separate facets without redeploying the core system.
 - **Upgradeable** — business logic evolves without changing the main contract address.
-- **Deterministic** — all routes follow strict execution rules encoded in the **Execution Packet**.
+- **Deterministic** — all routes follow strict execution rules encoded in the returned transaction payload.
 
 Business logic lives inside Facet contracts, each responsible for interacting with a specific type of liquidity provider (e.g., bridges, DEXs).
 
@@ -31,10 +31,10 @@ For API and MCP integrations, Delora exposes this execution path as unsigned tra
 
 Example: a user swaps USDC on Ethereum for USDT on Arbitrum.
 
-1. The signed **Execution Packet** is submitted to the **Delora Diamond** contract.
-2. Diamond validates the packet and forwards the call to the appropriate **Bridge Facet**.
+1. The user or integrator wallet signs and broadcasts the transaction returned by Delora API.
+2. Diamond validates the encoded route data and forwards the call to the appropriate **Bridge Facet**.
 3. The Bridge Facet encodes and forwards the transaction to the chosen bridge (e.g., Stargate).
-4. Settlement completes on the destination chain exactly as specified in the packet, or reverts safely if constraints are violated.
+4. Settlement proceeds through the destination adapter when encoded constraints and downstream requirements are satisfied.
 
 ---
 

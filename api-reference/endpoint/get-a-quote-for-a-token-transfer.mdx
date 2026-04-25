@@ -11,10 +11,6 @@ This endpoint enables you to request a quote for transferring tokens, whether ac
 </Info>
 
 <Note>
-  `/v1/quotes` currently uses exact-input semantics. `tradeType` is not part of the public query contract and should not be sent by new integrations.
-</Note>
-
-<Note>
   `senderAddress` is required. `receiverAddress` is optional only when the origin and destination chain types match; otherwise it must be provided explicitly.
 </Note>
 
