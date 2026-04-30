@@ -43,6 +43,7 @@ The `config` prop is required, but all fields inside `TradeWidgetConfig` are opt
 ## Minimal install notes
 
 - Default API base: `https://api.delora.build`
-- Metadata endpoints used by the widget: `/v1/chains` and `/v1/tokens`
+- Metadata endpoints used by the widget: `/v1/chains`, `/v1/tokens`, and `/v1/tools`
 - Quote endpoint used by the widget: `/v1/quotes`
+- For browser-based embeds that need authenticated rate limits, keep your Delora API key on your backend and point `config.apiUrl` to your proxy. See [Configure Widget](./configure-widget)
 - If your app already manages wallets or receiver state, see [Wallet & Receiver Management](../advanced-setup/wallet-management)
