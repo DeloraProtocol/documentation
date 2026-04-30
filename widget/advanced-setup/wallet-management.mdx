@@ -121,6 +121,8 @@ For each externally managed side, the widget reads values such as:
 
 So your application remains the source of truth for connection state, while the widget only renders that state.
 
+In externally managed mode, the host app is also responsible for pushing state updates back into the widget after connect, disconnect, account change, or chain change. The widget does not subscribe to external provider events on your behalf.
+
 The provider accepts:
 
 - `origin` for the sell-side wallet
@@ -205,21 +207,19 @@ This receiver-side behavior works with both integration patterns:
 
 After a wallet is connected, the widget still needs provider access to execute transactions.
 
-For EVM, it resolves providers in this order:
+For EVM execution, the current widget implementation requires a raw EIP-1193 provider so it can:
 
-1. `evmBrowserProvider`
-2. `getEvmBrowserProvider()`
-3. `getEvmProvider()`
-4. `evmProvider`
+- read the active account with `eth_accounts`
+- switch chains with `wallet_switchEthereumChain`
+- add missing chains with `wallet_addEthereumChain`
+- submit transactions with `eth_sendTransaction`
 
-If only a raw EIP-1193 provider is available, the widget wraps it into an `ethers` `BrowserProvider` when needed.
+Provide one of these for externally managed EVM execution:
 
-For an externally managed EVM side that should execute trades, you should provide at least one of these:
-
-- `evmBrowserProvider`
-- `getEvmBrowserProvider()`
 - `getEvmProvider()`
 - `evmProvider`
+
+If you also expose `evmBrowserProvider` or `getEvmBrowserProvider()`, treat them as optional helpers, not as a replacement for the raw EIP-1193 provider.
 
 For Solana, it resolves providers in this order:
 
@@ -247,6 +247,8 @@ Examples:
 - manage both sides externally
 
 When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can still show its own wallet chooser and call the host's `connectWalletOption` logic.
+
+When you provide `walletOptions`, make sure each option's `availableNamespaces` accurately reflects the ecosystems that wallet can actually connect to.
 
 ## Execution details
 
