@@ -57,7 +57,7 @@ The widget also applies a local quote lifecycle around refreshes:
 
 - successful quotes auto-refresh every 60 seconds while the selection stays stable
 - auto-refresh stops after 5 consecutive refresh cycles
-- more than 5 quote requests within 5 seconds triggers a local cooldown
+- more than 15 quote requests within 5 seconds triggers a local cooldown
 - the cooldown lasts 5 seconds
 - during that window, `onError` can emit a quote error with `statusCode: 429` even if the backend did not return 429
 

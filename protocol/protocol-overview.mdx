@@ -5,7 +5,7 @@ og:image: "https://docs.delora.build/images/OG.png"
 
 ## Introduction
 
-Delora is an execution infrastructure that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API, returning deterministic Execution Packets that are safely executed on-chain. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
+Delora is an execution infrastructure that aggregates liquidity and abstracts away the complexity of multi-chain interactions. Our system connects dApps with bridges and DEXs through a single API, returning execution-ready transaction payloads that can be signed and broadcast by the user or integrator wallet. This architecture enables seamless cross-chain and same-chain transactions with built-in monitoring, fallback logic, and transparent smart contracts.
 
 <img
   src="/images/image.png"
@@ -18,7 +18,7 @@ Delora is an execution infrastructure that aggregates liquidity and abstracts aw
 
 **What it is**: The entry point where users interact.
 
-**How it works**: dApps plug into Delora’s API to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, the dApp packages it into a signed Execution Packet and submits it on-chain for processing.
+**How it works**: dApps plug into Delora’s API to request quotes for swaps or cross-chain transfers. Once the optimal path is chosen, Delora returns transaction payload data (`calldata`) for that route. The user or integrator wallet signs and broadcasts the blockchain transaction.
 
 #### 2. Delora Router (Off-chain Routing)
 
@@ -28,18 +28,19 @@ Delora is an execution infrastructure that aggregates liquidity and abstracts aw
 
 - Collect pricing and routes from integrated bridges and DEXs.
 - Determine the optimal path based on cost, speed, and reliability.
-- After identifying the optimal route, Delora validates the security of the selected path, ensuring that there are no vulnerabilities or risks before proceeding.
-- Encode the chosen route and parameters into an Execution Packet for deterministic settlement.
+- After identifying the optimal route, Delora validates it against supported adapters, encoded constraints, allowlists, and execution requirements before returning calldata.
+- Encode the chosen route, constraints, fee logic, deadlines, and adapter-specific execution data into the returned payload.
 
-#### 3. Execution Packet (CallData)
+#### 3. Transaction Payload (Calldata)
 
-**Essence**: A structured, signed instruction that defines exactly how a transaction should execute.
+**Essence**: Execution-ready transaction data that defines the selected route and constraints.
 
 **Contents**:
 
 - Full route across liquidity sources.
 - Minimum output amounts and deadlines.
 - Fee logic.
+- Adapter-specific execution data.
 
 #### 4. Delora Diamond Contract (On-chain Executor)
 
@@ -47,7 +48,7 @@ Delora is an execution infrastructure that aggregates liquidity and abstracts aw
 
 **Functions**:
 
-- Validate the Execution Packet and signature.
+- Validate the encoded route data and transaction constraints.
 - Route the transaction to the correct facet (bridge/DEX).
 - Enforce constraints and trigger fallback if conditions are violated.
 - Act as a deterministic state machine for all executions.
@@ -61,9 +62,9 @@ Delora is an execution infrastructure that aggregates liquidity and abstracts aw
 
 #### 6. Liquidity Provider Contracts
 
-- **Where settlement happens**: Bridges, or DEXs, contracts finalize the trade/transfer.
+- **Where settlement happens**: Bridge or DEX contracts finalize the trade or transfer.
 
-  **Rule**: Delora enforces deterministic execution — every step must match the encoded packet.
+  **Rule**: Delora enforces encoded execution constraints before routing funds through supported adapters.
 
 ---
 
@@ -71,19 +72,19 @@ Delora is an execution infrastructure that aggregates liquidity and abstracts aw
 
 1. **Request** → The user starts a swap or transfer from a dApp integrated with Delora.
 2. **Quote Discovery** → Delora Router queries connected bridges and DEXs to gather pricing and route data.
-3. **Packet Creation** → The chosen route (with minOut, deadlines, and fee caps) is encoded into a deterministic **Execution Packet**.
-4. **Signature** → The user signs the packet, approving exactly this execution flow.
-5. **On-chain Submission** → The signed packet is sent to the **Delora Diamond** contract.
+3. **Payload Creation** → The chosen route, constraints, fee logic, deadlines, and adapter-specific execution data are encoded into transaction payload data.
+4. **Transaction Signature** → The user or integrator wallet signs the blockchain transaction that contains the returned payload.
+5. **On-chain Submission** → The signed transaction is broadcast to the origin chain.
 6. **Facet Dispatch** → Delora Diamond validates the packet and forwards execution to the correct **Facet Module** (bridge or DEX).
 7. **Settlement** → The liquidity provider’s contract (bridge/DEX) finalizes the swap or transfer.
-8. **Outcome** → Execution either completes exactly as specified in the packet.
+8. **Outcome** → Execution completes if the encoded constraints and downstream adapter requirements are satisfied.
 
 ---
 
 ### Key Differentiators
 
-- **Security-first**: Strict execution rules ensure no undefined outcomes.
+- **Security-first**: Routes are validated against supported adapters, encoded constraints, allowlists, and execution requirements.
 - **Unified integration**: One API replaces dozens of fragmented setups.
-- **Determinism**: Execution is binary — success or safe fail.
+- **Determinism**: Execution follows encoded constraints and fails when those constraints are not satisfied.
 - **Modularity**: Extensible architecture with pluggable facets and providers.
 - **Efficiency**: Faster go-to-market with lower maintenance overhead.

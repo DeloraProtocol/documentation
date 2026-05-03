@@ -14,6 +14,7 @@ All runtime options live under the required `config` prop.
 <TradeWidget
   config={{
     apiKey: "your-api-key",
+    apiUrl: "https://your-app.com/api/delora",
     integrator: "my-dapp",
     fee: 0.03,
     slippage: 0.005,
@@ -26,8 +27,8 @@ All runtime options live under the required `config` prop.
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `apiUrl` | `string` | Delora API base used for `/v1/chains`, `/v1/tokens`, and `/v1/quotes` |
-| `apiKey` | `string` | Optional `x-api-key` header for Delora API requests |
+| `apiUrl` | `string` | Delora API base used for `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` |
+| `apiKey` | `string` | Optional `x-api-key` header for Delora API requests. Avoid using this directly in browser-rendered widgets. |
 | `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Per-chain RPC override map used for on-chain reads and execution helpers |
 | `integrator` | `string` | Forwarded to quote requests |
 | `fee` | `number` | Forwarded to quote requests. Valid range: `0..0.1` |
@@ -41,7 +42,14 @@ All runtime options live under the required `config` prop.
 
 If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to the default Delora API base.
 
-If you pass `apiKey` from a browser application, that key is exposed to the client. Treat it as a public integration key, not as a secret.
+For browser-based widget integrations, do not pass `apiKey` directly from the client. Instead:
+
+- keep your Delora API key on your backend
+- expose a proxy that forwards `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` to `https://api.delora.build`
+- point `config.apiUrl` to that proxy
+- if your proxy does not also serve Delora relative image assets, set `assetBaseUrl: "https://api.delora.build"` or proxy those asset paths as well
+
+`TradeWidget` already supports this pattern because all Delora API reads go through `config.apiUrl`.
 
 If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
 
@@ -163,7 +171,7 @@ The widget does not request a quote on every keystroke. Quote loading has a smal
 
 The widget also applies a local cooldown around quote refreshes to avoid excessive request loops:
 
-- more than 5 quote requests within 5 seconds starts a local cooldown
+- more than 15 quote requests within 5 seconds starts a local cooldown
 - the cooldown lasts 5 seconds
 - during that window, the widget can emit `onError({ source: "quote", statusCode: 429 })` even if the backend did not return 429
 

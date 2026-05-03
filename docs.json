@@ -69,8 +69,8 @@
           {
             "group": "EXAMPLES",
             "pages": [
-              "examples/transaction-flow/ethereum",
               "examples/transaction-flow/solana",
+              "examples/transaction-flow/ethereum",
               "examples/metadata-api"
             ]
           },

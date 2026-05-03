@@ -313,9 +313,44 @@ import {
 </TradeWidgetWalletProvider>;
 ```
 
-If you pass an `origin` or `destination` object, that side is externally managed. This is presence-based, not connection-based. A side with `namespace: null` and `address: null` is still externally managed if the object exists.
+`TradeWidgetWalletProvider` is a React context provider. It does not connect to wallets by itself and it does not replace an EVM or Solana provider.
 
-Omit a side entirely when you want that side to keep the built-in wallet flow.
+Its job is to expose two optional wallet adapters to `TradeWidget`:
+
+- `origin` for the sell-side wallet
+- `destination` for the receiver-side wallet
+
+When `TradeWidget` mounts, it reads that context and passes `origin` and `destination` into its wallet hooks. If one side is present, that side switches into externally managed mode. If one side is missing, the widget falls back to its built-in wallet flow for that side.
+
+This is presence-based, not connection-based.
+
+If you pass an `origin` or `destination` object at all, that side is considered externally managed even when `namespace` and `address` are currently `null`.
+
+If you want the widget to keep its built-in wallet flow for a side, omit that side from the provider value entirely.
+
+## What the widget reads from your wallet adapter
+
+For each externally managed side, the widget reads values such as:
+
+- `namespace`
+- `address`
+- `status`
+- `walletName`
+- `connectedWalletId`
+- `connectedWalletVisualId`
+- `connectedWalletIconUrl`
+- `errorMessage`
+
+So your application remains the source of truth for connection state, while the widget only renders that state.
+
+In externally managed mode, the host app is also responsible for pushing state updates back into the widget after connect, disconnect, account change, or chain change. The widget does not subscribe to external provider events on your behalf.
+
+The provider accepts:
+
+- `origin` for the sell-side wallet
+- `destination` for the receiver-side wallet
+
+If one side is omitted, the widget falls back to its internal wallet flow for that side.
 
 ## Managed wallet shape
 
@@ -406,14 +441,20 @@ The widget still handles:
 - confirmation callbacks
 - bridge and swap tracking
 
-For externally managed EVM wallets, provide at least one of:
+For externally managed EVM execution, the current widget implementation requires a raw EIP-1193 provider. Provide one of:
 
-- `evmBrowserProvider`
-- `getEvmBrowserProvider()`
 - `getEvmProvider()`
 - `evmProvider`
 
-If only a raw EIP-1193 provider is available, the widget wraps it into an `ethers` `BrowserProvider` when needed.
+The widget uses this provider to:
+
+- read the active account with `eth_accounts`
+- switch to the selected sell chain with `wallet_switchEthereumChain`
+- add missing chains with `wallet_addEthereumChain`
+- submit transactions with `eth_sendTransaction`
+- try EIP-5792 batching for approve plus swap when the wallet supports it
+
+If the widget needs an `ethers` `BrowserProvider`, it wraps the raw EIP-1193 provider internally. `evmBrowserProvider` and `getEvmBrowserProvider()` are optional helpers, not a replacement for the raw provider in the current execution path.
 
 For externally managed Solana wallets, provide:
 
@@ -424,16 +465,12 @@ For Wallet Standard Solana flows, also provide:
 - `walletStandardSolanaAccount`
 - `getConnectedWalletStandardSolanaAccount()`
 
-For EVM execution, the widget:
-
-- switches to the selected sell chain with `wallet_switchEthereumChain`
-- falls back to `wallet_addEthereumChain` if the chain is missing
-- tries EIP-5792 batching for approve plus swap when the wallet supports it
-
 For Solana execution, the widget uses:
 
 - Wallet Standard `signAndSendTransaction` when available
 - otherwise the connected wallet's `signTransaction`
+
+When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can show its own wallet chooser and call the host's `connectWalletOption` logic. Each option's `availableNamespaces` should reflect the ecosystems that wallet can actually connect to.
 
 ## Mental model
 

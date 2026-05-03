@@ -4,7 +4,7 @@ description: "Example prompts, tool calls, and response shapes for the Delora MC
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-These examples show how to use the Delora MCP tools: typical prompts, tool arguments, and response structures. They are based on the [Delora API](https://api.delora.build) and the MCP server implementation.
+These examples show how to use the Delora MCP tools: typical prompts, tool arguments, and response structures. They are based on the [Delora API](https://api.delora.build) and the MCP server implementation. Quote responses use `adapter` plus a single `calldata` object, and may also include optional `warnings`.
 
 ## Example Prompts & Tool Calls
 
@@ -118,6 +118,7 @@ Key points:
 * **`outputAmount`**: Estimated amount on the destination chain (in smallest units).
 * **`calldata`**: Transaction payload to sign and submit with your wallet.
 * **`fees`**: Total and breakdown (gas, relayer, etc.) in USD and token amounts.
+* **`warnings`**: Optional non-blocking issues that do not prevent Delora from returning a quote.
 
 ### Same-Chain Swap Quote (1 ETH on Arbitrum via OpenOcean)
 
@@ -185,7 +186,7 @@ Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amou
     {
       "key": "OPENOCEAN",
       "name": "OpenOcean",
-      "logoURI": "https://raw.githubusercontent.com/AlyraLabs/types/main/src/assets/icons/bridges/openocean.png",
+      "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/openocean.png",
       "supportedChains": ["1", "56", "10", "137", "42161", "8453", "130", "146", "999", "9745", "1329", "43114", "59144", "80094"]
     }
   ],
@@ -193,7 +194,7 @@ Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amou
     {
       "key": "ACROSS",
       "name": "Across",
-      "logoURI": "https://raw.githubusercontent.com/AlyraLabs/types/main/src/assets/icons/bridges/across.svg",
+      "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/across.svg",
       "supportedChains": ["1", "10", "56", "137", "59144", "8453", "42161", "130", "324", "480", "999", "1135", "34443", "534352", "81457", "9745", "1868"]
     }
   ]
@@ -204,7 +205,7 @@ Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amou
 
 Connect to the Delora MCP server programmatically.
 
-### TypeScript (MCP SDK, streamable HTTP)
+### TypeScript MCP Client (streamable HTTP)
 
 ```typescript
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -264,7 +265,7 @@ Returns the server’s built-in guide (workflow: get_chains → get_tokens/get_t
   <Card title="Available Tools" icon="wrench" href="./available-tools">
     Full list of MCP tools and parameters.
   </Card>
-  <Card title="API Reference" icon="book" href="/api-reference/alyra-api-v1">
+  <Card title="API Reference" icon="book" href="/api-reference/endpoint/get-a-quote-for-a-token-transfer">
     Delora REST API endpoints and schemas.
   </Card>
 </CardGroup>

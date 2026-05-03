@@ -112,10 +112,10 @@ If you are embedding the production trade experience, use `TradeWidget`. If you 
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `apiUrl` | `string` | Delora API base |
+| `apiUrl` | `string` | Delora API base. You can point this to your own backend proxy. |
 | `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | RPC override map by chain id |
 | `integrator` | `string` | Quote request integrator id |
-| `apiKey` | `string` | Optional Delora API key sent as `x-api-key` |
+| `apiKey` | `string` | Optional Delora API key sent as `x-api-key`. Recommended only for trusted environments. |
 | `fee` | `number` | Quote fee value, range `0..0.1` |
 | `slippage` | `number` | Initial slippage, range `0..1` |
 | `excludeBridges` | `string[]` | Bridge denylist for quote requests |
@@ -125,7 +125,9 @@ If you are embedding the production trade experience, use `TradeWidget`. If you 
 | `privacyPolicyUrl` | `string` | Privacy Policy link in the connect modal |
 | `walletConnectProjectId` | `string` | WalletConnect Cloud project id |
 
-`apiKey` is sent from the browser as an `x-api-key` header. Do not treat it as a secret.
+For browser-rendered widgets, do not pass `apiKey` directly from the client. Keep it on your backend and proxy `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` through `config.apiUrl`.
+
+If your proxy does not serve Delora-relative image assets, set `assetBaseUrl` explicitly or proxy those asset paths as well.
 
 If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
 

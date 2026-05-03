@@ -38,7 +38,7 @@ To avoid hitting rate limits:
 ## Using the API key
 
 <Note>
-Delora API do not require API key. API key is only needed for higher rate limits.
+The Delora API does not require an API key by default. API keys are used for higher rate limits.
 </Note>
 Authentication to Delora API is performed via the custom HTTP header x-api-key with an API key.
 
@@ -52,6 +52,8 @@ curl --location 'https://api.delora.build/v1/quotes?senderAddress=0x26f1AA7356Fc
 <Danger>
 Never expose your x-api-key in client-side environments such as browser-based JavaScript. Using the API key on the client side can lead to unauthorized usage or abuse of your key, as it becomes publicly accessible in the browser’s developer tools or network tab. For server-side integrations (e.g. API requests from your backend), always keep your key secret and secure.
 </Danger>
+
+For browser-based widget integrations, keep the API key on your backend and proxy Delora requests server-side. The current `@deloraprotocol/widget` implementation supports this by letting you point `config.apiUrl` at your proxy instead of passing `apiKey` from the browser. See [Configure Widget](/widget/basic-setup/configure-widget).
 
 ## Need Higher Limits?
 
