@@ -14,6 +14,34 @@ npm install @deloraprotocol/widget react react-dom
 
 `react` and `react-dom` are peer dependencies. The package expects React 18 or newer.
 
+## Optional wallet-management package
+
+Install `@deloraprotocol/widget-wallet-management` only when your app already owns wallet connection state and you want Delora to reuse it through Wagmi or Solana Wallet Adapter.
+
+For EVM apps using Wagmi or a Wagmi-based wallet UI:
+
+```bash
+npm install @deloraprotocol/widget-wallet-management wagmi
+```
+
+For Solana apps using Solana Wallet Adapter:
+
+```bash
+npm install @deloraprotocol/widget-wallet-management @solana/wallet-adapter-react
+```
+
+If you use the Solana Wallet Adapter UI modal shown in examples, also install `@solana/wallet-adapter-react-ui`.
+
+Examples that open a host EVM wallet modal use RainbowKit's `useConnectModal`, but the adapter works with any Wagmi-based wallet UI. Install and configure your chosen wallet UI package separately.
+
+For the auto-detect provider that can handle both EVM and Solana contexts:
+
+```bash
+npm install @deloraprotocol/widget-wallet-management wagmi @solana/wallet-adapter-react
+```
+
+Use subpath imports such as `@deloraprotocol/widget-wallet-management/wagmi` or `@deloraprotocol/widget-wallet-management/solana` when your app only installs one wallet stack.
+
 ## Import the widget styles
 
 ```ts
@@ -45,4 +73,5 @@ The `config` prop is required, but all fields inside `TradeWidgetConfig` are opt
 - Default API base: `https://api.delora.build`
 - Metadata endpoints used by the widget: `/v1/chains` and `/v1/tokens`
 - Quote endpoint used by the widget: `/v1/quotes`
+- Optional host-wallet adapters: `@deloraprotocol/widget-wallet-management`
 - If your app already manages wallets or receiver state, see [Wallet & Receiver Management](../advanced-setup/wallet-management)

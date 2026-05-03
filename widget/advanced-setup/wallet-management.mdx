@@ -1,38 +1,66 @@
 ---
 title: "Wallet & Receiver Management"
-description: "Internal and host-managed wallet and receiver flows for TradeWidget."
+description: "Built-in, auto-detected, and host-managed wallet flows for TradeWidget."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-The widget can either manage wallets on its own or consume wallet state from the host application. That applies both to the sell-side wallet (`origin`) and the optional receiver-side wallet (`destination`).
+`TradeWidget` can manage wallets internally or reuse wallet state from the host application. The built-in wallet flow is enough for standalone embeds. Host wallet management is useful when your app already has wallet connection UI, account state, and providers.
 
-Current wallet connection and execution flows are implemented for:
+Current widget execution supports two wallet namespaces:
 
-- EVM wallets
-- Solana wallets
+- `EVM` for Ethereum-compatible chains
+- `SVM` for Solana-compatible chains
 
-## When to use `TradeWidgetWalletProvider`
+The widget also keeps origin and destination wallet state separate:
 
-You only need `TradeWidgetWalletProvider` if your application already owns wallet state and connection logic.
+- `origin` is the sell-side wallet and signs the transaction
+- `destination` is the optional receiver-side wallet on the buy side
 
-Use plain `TradeWidget` when:
+Users can also paste a receiver address instead of connecting a destination wallet.
 
-- the widget should detect wallets on its own
-- the widget should show its own wallet picker
-- the widget should manage connect and disconnect internally
+## Packages
 
-Use `TradeWidgetWalletProvider` when:
+Wallet integration is split into two layers.
 
-- your app already has its own wallet modal
-- your app already knows the connected address and namespace
-- your app already owns EVM or Solana provider instances
-- the widget should reuse your wallet state instead of creating its own
+| Package | Use for | Exports |
+| --- | --- | --- |
+| `@deloraprotocol/widget` | Built-in wallet management and low-level manual adapters | `TradeWidget`, `TradeWidgetWalletProvider`, `useTradeWidgetWalletManagement` |
+| `@deloraprotocol/widget-wallet-management` | Ready-made adapters for common host wallet stacks | Wagmi adapter, Solana Wallet Adapter adapter, composite adapter, auto-detect provider |
 
-In short: `TradeWidgetWalletProvider` is not a blockchain provider by itself. It is a bridge between your wallet system and the widget.
+Install the optional package only when the host app already manages wallets:
+
+```bash
+npm install @deloraprotocol/widget-wallet-management
+```
+
+Install the peer wallet stack you actually use:
+
+```bash
+npm install wagmi
+npm install @solana/wallet-adapter-react
+```
+
+Use subpath imports when installing only one wallet stack:
+
+```ts
+import { useWagmiManagedWallet } from "@deloraprotocol/widget-wallet-management/wagmi";
+import { useSolanaWalletAdapterManagedWallet } from "@deloraprotocol/widget-wallet-management/solana";
+```
+
+The root package and `@deloraprotocol/widget-wallet-management/auto` import both adapters, so use them only when both optional peer stacks are available in your app.
 
 ## Built-in wallet management
 
-If you render `TradeWidget` by itself, the widget shows its own wallet connection UI and manages transaction execution internally.
+If you render `TradeWidget` by itself, the widget shows its own wallet connection UI and owns the wallet state.
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+export function WidgetPage() {
+  return <TradeWidget theme="dark" config={{}} />;
+}
+```
 
 The built-in wallet list currently includes:
 
@@ -51,16 +79,212 @@ Built-in behavior:
 
 - EVM wallets use injected providers or WalletConnect
 - Solana wallets use injected providers or Wallet Standard providers
-- the connect modal requires the user to accept Terms and Privacy Policy before connection
 - wallet selection is persisted in browser `localStorage`
+- the connect modal requires the user to accept Terms and Privacy Policy before connection
 
-If `config.termsUrl` or `config.privacyPolicyUrl` is omitted, the modal falls back to same-origin `/documentation/termsofuse` and `/documentation/privacypolicy` links. For embedded third-party apps, passing explicit URLs is recommended.
+If `config.termsUrl` or `config.privacyPolicyUrl` is omitted, the modal falls back to same-origin `/documentation/termsofuse` and `/documentation/privacypolicy` links. Third-party embeds should pass explicit URLs.
 
-`walletConnectProjectId` can be set through `config` to override the WalletConnect Cloud project id used by the EVM QR flow.
+Set `config.walletConnectProjectId` to override the WalletConnect Cloud project id used by the built-in EVM QR flow.
 
-## Host-managed wallets
+## Auto wallet management
 
-If your app already owns wallet state, wrap the widget in `TradeWidgetWalletProvider`.
+`DeloraAutoWalletManagementProvider` is the auto-detected integration layer for apps that already use Wagmi and/or Solana Wallet Adapter. It detects those React contexts above the widget and wires them into `TradeWidget`.
+
+Use this when:
+
+- your EVM wallet UI is built on Wagmi, RainbowKit, Reown, Dynamic, or a similar Wagmi-based stack
+- your Solana wallet UI is built on Solana Wallet Adapter
+- you want the widget connect button to open the host app's wallet modal
+- you want the widget to fall back to built-in wallets for namespaces the host does not manage
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+import { DeloraAutoWalletManagementProvider } from "@deloraprotocol/widget-wallet-management/auto";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+
+export function WidgetPage() {
+  const { openConnectModal } = useConnectModal();
+  const { setVisible: setSolanaModalVisible } = useWalletModal();
+
+  return (
+    <DeloraAutoWalletManagementProvider
+      evm={{
+        walletOptions: [],
+        openConnectModal: () => {
+          openConnectModal?.();
+        },
+      }}
+      solana={{
+        walletOptions: [],
+        openConnectModal: () => {
+          setSolanaModalVisible(true);
+        },
+      }}
+    >
+      <TradeWidget config={{}} />
+    </DeloraAutoWalletManagementProvider>
+  );
+}
+```
+
+The auto provider does not create Wagmi or Solana providers for you. It must be rendered below the host app's `WagmiProvider` and, for Solana, below `ConnectionProvider` and `WalletProvider` from Solana Wallet Adapter.
+
+The example uses RainbowKit and Solana Wallet Adapter UI only as host wallet modals. Replace those callbacks with your own Wagmi-based or Solana wallet UI if your app uses a different provider.
+
+## EVM wallet connection
+
+For EVM, the optional package reads wallet state from Wagmi through `useWagmiManagedWallet`.
+
+```tsx
+import { TradeWidget } from "@deloraprotocol/widget";
+import { DeloraWalletManagementProvider } from "@deloraprotocol/widget-wallet-management/provider";
+import { useWagmiManagedWallet } from "@deloraprotocol/widget-wallet-management/wagmi";
+import { useConnectModal } from "@rainbow-me/rainbowkit";
+
+function WidgetWithWagmi() {
+  const { openConnectModal } = useConnectModal();
+  const evm = useWagmiManagedWallet({
+    walletOptions: [],
+    openConnectModal: () => {
+      openConnectModal?.();
+    },
+  });
+
+  return (
+    <DeloraWalletManagementProvider wallet={evm}>
+      <TradeWidget config={{}} />
+    </DeloraWalletManagementProvider>
+  );
+}
+```
+
+`useWagmiManagedWallet` returns a `TradeWidgetManagedWallet` object with:
+
+- connected Wagmi address and connector name
+- EIP-1193 provider access through `getEvmProvider`
+- connect, disconnect, and error handlers
+- optional wallet rows derived from Wagmi connectors
+
+The widget still performs execution itself. For EVM routes it switches to the selected sell chain with `wallet_switchEthereumChain` and falls back to `wallet_addEthereumChain` when the chain is missing from the wallet.
+
+If your host wallet UI restricts supported chains, keep that host configuration aligned with the chains you allow in the widget.
+
+## SVM wallet connection
+
+For Solana, the optional package reads wallet state from Solana Wallet Adapter through `useSolanaWalletAdapterManagedWallet`.
+
+```tsx
+import { TradeWidget } from "@deloraprotocol/widget";
+import { DeloraWalletManagementProvider } from "@deloraprotocol/widget-wallet-management/provider";
+import { useSolanaWalletAdapterManagedWallet } from "@deloraprotocol/widget-wallet-management/solana";
+import { useWalletModal } from "@solana/wallet-adapter-react-ui";
+
+function WidgetWithSolanaWalletAdapter() {
+  const { setVisible } = useWalletModal();
+  const solana = useSolanaWalletAdapterManagedWallet({
+    walletOptions: [],
+    openConnectModal: () => {
+      setVisible(true);
+    },
+  });
+
+  return (
+    <DeloraWalletManagementProvider wallet={solana}>
+      <TradeWidget config={{}} />
+    </DeloraWalletManagementProvider>
+  );
+}
+```
+
+`useSolanaWalletAdapterManagedWallet` returns a `TradeWidgetManagedWallet` object with:
+
+- connected public key
+- wallet name and icon when available
+- connect, disconnect, and error handlers
+- a Solana provider wrapper that exposes `signTransaction`
+- optional wallet rows derived from Solana Wallet Adapter wallets
+
+For Solana execution, the wallet must be able to sign a transaction. If the connected adapter does not expose `signTransaction`, execution cannot continue.
+
+## Connect button modes
+
+The optional adapters support two host-wallet UX modes.
+
+### Host modal
+
+Pass `walletOptions: []` and `openConnectModal`.
+
+```tsx
+useWagmiManagedWallet({
+  walletOptions: [],
+  openConnectModal: () => {
+    openConnectModal?.();
+  },
+});
+```
+
+In this mode the Delora connect button opens your wallet UI directly. The widget waits until the host wallet state changes or the connection times out.
+
+### Widget picker
+
+Omit `walletOptions` to let the adapter expose wallet rows to the Delora connect modal.
+
+```tsx
+useWagmiManagedWallet({
+  walletOptionIds: ["metamask", "rabby-wallet", "walletconnect"],
+});
+```
+
+When the user selects a row, Delora delegates that selection back to the host adapter through `connectWalletOption`.
+
+For Wagmi, unknown or service connectors are hidden by default. Use:
+
+- `walletOptionIds` for an explicit allowlist
+- `includeUnknownWalletOptions: true` to expose custom connectors
+
+For Solana Wallet Adapter, undetected adapters are hidden by default. Use `includeUndetectedWallets: true` when you want installable Solana wallet rows.
+
+## Partial wallet management
+
+Partial wallet management lets the host manage one namespace while the widget keeps built-in management for the other namespace.
+
+Examples:
+
+- host manages EVM through Wagmi, Delora manages Solana internally
+- host manages Solana through Solana Wallet Adapter, Delora manages EVM internally
+- host manages both namespaces through a composite wallet adapter
+
+`DeloraAutoWalletManagementProvider` enables partial wallet management by default.
+
+```tsx
+<DeloraAutoWalletManagementProvider
+  evm={evmOptions}
+  solana={false}
+  usePartialWalletManagement
+>
+  <TradeWidget config={{}} />
+</DeloraAutoWalletManagementProvider>
+```
+
+Set `usePartialWalletManagement={false}` when the host wants full wallet ownership and does not want Delora to fall back to its built-in wallet flow for unmanaged namespaces.
+
+## Force internal wallet management
+
+Use `forceInternalWalletManagement` on the auto provider to ignore detected host wallet contexts and use only Delora's built-in wallet flow.
+
+```tsx
+<DeloraAutoWalletManagementProvider forceInternalWalletManagement>
+  <TradeWidget config={{}} />
+</DeloraAutoWalletManagementProvider>
+```
+
+For the low-level `TradeWidgetWalletProvider` API, the equivalent is to not render the provider around `TradeWidget`.
+
+## Manual core provider
+
+`TradeWidgetWalletProvider` is the low-level API from `@deloraprotocol/widget`. Use it when you have custom wallet state that is not represented by Wagmi or Solana Wallet Adapter.
 
 ```tsx
 import {
@@ -89,100 +313,66 @@ import {
 </TradeWidgetWalletProvider>;
 ```
 
-## How it works
+If you pass an `origin` or `destination` object, that side is externally managed. This is presence-based, not connection-based. A side with `namespace: null` and `address: null` is still externally managed if the object exists.
 
-`TradeWidgetWalletProvider` is a React context provider. It does not connect to wallets by itself and it does not replace an EVM or Solana provider.
-
-Its job is to expose two optional wallet adapters to `TradeWidget`:
-
-- `origin` for the sell-side wallet
-- `destination` for the receiver-side wallet
-
-When `TradeWidget` mounts, it reads that context and passes `origin` and `destination` into its wallet hooks. If one side is present, that side switches into externally managed mode. If one side is missing, the widget falls back to its built-in wallet flow for that side.
-
-This is presence-based, not connection-based.
-
-If you pass an `origin` or `destination` object at all, that side is considered externally managed even when `namespace` and `address` are currently `null`.
-
-If you want the widget to keep its built-in wallet flow for a side, omit that side from the provider value entirely.
-
-## What the widget reads from your wallet adapter
-
-For each externally managed side, the widget reads values such as:
-
-- `namespace`
-- `address`
-- `status`
-- `walletName`
-- `connectedWalletId`
-- `connectedWalletVisualId`
-- `connectedWalletIconUrl`
-- `errorMessage`
-
-So your application remains the source of truth for connection state, while the widget only renders that state.
-
-The provider accepts:
-
-- `origin` for the sell-side wallet
-- `destination` for the receiver-side wallet
-
-If one side is omitted, the widget falls back to its internal wallet flow for that side.
+Omit a side entirely when you want that side to keep the built-in wallet flow.
 
 ## Managed wallet shape
 
-At minimum, a managed wallet can expose:
+At minimum, a managed wallet exposes:
 
 - `namespace`
 - `address`
 
-That is enough when your host app already controls the full connection lifecycle and the wallet is already connected when the widget renders.
-
-If that side may need to connect from inside the widget UI, also provide at least one connect handler:
+To let the widget initiate connection, also provide at least one connect handler:
 
 - `connectWalletOption`
 - `connectPreferred`
 - `connect`
 
-Depending on your integration, you can also pass:
+Additional fields let the widget render connection state and execute transactions:
 
-- `evmProvider` or `solanaProvider`
-- `evmBrowserProvider`
-- `walletStandardSolanaAccount`
-- `connect` and `disconnect`
-- `connectPreferred`
-- `connectWalletOption`
-- `walletOptions` for a widget-owned selection modal backed by host logic
-- `connectedWalletId`, `connectedWalletVisualId`, and `connectedWalletIconUrl` for custom wallet branding
-- `errorMessage`, `clearError`, and `peekLastConnectionError` for host-controlled error UX
-- getter helpers such as `getEvmProvider`, `getEvmBrowserProvider`, `getSolanaProvider`, or `getConnectedWalletStandardSolanaAccount`
+- `status`
+- `managedNamespaces`
+- `walletsByNamespace`
+- `walletName`
+- `connectedWalletId`, `connectedWalletVisualId`, `connectedWalletIconUrl`
+- `walletOptions`
+- `evmProvider` or `getEvmProvider`
+- `evmBrowserProvider` or `getEvmBrowserProvider`
+- `solanaProvider` or `getSolanaProvider`
+- `walletStandardSolanaAccount` or `getConnectedWalletStandardSolanaAccount`
+- `disconnect`
+- `errorMessage`, `clearError`, and `peekLastConnectionError`
 
-This allows the host app to keep wallet ownership while still letting the widget render a coherent UI.
+When the widget connects an externally managed wallet, it delegates in this order:
 
-If a side is marked as externally managed but no connect handler is provided, the widget cannot fall back to its built-in connect flow for that side.
+1. `connectWalletOption(walletId, namespace)`
+2. `connectPreferred(namespace)`
+3. `connect(params)`
 
-## How connect is delegated
+If none of those handlers exists, the widget reports a wallet error instead of silently falling back for that externally managed side.
 
-When the widget needs to connect an externally managed wallet, it delegates that work back to your app.
+## Composite wallets
 
-It does that in this order:
+Use `useCompositeManagedWallet` when EVM and Solana are managed by separate hooks but should be passed to the widget as one wallet object.
 
-1. `connectWalletOption(walletId, namespace)` if the user selected a specific wallet option in the widget UI
-2. `connectPreferred(namespace)` if the widget knows which namespace it needs
-3. `connect(params)` as the generic fallback
+```tsx
+import { DeloraWalletManagementProvider } from "@deloraprotocol/widget-wallet-management/provider";
+import { useCompositeManagedWallet } from "@deloraprotocol/widget-wallet-management/composite";
 
-So the widget does not decide how your app opens MetaMask, Phantom, WalletConnect, or any custom modal. It only asks your wallet layer to perform the connection.
+const wallet = useCompositeManagedWallet({ evm, solana });
 
-## When the widget shows its own connect modal
+<DeloraWalletManagementProvider wallet={wallet}>
+  <TradeWidget config={{}} />
+</DeloraWalletManagementProvider>;
+```
 
-There are two external-wallet modes:
+The composite wallet exposes:
 
-- If you provide `walletOptions`, the widget can still render its own connect modal, but the modal is only a UI shell. After the user chooses a wallet, the widget calls your `connectWalletOption(...)`.
-- If you do not provide `walletOptions`, the widget skips its own chooser and directly calls your external connect handler.
-
-This lets you choose between:
-
-- fully host-owned connect UX
-- widget-owned wallet picker backed by host-owned wallet logic
+- `managedNamespaces` for the namespaces it controls
+- `walletsByNamespace` so the widget can route EVM and Solana operations to the correct adapter
+- merged wallet rows for the connect modal
 
 ## Receiver and destination behavior
 
@@ -194,93 +384,63 @@ At runtime, users can:
 - connect a separate destination wallet
 - paste a receiver address directly in the UI
 
-Pasted receiver addresses are validated and normalized for the active buy-side chain before execution. If a separate destination wallet is connected, it can also be disconnected independently from the origin wallet.
+Pasted receiver addresses are validated and normalized for the active buy-side chain before execution. If a separate destination wallet is connected, it can be disconnected independently from the origin wallet.
 
-This receiver-side behavior works with both integration patterns:
+This works with all wallet-management modes:
 
-- fully built-in wallet management
-- host-managed `destination` wallet adapters through `TradeWidgetWalletProvider`
+- built-in wallet management
+- auto wallet management through `@deloraprotocol/widget-wallet-management`
+- manual `origin` and `destination` adapters through `TradeWidgetWalletProvider`
 
-## How provider access works
+## Provider access and execution
 
-After a wallet is connected, the widget still needs provider access to execute transactions.
+Wallet management only provides connection state and provider access. Transaction orchestration stays inside `TradeWidget`.
 
-For EVM, it resolves providers in this order:
+The widget still handles:
 
-1. `evmBrowserProvider`
-2. `getEvmBrowserProvider()`
-3. `getEvmProvider()`
-4. `evmProvider`
+- metadata and quote loading
+- balance checks
+- allowance checks
+- approve vs swap state transitions
+- transaction submission callbacks
+- confirmation callbacks
+- bridge and swap tracking
 
-If only a raw EIP-1193 provider is available, the widget wraps it into an `ethers` `BrowserProvider` when needed.
-
-For an externally managed EVM side that should execute trades, you should provide at least one of these:
+For externally managed EVM wallets, provide at least one of:
 
 - `evmBrowserProvider`
 - `getEvmBrowserProvider()`
 - `getEvmProvider()`
 - `evmProvider`
 
-For Solana, it resolves providers in this order:
+If only a raw EIP-1193 provider is available, the widget wraps it into an `ethers` `BrowserProvider` when needed.
 
-1. `getSolanaProvider()`
-2. `solanaProvider`
+For externally managed Solana wallets, provide:
 
-If you use a Wallet Standard Solana wallet, you can also provide:
+- `getSolanaProvider()` or `solanaProvider`
+
+For Wallet Standard Solana flows, also provide:
 
 - `walletStandardSolanaAccount`
 - `getConnectedWalletStandardSolanaAccount()`
-
-For an externally managed Solana side that should execute trades, you should provide:
-
-- `getSolanaProvider()` or `solanaProvider`
-- and, for Wallet Standard flows, `walletStandardSolanaAccount` or `getConnectedWalletStandardSolanaAccount()`
-
-## Partial management
-
-You can mix internal and external flows.
-
-Examples:
-
-- manage only `origin` externally and let the widget manage `destination`
-- manage only `destination` externally for a custom receiver-wallet flow
-- manage both sides externally
-
-When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can still show its own wallet chooser and call the host's `connectWalletOption` logic.
-
-## Execution details
-
-Even in externally managed mode, transaction orchestration still lives inside `TradeWidget`.
-
-That means the widget still handles:
-
-- metadata and quote loading
-- allowance checks
-- approve vs swap state transitions
-- transaction submission callbacks
-- confirmation callbacks
-
-Your app provides connection state and provider access. The widget uses that access to execute the quote flow.
 
 For EVM execution, the widget:
 
 - switches to the selected sell chain with `wallet_switchEthereumChain`
 - falls back to `wallet_addEthereumChain` if the chain is missing
-- tries EIP-5792 batching for approve + swap when the wallet supports it
+- tries EIP-5792 batching for approve plus swap when the wallet supports it
 
 For Solana execution, the widget uses:
 
 - Wallet Standard `signAndSendTransaction` when available
-- otherwise the injected wallet's `signTransaction`
+- otherwise the connected wallet's `signTransaction`
 
 ## Mental model
 
-The easiest way to think about it is:
+The shortest way to choose an integration is:
 
-- `TradeWidget` owns the trading flow
-- your app can own the wallet state
-- `TradeWidgetWalletProvider` is the adapter layer between the two
+- use plain `TradeWidget` for standalone embeds
+- use `DeloraAutoWalletManagementProvider` when your app already has Wagmi and/or Solana Wallet Adapter contexts
+- use `TradeWidgetWalletProvider` when you need a custom low-level adapter
 
-If you want the widget to feel native inside an app that already has its own wallet architecture, use `TradeWidgetWalletProvider`. If you just want an embeddable trading widget with built-in wallet handling, use plain `TradeWidget`.
-
-For the full list of exported wallet-management types, see [Widget API Reference](./widget-api-reference).
+For the full list of exported types, see [Widget API Reference](./widget-api-reference).

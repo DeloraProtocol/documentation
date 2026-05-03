@@ -4,13 +4,15 @@ description: "Core capabilities and integration patterns for the Delora widget p
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-Delora Widget lets you embed Delora trading flows into a React application. The package is published as `@deloraprotocol/widget`, and its main export is `TradeWidget`, which loads chain and token metadata, requests quotes from `/v1/quotes`, and lets users execute trades from the same UI.
+Delora Widget lets you embed Delora trading flows into a React application. The main package is published as `@deloraprotocol/widget`, and its main export is `TradeWidget`, which loads chain and token metadata, requests quotes from `/v1/quotes`, and lets users execute trades from the same UI.
 
 The package also includes:
 
-- `TradeWidgetWalletProvider` for host-managed wallet integrations
+- `TradeWidgetWalletProvider` for low-level host-managed wallet integrations
 - `useTradeWidgetWalletManagement` for reading the wallet-management context
 - TypeScript types for configuration, events, filters, tokens, networks, and wallet management
+
+For apps that already use Wagmi, RainbowKit, Reown, Dynamic, or Solana Wallet Adapter, Delora also provides the optional `@deloraprotocol/widget-wallet-management` package. It contains ready-made wallet adapters that connect those host wallet contexts to `TradeWidget`.
 
 ## What the widget supports
 
@@ -18,6 +20,7 @@ The package also includes:
 - Quote requests to `/v1/quotes`
 - Internal wallet connection UI for EVM and Solana wallets
 - External wallet integration through `TradeWidgetWalletProvider`
+- Optional Wagmi and Solana Wallet Adapter integration through `@deloraprotocol/widget-wallet-management`
 - Separate origin and destination wallet flows
 - Receiver selection through a connected destination wallet or a pasted address
 - Side-specific network and token filters

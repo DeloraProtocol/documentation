@@ -1,10 +1,10 @@
 ---
 title: "Widget API Reference"
-description: "Reference for exported components, props, and types in @deloraprotocol/widget."
+description: "Reference for exported components, props, and types in the Delora widget packages."
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-This page summarizes the supported third-party integration API for `@deloraprotocol/widget`.
+This page summarizes the supported third-party integration API for `@deloraprotocol/widget` and the optional `@deloraprotocol/widget-wallet-management` adapter package.
 
 Most integrations center on the trading widget surface:
 
@@ -12,9 +12,9 @@ Most integrations center on the trading widget surface:
 - `TradeWidgetWalletProvider`
 - `useTradeWidgetWalletManagement`
 
-The package also exports a smaller `MyWidget` demo component and shared theming props.
+The core package also exports a smaller `MyWidget` demo component and shared theming props.
 
-## Main exports
+## `@deloraprotocol/widget` exports
 
 Components and hooks:
 
@@ -255,6 +255,8 @@ interface TradeWidgetManagedWallet {
   status?: WalletConnectionStatus;
   namespace: "EVM" | "SVM" | null;
   address: string | null;
+  managedNamespaces?: Array<"EVM" | "SVM">;
+  walletsByNamespace?: Partial<Record<"EVM" | "SVM", TradeWidgetManagedWallet | null>>;
   walletName?: string;
   connectedWalletId?: WalletOptionId | null;
   connectedWalletVisualId?: WalletVisualId | null;
@@ -281,3 +283,124 @@ interface TradeWidgetManagedWallet {
 If you pass an `origin` or `destination` object into `TradeWidgetWalletProvider`, that side is treated as externally managed. To keep the built-in wallet flow for a side, omit that side from the provider value entirely.
 
 `useTradeWidgetWalletManagement` is a thin helper hook for reading the same wallet-management context that powers `TradeWidgetWalletProvider`.
+
+## `@deloraprotocol/widget-wallet-management` exports
+
+This package is optional. Install it when you want Delora to reuse wallet state from common host wallet libraries instead of writing a `TradeWidgetManagedWallet` object by hand.
+
+Subpath exports:
+
+| Import | Exports |
+| --- | --- |
+| `@deloraprotocol/widget-wallet-management/provider` | `DeloraWalletManagementProvider`, `DeloraWalletManagementProviderProps` |
+| `@deloraprotocol/widget-wallet-management/auto` | `DeloraAutoWalletManagementProvider`, `DeloraAutoWalletManagementProviderProps` |
+| `@deloraprotocol/widget-wallet-management/wagmi` | `useWagmiManagedWallet`, `UseWagmiManagedWalletOptions` |
+| `@deloraprotocol/widget-wallet-management/solana` | `useSolanaWalletAdapterManagedWallet`, `UseSolanaWalletAdapterManagedWalletOptions` |
+| `@deloraprotocol/widget-wallet-management/composite` | `useCompositeManagedWallet`, `UseCompositeManagedWalletOptions` |
+
+The root package also re-exports every adapter and shared type. Prefer subpath imports when your app only installs one optional peer wallet stack.
+
+Shared types exported from the root package:
+
+- `DeloraOpenConnectModal`
+- `DeloraOpenConnectModalParams`
+- `ManagedWallet`
+
+## `DeloraWalletManagementProvider`
+
+`DeloraWalletManagementProvider` is a convenience wrapper around `TradeWidgetWalletProvider`.
+
+```ts
+interface DeloraWalletManagementProviderProps {
+  wallet?: TradeWidgetManagedWallet | null;
+  origin?: TradeWidgetManagedWallet | null;
+  destination?: TradeWidgetManagedWallet | null;
+  children?: React.ReactNode;
+}
+```
+
+If `origin` or `destination` is omitted, that side receives `wallet`. Pass explicit `origin` and `destination` when sell-side and receiver-side wallet ownership should differ.
+
+## `DeloraAutoWalletManagementProvider`
+
+`DeloraAutoWalletManagementProvider` detects host Wagmi and Solana Wallet Adapter contexts and wires them into the widget.
+
+```ts
+interface DeloraAutoWalletManagementProviderProps {
+  evm?: UseWagmiManagedWalletOptions | false;
+  solana?: UseSolanaWalletAdapterManagedWalletOptions | false;
+  wallet?: TradeWidgetManagedWallet | null;
+  origin?: TradeWidgetManagedWallet | null;
+  destination?: TradeWidgetManagedWallet | null;
+  usePartialWalletManagement?: boolean;
+  forceInternalWalletManagement?: boolean;
+  children?: React.ReactNode;
+}
+```
+
+Defaults:
+
+- `usePartialWalletManagement`: `true`
+- `forceInternalWalletManagement`: `false`
+
+Set `evm={false}` or `solana={false}` to opt out of one namespace. Set `forceInternalWalletManagement` to ignore all detected host contexts.
+
+## `useWagmiManagedWallet`
+
+```ts
+interface UseWagmiManagedWalletOptions {
+  walletOptions?: WalletOptionDescriptor[];
+  walletOptionIds?: WalletOptionId[];
+  includeUnknownWalletOptions?: boolean;
+  openConnectModal?: DeloraOpenConnectModal;
+  connectTimeoutMs?: number;
+  preferredConnectorId?: string;
+  chainId?: number;
+  walletName?: string;
+  walletIconUrl?: string | null;
+}
+```
+
+The hook returns `TradeWidgetManagedWallet` for the `EVM` namespace. It reads account state from Wagmi, resolves an EIP-1193 provider from the active connector, and delegates connect and disconnect actions to Wagmi.
+
+## `useSolanaWalletAdapterManagedWallet`
+
+```ts
+interface UseSolanaWalletAdapterManagedWalletOptions {
+  walletOptions?: WalletOptionDescriptor[];
+  includeUndetectedWallets?: boolean;
+  openConnectModal?: DeloraOpenConnectModal;
+  connectTimeoutMs?: number;
+  walletName?: string;
+  walletIconUrl?: string | null;
+}
+```
+
+The hook returns `TradeWidgetManagedWallet` for the `SVM` namespace. It reads account state from Solana Wallet Adapter and exposes a Solana provider wrapper for transaction signing.
+
+## `useCompositeManagedWallet`
+
+```ts
+interface UseCompositeManagedWalletOptions {
+  evm?: TradeWidgetManagedWallet | null;
+  solana?: TradeWidgetManagedWallet | null;
+  preferredNamespace?: "EVM" | "SVM" | null;
+}
+```
+
+The hook combines separate EVM and Solana managed wallets into one `TradeWidgetManagedWallet`. It sets `managedNamespaces`, fills `walletsByNamespace`, merges wallet options, and routes connect/provider calls to the namespace-specific adapter.
+
+## Shared connect modal types
+
+```ts
+interface DeloraOpenConnectModalParams {
+  namespace: "EVM" | "SVM";
+  walletId?: WalletOptionId | null;
+}
+
+type DeloraOpenConnectModal = (
+  params: DeloraOpenConnectModalParams
+) => Promise<void> | void;
+```
+
+Use `openConnectModal` when the Delora connect button should open a host wallet modal, such as RainbowKit or Solana Wallet Adapter UI.

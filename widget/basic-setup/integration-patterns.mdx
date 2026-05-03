@@ -4,17 +4,19 @@ description: "Choose between the built-in wallet flow and host-managed wallet in
 "og:image": "https://docs.delora.build/images/OG.png"
 ---
 
-The widget exposes one main trading UI and two practical integration patterns.
+The widget exposes one main trading UI and three practical integration patterns.
 
 These patterns do not change the widget layout. They change who owns wallet state and provider access.
 
 - `TradeWidget`
+- `DeloraAutoWalletManagementProvider` from `@deloraprotocol/widget-wallet-management`
 - `TradeWidgetWalletProvider`
 
 | Pattern | Use when | Notes |
 | --- | --- | --- |
 | `TradeWidget` | You want the full trading widget with the built-in wallet flow | Best default for standalone embeds |
-| `TradeWidget` + `TradeWidgetWalletProvider` | Your app already owns wallet connection and providers | Lets the widget reuse host-managed wallets |
+| `TradeWidget` + `DeloraAutoWalletManagementProvider` | Your app already uses Wagmi and/or Solana Wallet Adapter | Auto-detected adapter layer for common wallet stacks |
+| `TradeWidget` + `TradeWidgetWalletProvider` | Your app has custom wallet state or custom providers | Low-level adapter API from the core widget package |
 
 ## 1. `TradeWidget`
 
@@ -30,7 +32,40 @@ import { TradeWidget } from "@deloraprotocol/widget";
 />;
 ```
 
-## 2. `TradeWidget` with external wallet management
+## 2. `TradeWidget` with auto wallet management
+
+Use this pattern when the host app already wraps the widget with Wagmi and/or Solana Wallet Adapter providers.
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+import { DeloraAutoWalletManagementProvider } from "@deloraprotocol/widget-wallet-management/auto";
+
+<DeloraAutoWalletManagementProvider
+  evm={{
+    walletOptions: [],
+    openConnectModal: () => {
+      // Open RainbowKit, Reown, Dynamic, or another Wagmi-based modal.
+    },
+  }}
+  solana={{
+    walletOptions: [],
+    openConnectModal: () => {
+      // Open your Solana Wallet Adapter modal.
+    },
+  }}
+>
+  <TradeWidget config={{}} />
+</DeloraAutoWalletManagementProvider>;
+```
+
+By default, this provider uses partial wallet management. If only EVM is externally managed, Solana can still fall back to the widget's built-in wallet flow, and vice versa.
+
+Use `forceInternalWalletManagement` when you want to ignore detected host wallet contexts and use only the widget's built-in wallet flow.
+
+The `/auto` import loads both the Wagmi and Solana Wallet Adapter adapters, so install both optional peer stacks when you use this pattern. Use the `/wagmi` or `/solana` subpath hooks for single-stack integrations.
+
+## 3. `TradeWidget` with manual external wallet management
 
 Use this pattern when the host app already manages wallet state and providers.
 
