@@ -31,12 +31,13 @@ Use `vars` to override the widget's CSS variables.
   theme="dark"
   config={{}}
   vars={{
+    fontFamily: "'Roboto Mono', monospace",
+    radius: "0px",
+    actionButtonRadius: "999px",
     accent: "#22c55e",
     border: "#1f2937",
     surface: "#050816",
     surfaceAlt: "#0b1220",
-    radius: "18px",
-    fontFamily: "'IBM Plex Mono', monospace",
     fontSize: "14px",
   }}
 />
@@ -62,12 +63,15 @@ The `vars` object supports these fields:
 | `modalBackdrop` | Full-screen modal scrim color |
 | `shadow` | Box shadow token for elevated surfaces |
 | `radius` | Shared border radius token |
+| `actionButtonRadius` | Main CTA button radius token |
 | `fontFamily` | Root font family |
 | `fontSize` | Root font size |
 | `lineHeight` | Root line height |
 | `letterSpacing` | Root letter spacing |
 
-The bundled themes use `Roboto Mono` and the stylesheet imports that font from Google Fonts. If you want to keep typography fully local to your app, override `fontFamily`.
+For `TradeWidget`, the main widget surfaces stay square by default. Set `radius` only when you want rounded panels. Use `actionButtonRadius` when you want to round the main bottom CTA independently.
+
+The bundled themes use `Roboto Mono` and the stylesheet imports that font from Google Fonts. If you want to keep typography fully local to your app, override `fontFamily`. If you use a non-system font, load that font in the host app before passing it to the widget.
 
 ## Use host styling props
 

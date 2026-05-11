@@ -80,6 +80,15 @@ If you are embedding the production trade experience, use `TradeWidget`. If you 
 | `className` | `string` | Applied to the widget root element |
 | `style` | `React.CSSProperties` | Inline root styles applied after generated CSS variables |
 
+Common `MyWidgetVars` fields include:
+
+- `radius` for shared surface radius
+- `actionButtonRadius` for the main CTA radius
+- `fontFamily`, `fontSize`, `lineHeight`, and `letterSpacing` for typography
+- color and surface tokens such as `bg`, `fg`, `border`, `surface`, and `surfaceAlt`
+
+See [Customize Widget](/widget/basic-setup/customize-widget) for the full theme-token surface and examples.
+
 ## `TradeWidgetProps`
 
 `TradeWidgetProps` extends normal root `div` props, except the DOM `onError` prop is replaced by the widget error callback.
@@ -112,7 +121,7 @@ If you are embedding the production trade experience, use `TradeWidget`. If you 
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `apiUrl` | `string` | Delora API base. You can point this to your own backend proxy. |
+| `apiUrl` | `string` | Optional Delora API base. If omitted, the widget uses `https://api.delora.build`. You can point this to your own backend proxy. |
 | `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | RPC override map by chain id |
 | `integrator` | `string` | Quote request integrator id |
 | `apiKey` | `string` | Optional Delora API key sent as `x-api-key`. Recommended only for trusted environments. |
@@ -125,7 +134,7 @@ If you are embedding the production trade experience, use `TradeWidget`. If you 
 | `privacyPolicyUrl` | `string` | Privacy Policy link in the connect modal |
 | `walletConnectProjectId` | `string` | WalletConnect Cloud project id |
 
-For browser-rendered widgets, do not pass `apiKey` directly from the client. Keep it on your backend and proxy `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` through `config.apiUrl`.
+For browser-rendered widgets, prefer not to pass `apiKey` directly from the client. Keep it on your backend and proxy `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` through `config.apiUrl`.
 
 If your proxy does not serve Delora-relative image assets, set `assetBaseUrl` explicitly or proxy those asset paths as well.
 

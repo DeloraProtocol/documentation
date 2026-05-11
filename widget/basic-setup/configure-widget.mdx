@@ -16,7 +16,7 @@ All runtime options live under the required `config` prop.
     apiKey: "your-api-key",
     apiUrl: "https://your-app.com/api/delora",
     integrator: "my-dapp",
-    fee: 0.03,
+    fee: 0.01,
     slippage: 0.005,
     walletConnectProjectId: "your-walletconnect-project-id",
     termsUrl: "/legal/terms",
@@ -25,9 +25,23 @@ All runtime options live under the required `config` prop.
 />
 ```
 
+If you do not set `apiUrl`, the widget uses the default Delora API base: `https://api.delora.build`.
+
+Use `apiUrl` when you want a custom upstream, such as your own backend proxy:
+
+```tsx
+<TradeWidget
+  config={{
+    apiUrl: "https://your-app.com/api/delora",
+    integrator: "my-dapp",
+    fee: 0.01,
+  }}
+/>
+```
+
 | Field | Type | Description |
 | --- | --- | --- |
-| `apiUrl` | `string` | Delora API base used for `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` |
+| `apiUrl` | `string` | Optional Delora API base used for `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` |
 | `apiKey` | `string` | Optional `x-api-key` header for Delora API requests. Avoid using this directly in browser-rendered widgets. |
 | `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Per-chain RPC override map used for on-chain reads and execution helpers |
 | `integrator` | `string` | Forwarded to quote requests |
@@ -42,7 +56,7 @@ All runtime options live under the required `config` prop.
 
 If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to the default Delora API base.
 
-For browser-based widget integrations, do not pass `apiKey` directly from the client. Instead:
+For browser-based widget integrations, prefer not to pass `apiKey` directly from the client. Instead:
 
 - keep your Delora API key on your backend
 - expose a proxy that forwards `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` to `https://api.delora.build`
