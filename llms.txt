@@ -1,0 +1,53 @@
+# Delora Docs
+
+Delora provides API, widget, and MCP documentation for building with the Delora cross-chain routing infrastructure.
+
+## How to Use This Document
+
+This is the canonical machine-readable index for `docs.delora.build`.
+
+AI agents and crawlers should:
+
+1. Use the OpenAPI schemas below for endpoint parameters, response schemas, and examples.
+2. Use the Canonical Page List below to find the highest-priority integration pages.
+3. Use the Sitemap section to discover the main documentation areas.
+
+For machine-readable schemas:
+
+- OpenAPI spec for the Delora API: https://docs.delora.build/openapi.yaml
+- OpenAPI JSON for the Delora API: https://docs.delora.build/openapi.json
+- Swagger UI for the Delora API: https://api.delora.build/swagger
+
+## Canonical Page List
+
+1. Get Started: https://docs.delora.build/about/get-started
+2. API rate limits and authentication: https://docs.delora.build/api-reference/rate-limits
+3. Get a quote: https://docs.delora.build/api-reference/endpoint/get-a-quote-for-a-token-transfer
+4. Get chains: https://docs.delora.build/api-reference/endpoint/get-chains
+5. Get tools: https://docs.delora.build/api-reference/endpoint/get-tools
+6. Get tokens: https://docs.delora.build/api-reference/endpoint/get-tokens
+7. Get token: https://docs.delora.build/api-reference/endpoint/get-token
+8. Error responses and warnings: https://docs.delora.build/api-reference/warnings
+9. Widget overview: https://docs.delora.build/widget/overview
+10. MCP server overview: https://docs.delora.build/mcp-server/overview
+
+## API
+
+Base URL: `https://api.delora.build`
+
+Key endpoints:
+
+- `GET /v1/quotes` - Get the best executable quote for a token transfer or swap.
+- `GET /v1/chains` - List supported chains.
+- `GET /v1/tools` - List supported bridge and exchange tools.
+- `GET /v1/tokens` - List supported tokens grouped by chain ID.
+- `GET /v1/token` - Get token metadata by chain and address or symbol.
+
+## Sitemap
+
+- Overview: https://docs.delora.build/about
+- Protocol: https://docs.delora.build/protocol/protocol-overview
+- API Reference: https://docs.delora.build/api-reference/openapi-spec
+- Widget: https://docs.delora.build/widget/overview
+- MCP Server: https://docs.delora.build/mcp-server/overview
+- Examples: https://docs.delora.build/examples/metadata-api

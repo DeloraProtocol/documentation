@@ -8,7 +8,7 @@
   },
   "name": "Delora",
   "api": {
-    "openapi": "api-reference/openapi.json"
+    "openapi": "openapi.yaml"
   },
   "colors": {
     "primary": "#0088FF",
@@ -94,11 +94,12 @@
       },
       {
         "tab": "API Reference",
-        "openapi": "api-reference/openapi.json",
+        "openapi": "openapi.yaml",
         "groups": [
           {
             "group": "About APIs",
             "pages": [
+              "api-reference/openapi-spec",
               "api-reference/rate-limits",
               {
                 "group": "Error responses",
