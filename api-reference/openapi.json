@@ -1,268 +1,205 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.1.1",
   "info": {
     "title": "Delora API",
     "description": "Delora API",
     "version": "1.0.0"
   },
   "servers": [
-    { "url": "https://api.delora.build" }
+    {
+      "url": "https://api.delora.build"
+    }
   ],
   "paths": {
     "/v1/quotes": {
       "get": {
-        "summary": "Get a quote for a token transfer",
-        "description": "",
+        "operationId": "getQuote",
         "parameters": [
           {
-            "name": "originChainId",
-            "in": "query",
-            "required": true,
-            "description": "The sending chain id",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "destinationChainId",
-            "in": "query",
-            "required": true,
-            "description": "The receiving chain id",
-            "schema": { "type": "number" }
-          },
-          {
-            "name": "originCurrency",
-            "in": "query",
-            "required": true,
-            "description": "The token address that should be transferred",
-            "schema": { "type": "string" }
-          },
-          {
-            "name": "destinationCurrency",
-            "in": "query",
-            "required": true,
-            "description": "The token address that should be transferred to",
-            "schema": { "type": "string" }
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "name": "senderAddress",
-            "in": "query",
             "required": true,
-            "description": "The sending wallet address. Required for quote generation and execution payload construction. It is validated against the origin chain type.",
-            "schema": { "type": "string" }
+            "in": "query",
+            "description": "Sender wallet address on the origin chain.",
+            "schema": {
+              "example": "0x1111111111111111111111111111111111111111",
+              "type": "string"
+            }
           },
           {
             "name": "receiverAddress",
-            "in": "query",
             "required": false,
-            "description": "The receiving wallet address. It is validated against the destination chain type. If omitted and the origin/destination chain types match, senderAddress will be used. If the chain types differ, receiverAddress is required.",
-            "schema": { "type": "string" }
+            "in": "query",
+            "description": "Receiver wallet address. Required when EVM and Solana are crossed.",
+            "schema": {
+              "example": "0x2222222222222222222222222222222222222222",
+              "type": "string"
+            }
+          },
+          {
+            "name": "originChainId",
+            "required": true,
+            "in": "query",
+            "description": "Origin chain ID.",
+            "schema": {
+              "example": 8453,
+              "type": "number"
+            }
+          },
+          {
+            "name": "destinationChainId",
+            "required": true,
+            "in": "query",
+            "description": "Destination chain ID.",
+            "schema": {
+              "example": 8453,
+              "type": "number"
+            }
           },
           {
             "name": "amount",
-            "in": "query",
             "required": true,
-            "description": "The amount that should be sent including all decimals (e.g. 1000000 for 1 USDC with 6 decimals)",
-            "schema": { "type": "string" }
+            "in": "query",
+            "description": "Input amount in token base units as a positive integer string.",
+            "schema": {
+              "example": "1000000",
+              "type": "string"
+            }
+          },
+          {
+            "name": "originCurrency",
+            "required": true,
+            "in": "query",
+            "description": "Origin token address, or native asset marker supported by the backend.",
+            "schema": {
+              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "type": "string"
+            }
+          },
+          {
+            "name": "destinationCurrency",
+            "required": true,
+            "in": "query",
+            "description": "Destination token address, or native asset marker supported by the backend.",
+            "schema": {
+              "example": "0x4200000000000000000000000000000000000006",
+              "type": "string"
+            }
           },
           {
             "name": "integrator",
-            "in": "query",
             "required": false,
-            "description": "A string containing tracking information about the integrator of the API",
-            "schema": { "type": "string" }
+            "in": "query",
+            "description": "Integrator identifier. Required when `fee` is provided.",
+            "schema": {
+              "example": "partner-app",
+              "type": "string"
+            }
           },
           {
             "name": "fee",
-            "in": "query",
             "required": false,
-            "description": "An optional fee applied to the transaction, expressed as a decimal value. \nSupported range is from 0 to 0.1 (0 – 10%). \nIf this parameter is not specified, no fees are collected.",
-            "schema": { "type": "string" }
+            "in": "query",
+            "description": "Optional integrator fee fraction. `0.01` means 1%.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 0.1,
+              "example": 0.01,
+              "type": "number"
+            }
           },
           {
             "name": "slippage",
-            "in": "query",
             "required": false,
-            "description": "Specifies the maximum permissible slippage for a transaction, expressed as a decimal value. For example, 0.005 corresponds to a slippage of 0.5%.\n Allowed range: 0 ≤ x ≤ 1",
-            "schema": { "type": "number" }
+            "in": "query",
+            "description": "Optional slippage fraction. `0.005` means 0.5%.",
+            "schema": {
+              "minimum": 0,
+              "maximum": 1,
+              "example": 0.005,
+              "type": "number"
+            }
           },
           {
             "name": "excludeBridges",
-            "in": "query",
             "required": false,
-            "description": "List of bridge adapters that should be excluded from the `/quotes`. Bridge tool identifiers must be provided as a comma-separated list. Retrieve current bridge keys from the `/v1/tools` endpoint.",
-            "schema": { 
-              "type": "string",
-              "examples": ["relay", "relay, mayan"]
+            "in": "query",
+            "description": "Comma-separated bridge adapter names to exclude, for example `RELAY,ACROSS`.",
+            "schema": {
+              "example": "RELAY,ACROSS",
+              "type": "string"
             }
           },
           {
             "name": "excludeExchanges",
-            "in": "query",
             "required": false,
-            "description": "List of exchange adapters that should be excluded from the `/quotes`. Exchange tool identifiers must be provided as a comma-separated list. Retrieve current exchange keys from the `/v1/tools` endpoint.",
-            "schema": { 
-              "type": "string",
-              "examples": ["OPENOCEAN", "OPENOCEAN,OKX"]
+            "in": "query",
+            "description": "Comma-separated exchange adapter names to exclude, for example `OPENOCEAN,OKX`.",
+            "schema": {
+              "example": "OPENOCEAN,OKX",
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "Quote response",
+            "description": "Best executable quote response.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/QuoteResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/QuoteResponseDto"
+                },
                 "examples": {
                   "success": {
-                    "summary": "Example quote",
+                    "summary": "Executable quote response",
                     "value": {
                       "inputAmount": "1000000",
-                      "outputAmount": "998400",
-                      "adapter": "RELAY",
+                      "outputAmount": "997321",
+                      "minOutputAmount": "992334",
+                      "adapter": "OPENOCEAN",
                       "calldata": {
-                          "to": "0xRouterContract",
-                          "data": "0xabcdef...",
-                          "value": "0"
+                        "to": "0x1111111111111111111111111111111111111111",
+                        "value": "0x0",
+                        "data": "0xabcdef"
                       },
                       "fees": {
                         "total": {
-                          "amount": "534942",
+                          "amount": "2679",
                           "currencySymbol": "USDC",
-                          "currencyAddress": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
-                          "chainId": 42161,
+                          "currencyAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                          "chainId": 8453,
                           "decimals": 6
                         },
                         "breakdown": [
                           {
                             "type": "gas",
-                            "amount": "494502800000",
-                            "currencySymbol": "ETH",
-                            "currencyAddress": "0x0000000000000000000000000000000000000000",
-                            "chainId": 42161,
-                            "decimals": 18,
-                            "amountUsd": "0.001475"
-                          },
-                          {
-                            "type": "relayer",
-                            "amount": "267471",
+                            "amount": "2679",
                             "currencySymbol": "USDC",
-                            "currencyAddress": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
-                            "chainId": 42161,
+                            "currencyAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                            "chainId": 8453,
                             "decimals": 6,
-                            "amountUsd": "0.267404"
+                            "amountUsd": "0.01"
                           }
                         ],
-                        "totalUsd": "0.536283"
+                        "totalUsd": "0.01"
                       },
                       "gas": {
-                        "gasPrice": "0x018e2d98"
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request (missing or invalid parameters)",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "examples": {
-                  "missingParam": {
-                    "value": {
-                      "error": 400,
-                      "message": "originCurrency is required"
-                    }
-                  },
-                  "receiverRequiredForCrossType": {
-                    "value": {
-                      "error": 400,
-                      "message": "`receiverAddress` is required when origin and destination chain types differ."
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable quote (route not found or unsupported pair)",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
-                "examples": {
-                  "noRoute": {
-                    "value": {
-                      "error": 422,
-                      "message": "No available route for given parameters"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/chains": {
-      "get": {
-        "summary": "List supported chains",
-        "description": "Returns all supported chains. Optionally filter by chain types.",
-        "parameters": [
-          {
-            "name": "chainTypes",
-            "in": "query",
-            "required": false,
-            "description": "List of chain types to include (EVM,SVM).",
-            "schema": {
-              "type": "string",
-              "examples": ["EVM", "EVM, SVM"]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "List of chains",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/ChainsResponse" },
-                "examples": {
-                  "success": {
-                    "summary": "Example chains response",
-                    "value": {
-                      "chains": [
+                        "gasPrice": "0x3b9aca00",
+                        "maxFeePerGas": "0x59682f00",
+                        "maxPriorityFeePerGas": "0x3b9aca00"
+                      },
+                      "warnings": [
                         {
-                          "key": "eth",
-                          "name": "Ethereum",
-                          "chainType": "EVM",
-                          "id": 1,
-                          "idHex": "0x1",
-                          "mainnet": true,
-                          "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/chains/ethereum.svg",
-                          "tokenlistUrl": "https://gateway.ipfs.io/ipns/tokens.uniswap.org",
-                          "multicallAddress": "0xcA11bde05977b3631167028862bE2a173976CA11",
-                          "rpcUrls": [
-                            "https://ethereum-rpc.publicnode.com",
-                            "https://eth.drpc.org"
-                          ],
-                          "blockExplorerUrls": "https://etherscan.io/",
-                          "nativeToken": {
-                            "address": "0x0000000000000000000000000000000000000000",
-                            "decimals": 18,
-                            "symbol": "ETH",
-                            "chainId": 1,
-                            "coinKey": "ETH",
-                            "name": "ETH",
-                            "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png"
-                          },
-                          "DeloraDiamond": "0x8FE04AcCD609b7Aa08a03Ef7cfa2B04E2A1A5d3d"
+                          "code": "SOLANA_INSUFFICIENT_BALANCE",
+                          "message": "Solana simulation reported insufficient balance."
                         }
                       ]
                     }
@@ -271,231 +208,267 @@
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "400": {
+            "description": "Invalid request parameters.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "validationErrors": {
+                    "summary": "Validation errors",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request parameters",
+                      "details": {
+                        "message": [
+                          "senderAddress should not be empty",
+                          "senderAddress must be a string"
+                        ]
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
               }
             }
           }
-        }
+        },
+        "summary": "Get the best executable quote",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns the best available route for an exact-input transfer or swap, including estimated output, executable calldata, fee breakdown, optional gas data, and non-blocking warnings."
       }
     },
-    "/v1/tools": {
+    "/v1/chains": {
       "get": {
-        "summary": "List available exchanges and bridges",
-        "description": "Returns available tools (DEX aggregators, bridges, etc.). You can filter by chain IDs that the tool supports.",
+        "operationId": "getChains",
         "parameters": [
           {
-            "name": "chains",
-            "in": "query",
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
             "required": false,
-            "description": "A comma-separated list of chain identifiers to filter the instruments.",
             "schema": {
-              "type": "string",
-              "example": "1,56,10"
+              "type": "string"
+            }
+          },
+          {
+            "name": "chainTypes",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated chain types to include. Supported values: EVM, SVM.",
+            "schema": {
+              "example": "EVM,SVM",
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "List of tools grouped by type",
+            "description": "Supported chains response.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/ToolsResponse" },
+                "schema": {
+                  "$ref": "#/components/schemas/ChainsResponseDto"
+                },
                 "examples": {
                   "success": {
-                    "summary": "Example tools response",
+                    "summary": "Supported chains response",
+                    "value": {
+                      "chains": [
+                        {
+                          "key": "base",
+                          "name": "Base",
+                          "chainType": "EVM",
+                          "id": 8453,
+                          "idHex": "0x2105",
+                          "mainnet": true,
+                          "logoURI": "https://example.com/base.png",
+                          "tokenlistUrl": "https://tokens.example.com/base.json",
+                          "multicallAddress": "0xcA11bde05977b3631167028862bE2a173976CA11",
+                          "rpcUrls": [
+                            "https://mainnet.base.org"
+                          ],
+                          "blockExplorerUrls": "https://basescan.org",
+                          "nativeToken": {
+                            "address": "0x0000000000000000000000000000000000000000",
+                            "decimals": 18,
+                            "symbol": "ETH",
+                            "chainId": 8453,
+                            "coinKey": "ETH",
+                            "name": "Ether",
+                            "logoURI": "https://example.com/eth.png"
+                          },
+                          "DeloraDiamond": "0x1111111111111111111111111111111111111111"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "validationErrors": {
+                    "summary": "Validation errors",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request parameters",
+                      "details": {
+                        "message": [
+                          "senderAddress should not be empty",
+                          "senderAddress must be a string"
+                        ]
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  },
+                  "invalidChainTypes": {
+                    "summary": "Invalid chainTypes filter",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid \"chainTypes\" query parameter. Allowed values: EVM, SVM.",
+                      "details": {
+                        "message": "Invalid \"chainTypes\" query parameter. Allowed values: EVM, SVM."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/tokens?chainTypes=aaa"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List supported chains",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns the chains supported by Delora. Use the optional chainTypes query parameter to filter by EVM or SVM networks."
+      }
+    },
+    "/v1/tools": {
+      "get": {
+        "operationId": "getTools",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chains",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated chain IDs used to filter supported tools.",
+            "schema": {
+              "example": "1,8453"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supported tools response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ToolsResponseDto"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Supported tools response",
                     "value": {
                       "exchanges": [
                         {
                           "key": "OPENOCEAN",
                           "name": "OpenOcean",
-                          "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/openocean.png",
+                          "logoURI": "https://example.com/openocean.png",
                           "supportedChains": [
                             "1",
-                            "56",
-                            "10",
-                            "137",
-                            "42161",
-                            "8453",
-                            "130",
-                            "146",
-                            "999",
-                            "9745",
-                            "1329",
-                            "43114",
-                            "59144",
-                            "80094"
+                            "8453"
                           ]
                         }
                       ],
                       "bridges": [
                         {
-                          "key": "ACROSS",
-                          "name": "Across",
-                          "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/across.svg",
+                          "key": "RELAY",
+                          "name": "Relay",
+                          "logoURI": "https://example.com/relay.png",
                           "supportedChains": [
                             "1",
-                            "10",
-                            "56",
-                            "137",
-                            "59144",
-                            "8453",
-                            "42161",
-                            "130",
-                            "324",
-                            "480",
-                            "999",
-                            "1135",
-                            "34443",
-                            "534352",
-                            "81457",
-                            "9745",
-                            "1868"
+                            "8453"
                           ]
                         }
                       ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/tokens": {
-      "get": {
-        "summary": "List supported tokens",
-        "description": "Returns tokens supported by the protocol, optionally filtered by chain IDs and chain types.",
-        "parameters": [
-          {
-            "name": "chains",
-            "in": "query",
-            "required": false,
-            "description": "Comma-separated list of chain IDs to include.",
-            "schema": {
-              "type": "string",
-              "example": "1,56,10"
-            }
-          },
-          {
-            "name": "chainTypes",
-            "in": "query",
-            "required": false,
-            "description": "List of chain types to include.",
-            "schema": {
-              "type": "string",
-              "examples": ["EVM", "EVM,SVM"]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Tokens grouped by chain ID",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/TokensResponse" },
-                "examples": {
-                  "success": {
-                    "summary": "Example tokens response",
-                    "value": {
-                      "1": [
-                        {
-                          "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                          "symbol": "WETH",
-                          "decimals": 18,
-                          "chainId": 1,
-                          "name": "Wrapped Ether",
-                          "coinKey": "WETH",
-                          "priceUSD": "3180.67",
-                          "logoURI": "https://github.com/trustwallet/assets/blob/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png?raw=true"
-                        },
-                        {
-                          "address": "0x0000000000000000000000000000000000000000",
-                          "symbol": "ETH",
-                          "decimals": 18,
-                          "chainId": 1,
-                          "name": "Ether",
-                          "coinKey": "ETH",
-                          "priceUSD": "3180.67",
-                          "logoURI": "https://github.com/trustwallet/assets/blob/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png?raw=true"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal server error",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/v1/token": {
-      "get": {
-        "summary": "Get a single token",
-        "description": "Returns detailed information for a single token identified by chain and address or symbol.",
-        "parameters": [
-          {
-            "name": "chain",
-            "in": "query",
-            "required": true,
-            "description": "Chain identifier: numeric chain ID or chain key.",
-            "schema": {
-              "type": "string",
-              "examples": ["1", "eth"]
-            }
-          },
-          {
-            "name": "token",
-            "in": "query",
-            "required": true,
-            "description": "Token identifier: contract address or symbol.",
-            "schema": {
-              "type": "string",
-              "examples": [
-                "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                "WETH"
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Token metadata",
-            "content": {
-              "application/json": {
-                "schema": { "$ref": "#/components/schemas/Token" },
-                "examples": {
-                  "success": {
-                    "summary": "Example token response",
-                    "value": {
-                      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
-                      "symbol": "WETH",
-                      "decimals": 18,
-                      "chainId": 1,
-                      "name": "Wrapped Ether",
-                      "coinKey": "WETH",
-                      "priceUSD": "3180.67",
-                      "logoURI": "https://github.com/trustwallet/assets/blob/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png?raw=true"
                     }
                   }
                 }
@@ -503,297 +476,1008 @@
             }
           },
           "400": {
-            "description": "Bad request (missing or invalid parameters)",
+            "description": "Invalid request parameters.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" },
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
                 "examples": {
-                  "missingParam": {
+                  "validationErrors": {
+                    "summary": "Validation errors",
                     "value": {
-                      "error": 400,
-                      "message": "chain and token are required"
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request parameters",
+                      "details": {
+                        "message": [
+                          "senderAddress should not be empty",
+                          "senderAddress must be a string"
+                        ]
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
                     }
                   }
                 }
               }
             }
           },
-          "500": {
-            "description": "Internal server error",
+          "429": {
+            "description": "Rate limit exceeded.",
             "content": {
               "application/json": {
-                "schema": { "$ref": "#/components/schemas/Error" }
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
               }
             }
           }
-        }
+        },
+        "summary": "List supported bridge and exchange tools",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns supported bridge and exchange adapters, grouped by type. Use the optional chains query parameter to filter tools by supported chain IDs."
+      }
+    },
+    "/v1/tokens": {
+      "get": {
+        "operationId": "getTokens",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chains",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated chain IDs used to filter tokens.",
+            "schema": {
+              "example": "8453,1",
+              "type": "string"
+            }
+          },
+          {
+            "name": "chainTypes",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated chain types to include. Supported values: EVM, SVM.",
+            "schema": {
+              "example": "EVM,SVM",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tokens grouped by chain ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/TokenDto"
+                    }
+                  },
+                  "example": {
+                    "8453": [
+                      {
+                        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                        "symbol": "USDC",
+                        "decimals": 6,
+                        "chainId": 8453,
+                        "name": "USD Coin",
+                        "coinKey": "USDC"
+                      }
+                    ]
+                  }
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Tokens grouped by chain ID",
+                    "value": {
+                      "8453": [
+                        {
+                          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                          "symbol": "USDC",
+                          "decimals": 6,
+                          "chainId": 8453,
+                          "name": "USD Coin",
+                          "coinKey": "USDC",
+                          "priceUSD": "1.00",
+                          "logoURI": "https://example.com/usdc.png"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "validationErrors": {
+                    "summary": "Validation errors",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request parameters",
+                      "details": {
+                        "message": [
+                          "senderAddress should not be empty",
+                          "senderAddress must be a string"
+                        ]
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  },
+                  "invalidChainTypes": {
+                    "summary": "Invalid chainTypes filter",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid \"chainTypes\" query parameter. Allowed values: EVM, SVM.",
+                      "details": {
+                        "message": "Invalid \"chainTypes\" query parameter. Allowed values: EVM, SVM."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/tokens?chainTypes=aaa"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "List supported tokens grouped by chain ID",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns supported tokens grouped by chain ID. Use chains to limit the response to specific chain IDs and chainTypes to filter by EVM or SVM networks."
+      }
+    },
+    "/v1/token": {
+      "get": {
+        "operationId": "getToken",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chain",
+            "required": true,
+            "in": "query",
+            "description": "Chain ID or chain key, for example `8453` or `sol`.",
+            "schema": {
+              "example": "8453",
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "description": "Token address or symbol.",
+            "schema": {
+              "example": "USDC",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token metadata response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenDto"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Token metadata response",
+                    "value": {
+                      "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                      "symbol": "USDC",
+                      "decimals": 6,
+                      "chainId": 8453,
+                      "name": "USD Coin",
+                      "coinKey": "USDC",
+                      "priceUSD": "1.00",
+                      "logoURI": "https://example.com/usdc.png"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "validationErrors": {
+                    "summary": "Validation errors",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Invalid request parameters",
+                      "details": {
+                        "message": [
+                          "senderAddress should not be empty",
+                          "senderAddress must be a string"
+                        ]
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Token was not found.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "tokenNotFound": {
+                    "summary": "Token not found",
+                    "value": {
+                      "statusCode": 404,
+                      "code": "NOT_FOUND",
+                      "message": "Requested resource was not found",
+                      "details": {
+                        "message": "Requested resource was not found"
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/token?chain=8453&token=UNKNOWN"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Find one token by chain and address or symbol",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns metadata for a single token on a specific chain. The token query parameter can be a token address or symbol."
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Service is healthy.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponseDto"
+                },
+                "examples": {
+                  "ok": {
+                    "summary": "Healthy service",
+                    "value": {
+                      "status": "ok"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ],
+        "description": "Returns the current service health status."
       }
     }
-
   },
+  "tags": [
+    {
+      "name": "Health",
+      "description": ""
+    },
+    {
+      "name": "V1",
+      "description": ""
+    }
+  ],
   "components": {
+    "securitySchemes": {
+      "api-key": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Optional public API key for higher rate limits and fee rules."
+      }
+    },
     "schemas": {
-      "QuoteResponse": {
-        "type": "object",
-        "required": ["inputAmount", "outputAmount", "adapter", "calldata"],
-        "properties": {
-          "inputAmount": {
-            "type": "string",
-            "description": "The amount that should be transferred including all decimals"
-          },
-          "outputAmount": {
-            "type": "string",
-            "description": "The estimated resulting amount of the destinationCurrency including all decimals"
-          },
-          "adapter": {
-            "type": "string",
-            "description": "The adapter or route selected for the transaction"
-          },
-          "calldata": {
-            "$ref": "#/components/schemas/CalldataItem",
-            "description": "Execution-ready transaction payload returned by Delora"
-          },
-          "fees": {
-            "$ref": "#/components/schemas/ParsedFees",
-            "description": "Structured fee summary, including the dominant total currency and raw fee breakdown"
-          },
-          "gas": {
-            "$ref": "#/components/schemas/Gas",
-            "description": "Suggested gas values for EVM execution when available"
-          },
-          "warnings": {
-            "type": "array",
-            "description": "Optional non-blocking warnings returned with the quote",
-            "items": { "$ref": "#/components/schemas/QuoteWarning" }
-          }
-        }
-      },
-      "CalldataItem": {
-        "type": "object",
-        "description": "Execution payload; fields may vary by chain/tool",
-        "properties": {
-          "to": { "type": "string", "description": "Target contract/address" },
-          "value": { "type": "string", "description": "Native value to send" },
-          "data": { "type": "string", "description": "Calldata hex" }
-        },
-        "additionalProperties": true
-      },
-      "ParsedFees": {
-        "type": "object",
-        "properties": {
-          "total": { "$ref": "#/components/schemas/ParsedFeesTotalCurrency" },
-          "breakdown": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/ParsedFeesBreakdownItem" }
-          },
-          "totalUsd": {
-            "type": "string",
-            "description": "Optional USD sum of fee breakdown items when available"
-          }
-        },
-        "required": ["total", "breakdown"]
-      },
-      "ParsedFeesTotalCurrency": {
-        "type": "object",
-        "properties": {
-          "amount": { "type": "string", "description": "Total amount in minimal units" },
-          "currencySymbol": { "type": "string" },
-          "currencyAddress": { "type": "string" },
-          "chainId": { "type": "integer" },
-          "decimals": { "type": "integer" }
-        },
-        "required": ["amount", "currencySymbol", "currencyAddress", "chainId"]
-      },
-      "ParsedFeesBreakdownItem": {
-        "type": "object",
-        "properties": {
-          "type": { "type": "string", "description": "Fee category such as gas, relayer, protocol, or integrator" },
-          "amount": { "type": "string", "description": "Fee amount in minimal units" },
-          "currencySymbol": { "type": "string" },
-          "currencyAddress": { "type": "string" },
-          "chainId": { "type": "integer" },
-          "decimals": { "type": "integer" },
-          "amountUsd": { "type": "string", "description": "Optional USD representation of this fee item" }
-        },
-        "required": ["type", "amount", "currencySymbol", "currencyAddress", "chainId"]
-      },
-      "Gas": {
-        "type": "object",
-        "properties": {
-          "gasPrice": { "type": "string", "description": "Legacy gas price in wei, encoded as a hex string" },
-          "maxFeePerGas": { "type": "string", "description": "Maximum total gas fee in wei, encoded as a hex string" },
-          "maxPriorityFeePerGas": { "type": "string", "description": "Priority fee in wei, encoded as a hex string" }
-        },
-        "additionalProperties": true
-      },
-      "QuoteWarning": {
-        "type": "object",
-        "properties": {
-          "code": { "type": "string", "description": "Machine-readable warning code" },
-          "message": { "type": "string", "description": "Human-readable warning message" }
-        },
-        "required": ["code", "message"]
-      },
-      "Error": {
-        "type": "object",
-        "required": ["error", "message"],
-        "properties": {
-          "error": { "type": "integer", "format": "int32" },
-          "message": { "type": "string" }
-        }
-      },
-      "ChainsResponse": {
-        "type": "object",
-        "properties": {
-          "chains": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Chain" }
-          }
-        }
-      },
-      "Chain": {
-        "type": "object",
-        "properties": {
-          "key": { "type": "string", "description": "Short chain key (e.g., eth, opt)" },
-          "name": { "type": "string", "description": "Full name of the blockchain network"},
-          "chainType": { "type": "string", "description": "Type of chain: EVM or SVM" },
-          "id": { "type": "integer", "description": "Numeric chain ID used in RPC and contracts" },
-          "idHex": { "type": "string", "description": "Hexadecimal representation of the chain ID" },
-          "mainnet": { "type": "boolean", "description": "Indicates whether the chain is a mainnet" },
-          "logoURI": { "type": "string", "format": "uri", "description": "URL of the chain logo image" },
-          "tokenlistUrl": { "type": "string", "format": "uri", "description": "URL pointing to the token list for this chain" },
-          "multicallAddress": { "type": "string", "description": "Address of the multicall contract" },
-          "rpcUrls": {
-            "type": "array",
-            "items": { "type": "string", "format": "uri" },
-            "description": "List of RPC endpoints for accessing the chain"
-          },
-          "blockExplorerUrls": { "type": "string", "description": "URL of the main block explorer for the chain" },
-          "nativeToken": { "$ref": "#/components/schemas/NativeToken", "description": "Native token used for gas payments on this chain" }
-        },
-        "required": ["key", "name", "chainType", "id", "idHex", "mainnet"]
-      },
-      "NativeToken": {
-        "type": "object",
-        "properties": {
-          "address": { "type": "string", "description": "Token address (0x0 for native coins like ETH)" },
-          "decimals": { "type": "integer", "description": "Number of decimals used by the token" },
-          "symbol": { "type": "string", "description": "Ticker symbol of the token (e.g., ETH)" },
-          "chainId": { "type": "integer", "description": "Chain ID to which the token belongs" },
-          "coinKey": { "type": "string", "description": "Short identifier for the token used across chains" },
-          "name": { "type": "string", "description": "Full name of the token" },
-          "logoURI": { "type": "string", "format": "uri", "description": "URL of the token logo image" }
-        },
-        "required": ["address", "decimals", "symbol", "chainId", "coinKey", "name"]
-      },
-      "ToolsResponse": {
-        "type": "object",
-        "properties": {
-          "exchanges": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Exchange" }
-          },
-          "bridges": {
-            "type": "array",
-            "items": { "$ref": "#/components/schemas/Bridge" }
-          }
-        }
-      },
-      "Exchange": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique tool key, e.g. OPENOCEAN"
-          },
-          "name": {
-            "type": "string",
-            "description": "Exchange name"
-          },
-          "logoURI": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL to the tool logo"
-          },
-          "supportedChains": {
-            "type": "array",
-            "description": "List of chain IDs as strings this exchange supports",
-            "items": { "type": "string" }
-          }
-        },
-        "required": ["key", "name", "supportedChains"]
-      },
-      "Bridge": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Unique tool key, e.g. ACROSS"
-          },
-          "name": {
-            "type": "string",
-            "description": "Bridge name"
-          },
-          "logoURI": {
-            "type": "string",
-            "format": "uri",
-            "description": "URL to the tool logo"
-          },
-          "supportedChains": {
-            "type": "array",
-            "description": "List of chain IDs as strings this bridge supports",
-            "items": { "type": "string" }
-          }
-        },
-        "required": ["key", "name", "supportedChains"]
-      },
-      "Token": {
+      "TokenDto": {
         "type": "object",
         "properties": {
           "address": {
             "type": "string",
-            "description": "Token contract address"
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
           },
           "symbol": {
             "type": "string",
-            "description": "Token ticker symbol (e.g., WETH)"
+            "example": "USDC"
           },
           "decimals": {
-            "type": "integer",
-            "description": "Number of decimals used by the token"
+            "type": "number",
+            "example": 6
           },
           "chainId": {
-            "type": "integer",
-            "description": "Chain ID to which the token belongs"
+            "type": "number",
+            "example": 8453
           },
           "name": {
             "type": "string",
-            "description": "Human-readable token name"
+            "example": "USD Coin"
           },
           "coinKey": {
             "type": "string",
-            "description": "Short identifier for the token used across chains"
+            "example": "USDC"
           },
           "priceUSD": {
             "type": "string",
-            "description": "Token price in USD represented as a string"
+            "example": "1.00"
           },
           "logoURI": {
             "type": "string",
-            "format": "uri",
-            "description": "URL of the token logo image"
+            "example": "https://example.com/usdc.png"
           }
         },
-        "required": ["address", "symbol", "decimals", "chainId", "name", "coinKey"]
+        "required": [
+          "address",
+          "symbol",
+          "decimals",
+          "chainId",
+          "name",
+          "coinKey"
+        ]
       },
-      "TokensResponse": {
+      "QuoteCalldataDto": {
         "type": "object",
-        "additionalProperties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/components/schemas/Token"
+        "properties": {
+          "to": {
+            "type": "string",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "value": {
+            "type": "string",
+            "example": "0x0"
+          },
+          "data": {
+            "type": "string",
+            "example": "0xabcdef"
+          }
+        },
+        "required": [
+          "to",
+          "value",
+          "data"
+        ]
+      },
+      "ParsedFeesTotalCurrencyDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string",
+            "example": "2679"
+          },
+          "currencySymbol": {
+            "type": "string",
+            "example": "USDC"
+          },
+          "currencyAddress": {
+            "type": "string",
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          },
+          "chainId": {
+            "type": "number",
+            "example": 8453
+          },
+          "decimals": {
+            "type": "number",
+            "example": 6
+          }
+        },
+        "required": [
+          "amount",
+          "currencySymbol",
+          "currencyAddress",
+          "chainId"
+        ]
+      },
+      "ParsedFeesBreakdownItemDto": {
+        "type": "object",
+        "properties": {
+          "amount": {
+            "type": "string",
+            "example": "2679"
+          },
+          "currencySymbol": {
+            "type": "string",
+            "example": "USDC"
+          },
+          "currencyAddress": {
+            "type": "string",
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          },
+          "chainId": {
+            "type": "number",
+            "example": 8453
+          },
+          "decimals": {
+            "type": "number",
+            "example": 6
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "gas",
+              "relayer",
+              "relayerGas",
+              "relayerService",
+              "capital",
+              "lp",
+              "app",
+              "total"
+            ],
+            "example": "gas"
+          },
+          "amountUsd": {
+            "type": "string",
+            "example": "0.01"
+          }
+        },
+        "required": [
+          "amount",
+          "currencySymbol",
+          "currencyAddress",
+          "chainId",
+          "type"
+        ]
+      },
+      "ParsedFeesDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "$ref": "#/components/schemas/ParsedFeesTotalCurrencyDto"
+          },
+          "breakdown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ParsedFeesBreakdownItemDto"
+            }
+          },
+          "totalUsd": {
+            "type": "string",
+            "example": "0.01"
+          }
+        },
+        "required": [
+          "total",
+          "breakdown"
+        ]
+      },
+      "GasEstimationDto": {
+        "type": "object",
+        "properties": {
+          "gasPrice": {
+            "type": "string",
+            "example": "0x3b9aca00"
+          },
+          "maxFeePerGas": {
+            "type": "string",
+            "example": "0x59682f00"
+          },
+          "maxPriorityFeePerGas": {
+            "type": "string",
+            "example": "0x3b9aca00"
           }
         }
+      },
+      "QuoteWarningDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "enum": [
+              "INTEGRATOR_SOLANA_WALLET_NOT_ACTIVATED_FEE_SKIPPED",
+              "INTEGRATOR_WALLET_NOT_CONFIGURED_FEE_SKIPPED",
+              "SOLANA_SYSTEM_ACCOUNT_SKIPPED",
+              "SOLANA_INSUFFICIENT_BALANCE",
+              "SOLANA_SIMULATION_FAILED"
+            ],
+            "example": "SOLANA_INSUFFICIENT_BALANCE"
+          },
+          "message": {
+            "type": "string",
+            "example": "Solana simulation reported insufficient balance."
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ]
+      },
+      "QuoteResponseDto": {
+        "type": "object",
+        "properties": {
+          "inputAmount": {
+            "type": "string",
+            "example": "1000000"
+          },
+          "outputAmount": {
+            "type": "string",
+            "example": "997321"
+          },
+          "minOutputAmount": {
+            "type": "string",
+            "example": "992334"
+          },
+          "adapter": {
+            "enum": [
+              "ACROSS",
+              "RELAY",
+              "GASZIP",
+              "OPENOCEAN",
+              "JUPITER",
+              "SYMBIOSIS",
+              "MAYAN",
+              "MAYAN_WORMHOLE",
+              "MAYAN_SWIFT",
+              "MAYAN_MCTP",
+              "MAYAN_FAST_MCTP",
+              "OKX",
+              "RISE",
+              "NORDSTERN"
+            ],
+            "type": "string",
+            "example": "OPENOCEAN"
+          },
+          "calldata": {
+            "$ref": "#/components/schemas/QuoteCalldataDto"
+          },
+          "fees": {
+            "$ref": "#/components/schemas/ParsedFeesDto"
+          },
+          "gas": {
+            "$ref": "#/components/schemas/GasEstimationDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteWarningDto"
+            }
+          }
+        },
+        "required": [
+          "inputAmount",
+          "outputAmount",
+          "adapter",
+          "calldata",
+          "fees"
+        ]
+      },
+      "StandardErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 400
+          },
+          "code": {
+            "enum": [
+              "NO_AVAILABLE_QUOTES",
+              "WRONG_ADDRESS",
+              "RATE_LIMIT",
+              "ADAPTER_BAD_REQUEST",
+              "ADAPTER_UNAUTHORIZED",
+              "ADAPTER_INTERNAL",
+              "VALIDATION_ERROR",
+              "NOT_FOUND",
+              "UNKNOWN"
+            ],
+            "type": "string",
+            "example": "VALIDATION_ERROR"
+          },
+          "message": {
+            "type": "string",
+            "example": "Invalid request parameters"
+          },
+          "details": {
+            "description": "Optional error details. When details is an object, `message` can be either a string or an array of strings.",
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true,
+                "properties": {
+                  "message": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    ],
+                    "description": "Human-readable details. Validation errors may return multiple messages."
+                  },
+                  "errorCode": {
+                    "type": "string"
+                  },
+                  "code": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  },
+                  "status": {
+                    "oneOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            ],
+            "example": {
+              "message": [
+                "One or more request parameters are invalid."
+              ]
+            }
+          },
+          "timestamp": {
+            "type": "string",
+            "example": "2026-05-13T18:00:00.000Z"
+          },
+          "path": {
+            "type": "string",
+            "example": "/v1/..."
+          }
+        },
+        "required": [
+          "statusCode",
+          "code",
+          "message",
+          "timestamp"
+        ]
+      },
+      "NativeTokenDto": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "example": "0x0000000000000000000000000000000000000000"
+          },
+          "decimals": {
+            "type": "number",
+            "example": 18
+          },
+          "symbol": {
+            "type": "string",
+            "example": "ETH"
+          },
+          "chainId": {
+            "type": "number",
+            "example": 8453
+          },
+          "coinKey": {
+            "type": "string",
+            "example": "ETH"
+          },
+          "name": {
+            "type": "string",
+            "example": "Ether"
+          },
+          "logoURI": {
+            "type": "string",
+            "example": "https://example.com/eth.png"
+          }
+        },
+        "required": [
+          "address",
+          "decimals",
+          "symbol",
+          "chainId",
+          "coinKey",
+          "name",
+          "logoURI"
+        ]
+      },
+      "ChainInfoDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "base"
+          },
+          "name": {
+            "type": "string",
+            "example": "Base"
+          },
+          "chainType": {
+            "type": "string",
+            "enum": [
+              "EVM",
+              "SVM"
+            ],
+            "example": "EVM"
+          },
+          "id": {
+            "type": "number",
+            "example": 8453
+          },
+          "idHex": {
+            "type": "string",
+            "example": "0x2105"
+          },
+          "mainnet": {
+            "type": "boolean",
+            "example": true
+          },
+          "logoURI": {
+            "type": "string",
+            "example": "https://example.com/base.png"
+          },
+          "tokenlistUrl": {
+            "type": "string",
+            "example": "https://tokens.example.com/base.json"
+          },
+          "multicallAddress": {
+            "type": "string",
+            "example": "0xcA11bde05977b3631167028862bE2a173976CA11"
+          },
+          "rpcUrls": {
+            "example": [
+              "https://mainnet.base.org"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "blockExplorerUrls": {
+            "type": "string",
+            "example": "https://basescan.org"
+          },
+          "nativeToken": {
+            "$ref": "#/components/schemas/NativeTokenDto"
+          },
+          "DeloraDiamond": {
+            "type": "string",
+            "example": "0x1111111111111111111111111111111111111111"
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "chainType",
+          "id",
+          "idHex",
+          "mainnet",
+          "logoURI",
+          "rpcUrls",
+          "blockExplorerUrls",
+          "nativeToken"
+        ]
+      },
+      "ChainsResponseDto": {
+        "type": "object",
+        "properties": {
+          "chains": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChainInfoDto"
+            }
+          }
+        },
+        "required": [
+          "chains"
+        ]
+      },
+      "ToolInfoDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "enum": [
+              "ACROSS",
+              "RELAY",
+              "GASZIP",
+              "OPENOCEAN",
+              "JUPITER",
+              "SYMBIOSIS",
+              "MAYAN",
+              "MAYAN_WORMHOLE",
+              "MAYAN_SWIFT",
+              "MAYAN_MCTP",
+              "MAYAN_FAST_MCTP",
+              "OKX",
+              "RISE",
+              "NORDSTERN"
+            ],
+            "type": "string",
+            "example": "RELAY"
+          },
+          "name": {
+            "type": "string",
+            "example": "Relay"
+          },
+          "logoURI": {
+            "type": "string",
+            "example": "https://example.com/relay.png"
+          },
+          "supportedChains": {
+            "example": [
+              "1",
+              "8453"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "name",
+          "logoURI",
+          "supportedChains"
+        ]
+      },
+      "ToolsResponseDto": {
+        "type": "object",
+        "properties": {
+          "exchanges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolInfoDto"
+            }
+          },
+          "bridges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ToolInfoDto"
+            }
+          }
+        },
+        "required": [
+          "exchanges",
+          "bridges"
+        ]
+      },
+      "HealthResponseDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        },
+        "required": [
+          "status"
+        ]
       }
     }
   }
