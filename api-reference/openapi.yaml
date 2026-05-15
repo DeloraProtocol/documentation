@@ -827,6 +827,27 @@ components:
             - NOT_FOUND
             - UNKNOWN
           type: string
+          description: |-
+            Machine-readable Delora error code.
+            - NO_AVAILABLE_QUOTES: No bridge or exchange adapter returned an executable quote for the requested transfer.
+            - WRONG_ADDRESS: A wallet address is missing, malformed, or incompatible with the requested chain type.
+            - RATE_LIMIT: The request exceeded the configured rate limit for the IP address or API key.
+            - ADAPTER_BAD_REQUEST: An upstream bridge or exchange adapter rejected the request as invalid.
+            - ADAPTER_UNAUTHORIZED: An upstream bridge or exchange adapter rejected the request because credentials are missing or invalid.
+            - ADAPTER_INTERNAL: An upstream bridge or exchange adapter failed with an internal error.
+            - VALIDATION_ERROR: The request failed Delora API validation, including invalid query parameters, body fields, or address formats.
+            - NOT_FOUND: The requested chain, token, or resource was not found.
+            - UNKNOWN: The request failed with an unexpected error that does not map to a more specific code.
+          x-enumDescriptions:
+            - No bridge or exchange adapter returned an executable quote for the requested transfer.
+            - A wallet address is missing, malformed, or incompatible with the requested chain type.
+            - The request exceeded the configured rate limit for the IP address or API key.
+            - An upstream bridge or exchange adapter rejected the request as invalid.
+            - An upstream bridge or exchange adapter rejected the request because credentials are missing or invalid.
+            - An upstream bridge or exchange adapter failed with an internal error.
+            - The request failed Delora API validation, including invalid query parameters, body fields, or address formats.
+            - The requested chain, token, or resource was not found.
+            - The request failed with an unexpected error that does not map to a more specific code.
           example: VALIDATION_ERROR
         message:
           type: string
