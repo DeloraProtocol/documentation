@@ -83,9 +83,9 @@
               {
                 "group": "Getting Integrated with Delora",
                 "pages": [
-                  "overview/learn-more/getting-integrated-with-delora/overview",
-                  "overview/learn-more/getting-integrated-with-delora/for-dexs-and-aggregators",
-                  "overview/learn-more/getting-integrated-with-delora/bridges"
+                  "learn-more/getting-integrated-with-delora/overview",
+                  "learn-more/getting-integrated-with-delora/for-dexs-and-aggregators",
+                  "learn-more/getting-integrated-with-delora/bridges"
                 ]
               }
             ]
