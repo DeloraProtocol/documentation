@@ -58,7 +58,8 @@
               "protocol/protocol-overview",
               "protocol/smart-contract-architecture",
               "protocol/smart-contract-addresses",
-              "protocol/fee-configuration"
+              "protocol/fee-configuration",
+              "protocol/simple-vs-advanced-routing"
             ]
           },
           {
@@ -113,9 +114,12 @@
             "group": "API Endpoints",
             "pages": [
               "api-reference/endpoint/get-a-quote-for-a-token-transfer",
+              "api-reference/endpoint/post-advanced-routes",
+              "api-reference/endpoint/post-advanced-step-transaction",
               "api-reference/endpoint/get-chains",
               "api-reference/endpoint/get-tools",
               "api-reference/endpoint/get-tokens",
+              "api-reference/endpoint/get-prices",
               "api-reference/endpoint/get-token"
             ]
           }

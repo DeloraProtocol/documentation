@@ -1,0 +1,84 @@
+---
+title: "Discover advanced routes"
+openapi: "POST /v1/advanced/routes"
+"og:image": "https://docs.delora.build/images/docs-og.png"
+---
+
+Use this endpoint when your integration needs route-level control instead of a single packaged transaction from `/v1/quotes`.
+
+## Request body
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `senderAddress` | `string` | Required. Sender wallet address on the origin chain. |
+| `receiverAddress` | `string` | Receiver wallet address. Optional only when origin and destination chain types match; otherwise required. |
+| `originChainId` | `number` | Required. Origin chain ID. |
+| `destinationChainId` | `number` | Required. Destination chain ID. |
+| `amount` | `string` | Required. Input amount in token base units as a positive integer string. |
+| `originCurrency` | `string` | Required. Origin token address or native asset marker. |
+| `destinationCurrency` | `string` | Required. Destination token address or native asset marker. |
+| `integrator` | `string` | Optional integrator identifier. Required when `fee` is provided. |
+| `fee` | `number` | Optional integrator fee fraction. `0.01` means 1%. Valid range: `0..0.1`. |
+| `slippage` | `number` | Optional slippage fraction. `0.005` means 0.5%. Valid range: `0..1`. |
+| `maxRoutes` | `number` | Optional maximum number of ranked routes to return. |
+| `includeBridges` | `string` | Optional comma-separated bridge adapter allowlist for cross-chain route legs. |
+| `includeExchanges` | `string` | Optional comma-separated exchange adapter allowlist for same-chain route legs. |
+| `excludeBridges` | `string` | Optional comma-separated bridge adapter denylist. |
+| `excludeExchanges` | `string` | Optional comma-separated exchange adapter denylist. |
+
+## Headers
+
+| Header | Description |
+| --- | --- |
+| `x-api-key` | Optional API key for higher rate limits and fee rules. |
+
+## Example
+
+```http
+POST /v1/advanced/routes
+Content-Type: application/json
+```
+
+```json
+{
+  "senderAddress": "0x1111111111111111111111111111111111111111",
+  "receiverAddress": "0x2222222222222222222222222222222222222222",
+  "originChainId": 8453,
+  "destinationChainId": 42161,
+  "amount": "1000000",
+  "originCurrency": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "destinationCurrency": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+  "integrator": "partner-app",
+  "fee": 0.01,
+  "slippage": 0.005,
+  "includeBridges": "RELAY",
+  "maxRoutes": 2
+}
+```
+
+## Response
+
+The response contains a `routes` array. Each route includes:
+
+- route-level amounts and fee estimates
+- `routeKind`, either `single-step` or `multistep`
+- the selected adapter/tool
+- one or more `steps`
+
+Each step can be passed to `/v1/advanced/stepTransaction` when the user is ready to execute it.
+
+## Additional Notes
+
+`/v1/advanced/routes` returns ranked route plans. A route can be a single step or a multi-step flow such as bridge followed by swap. Each step includes an estimate, the tool selected for that step, and the execution metadata needed by `/v1/advanced/stepTransaction`.
+
+See [Simple vs advanced routing](/protocol/simple-vs-advanced-routing) for when to use `/v1/quotes` versus advanced routes.
+
+<Note>
+  Advanced routes are estimates and route plans, not locked executable quotes. Before the user signs, populate the selected step with `POST /v1/advanced/stepTransaction`.
+</Note>
+
+Use adapter keys returned by `/v1/tools`, such as `RELAY`, `MAYAN_SWIFT`, `OPENOCEAN`, or `OKX`.
+
+<Note>
+  `includeBridges` only applies to bridge-capable route legs. `includeExchanges` only applies to exchange-capable route legs. Passing an exchange key in `includeBridges`, or a bridge key in `includeExchanges`, returns a validation error.
+</Note>

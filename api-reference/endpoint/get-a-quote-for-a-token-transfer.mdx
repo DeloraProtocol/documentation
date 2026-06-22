@@ -6,6 +6,10 @@ openapi: "GET /v1/quotes"
 
 This endpoint enables you to request a quote for transferring tokens, whether across chains or within the same chain. It returns detailed information, including an estimated output amount, an execution-ready `calldata` payload, and optional non-blocking `warnings`. The estimated output amount can be found in the `outputAmount` field.
 
+**Base URL:** `https://api.delora.build/v1`
+
+## Additional Notes
+
 <Info>
   All Delora APIs don't require an API key by default. An API key is only necessary for accessing higher request limits.
 </Info>
@@ -39,4 +43,32 @@ GET /v1/quotes?originChainId=1&destinationChainId=1000000001&originCurrency=0xA0
 
 This returns `400 Bad Request` because the route is `EVM -> SVM`, so `receiverAddress` must be provided explicitly.
 
-**Base URL:** `https://api.delora.build/v1`
+### Adapter Filters
+
+Use adapter filter parameters when you need to constrain route discovery to specific providers.
+
+| Parameter | Behavior |
+| --- | --- |
+| `includeBridges` | Comma-separated bridge adapter allowlist for cross-chain route legs. |
+| `includeExchanges` | Comma-separated exchange adapter allowlist for same-chain route legs. |
+| `excludeBridges` | Comma-separated bridge adapter denylist. |
+| `excludeExchanges` | Comma-separated exchange adapter denylist. |
+
+Adapter values are the `key` values returned by `/v1/tools`.
+
+<Note>
+  Bridge filters accept bridge-capable adapters, and exchange filters accept exchange-capable adapters. Invalid adapter names or category mismatches return `400 Bad Request`.
+</Note>
+
+### Optional Response Fields
+
+Depending on the selected route and backend configuration, the quote response can include additional metadata:
+
+| Field | Behavior |
+| --- | --- |
+| `estimatedTimeSec` | Estimated bridge completion time. Returned for bridge routes when available. |
+| `approvalAddress` | EVM approval spender address. Returned for EVM-origin routes. |
+| `transactionSize` | Serialized Solana transaction size, returned when Solana calldata is available. |
+| `bridgeScan` | Bridge tracking metadata, returned when the selected bridge adapter provides it. |
+| `simulation` | Best-effort transaction simulation metadata, returned only when simulation is enabled. |
+| `usd` | Cached USD price snapshots for the origin and destination quote tokens. |

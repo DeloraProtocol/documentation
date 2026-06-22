@@ -10,14 +10,14 @@ description: Rate limits apply to requests made using your x-api-key and are cal
 
 | Endpoint Scope            | Rate Limit                     |
 |---------------------------|--------------------------------|
-| <Tooltip tip="Consists of the /quote endpoint"> Quote-related endpoints</Tooltip>   | 200 requests per two hours     |
+| <Tooltip tip="Includes /v1/quotes, /v1/advanced/routes, and /v1/advanced/stepTransaction"> Quote-related endpoints</Tooltip>   | 200 requests per two hours     |
 | Rest of endpoints         | 200 requests per two hours     |
 
 #### Authenticated (with API key specified)
 
 | Endpoint Scope            | Rate Limit              |
 |---------------------------|-------------------------|
-| <Tooltip tip="Consists of the /quote endpoint"> Quote-related endpoints</Tooltip>   | 200 requests per minute |
+| <Tooltip tip="Includes /v1/quotes, /v1/advanced/routes, and /v1/advanced/stepTransaction"> Quote-related endpoints</Tooltip>   | 200 requests per minute |
 | Rest of endpoints         | 200 requests per minute |
 
 > Higher limits may be available for clients in the custom terms. Please [Contact Us](https://t.me/whoisfedelya) for more information.
@@ -31,7 +31,7 @@ To obtain an API key with higher rate limits, you need to register on the [porta
 ## Best Practices
 
 To avoid hitting rate limits:
-* Cache results from `GET /tokens`, `GET /chains`, and static endpoints
+* Cache results from `GET /v1/tokens`, `GET /v1/chains`, `GET /v1/tools`, and other static metadata endpoints
 * Avoid polling frequently for the same data
 * Batch or debounce user input that triggers API calls
 

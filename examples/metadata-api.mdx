@@ -149,6 +149,45 @@ console.log(response);
 
 </CodeGroup>
 
+## Example requests for `/v1/prices`
+
+### Fetch one token price
+
+<CodeGroup>
+
+```ts TypeScript
+import axios from "axios";
+
+const response = await axios.get("https://api.delora.build/v1/prices", {
+  params: {
+    chainId: "8453",
+    token: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+  }
+});
+
+console.log(response);
+```
+
+</CodeGroup>
+
+### Fetch multiple token prices
+
+<CodeGroup>
+
+```ts TypeScript
+import axios from "axios";
+
+const response = await axios.get("https://api.delora.build/v1/prices", {
+  params: {
+    tokens: "8453:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913,1:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+  }
+});
+
+console.log(response);
+```
+
+</CodeGroup>
+
 ## Example requests for `/v1/tools`
 
 ### Fetch all tools

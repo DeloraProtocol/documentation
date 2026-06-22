@@ -129,6 +129,26 @@
             }
           },
           {
+            "name": "includeBridges",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated bridge adapter names to include, for example `RELAY,ACROSS`. When set, only bridge-capable adapters in this list are queried for cross-chain routes.",
+            "schema": {
+              "example": "RELAY,ACROSS",
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeExchanges",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated exchange adapter names to include, for example `OPENOCEAN,OKX`. When set, only exchange-capable adapters in this list are queried for same-chain routes.",
+            "schema": {
+              "example": "OPENOCEAN,OKX",
+              "type": "string"
+            }
+          },
+          {
             "name": "excludeBridges",
             "required": false,
             "in": "query",
@@ -267,6 +287,189 @@
           "V1"
         ],
         "description": "Returns the best available route for an exact-input transfer or swap, including estimated output, executable calldata, fee breakdown, optional gas data, and non-blocking warnings."
+      }
+    },
+    "/v1/advanced/routes": {
+      "post": {
+        "operationId": "getAdvancedRoutes",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvancedRoutesRequestDto"
+              },
+              "examples": {
+                "routeDiscovery": {
+                  "summary": "Discover advanced routes",
+                  "value": {
+                    "senderAddress": "0x1111111111111111111111111111111111111111",
+                    "receiverAddress": "0x2222222222222222222222222222222222222222",
+                    "originChainId": 8453,
+                    "destinationChainId": 42161,
+                    "amount": "1000000",
+                    "originCurrency": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                    "destinationCurrency": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                    "includeBridges": "RELAY",
+                    "maxRoutes": 2
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Ranked advanced route plans.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdvancedRoutesResponseDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No advanced route could be built for the requested transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Discover advanced route plans",
+        "tags": [
+          "Advanced"
+        ],
+        "description": "Returns ranked route plans with explicit steps. These routes are estimates; call `/v1/advanced/stepTransaction` for each selected step to get live executable transaction data."
+      }
+    },
+    "/v1/advanced/stepTransaction": {
+      "post": {
+        "operationId": "getAdvancedStepTransaction",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdvancedStepTransactionRequestDto"
+              },
+              "examples": {
+                "firstStep": {
+                  "summary": "Populate a selected route step",
+                  "value": {
+                    "step": {
+                      "id": "advanced-route:0",
+                      "routeId": "advanced-route",
+                      "type": "bridge",
+                      "tool": "RELAY",
+                      "action": {
+                        "fromChainId": 8453,
+                        "toChainId": 42161,
+                        "fromToken": {
+                          "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                          "symbol": "USDC",
+                          "decimals": 6,
+                          "chainId": 8453
+                        },
+                        "toToken": {
+                          "address": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                          "symbol": "USDC",
+                          "decimals": 6,
+                          "chainId": 42161
+                        },
+                        "fromAmount": "1000000"
+                      },
+                      "estimate": {
+                        "fromAmount": "1000000",
+                        "toAmount": "997321",
+                        "toAmountMin": "992334",
+                        "fees": {
+                          "total": {
+                            "amount": "0",
+                            "currencySymbol": "USDC",
+                            "currencyAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                            "chainId": 8453
+                          },
+                          "breakdown": []
+                        }
+                      },
+                      "execution": {
+                        "applyFee": true
+                      }
+                    },
+                    "context": {
+                      "senderAddress": "0x1111111111111111111111111111111111111111",
+                      "receiverAddress": "0x2222222222222222222222222222222222222222"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Populated advanced step with executable transaction data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PopulatedAdvancedStepDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid step payload or no quote for the selected step.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Populate an advanced route step transaction",
+        "tags": [
+          "Advanced"
+        ],
+        "description": "Re-quotes the selected step and returns executable transaction data. For later steps, pass the actual previous step output as `context.previousStepReceivedAmount`."
       }
     },
     "/v1/chains": {
@@ -609,6 +812,10 @@
                           "name": "USD Coin",
                           "coinKey": "USDC",
                           "priceUSD": "1.00",
+                          "priceUpdatedAt": "2026-06-22T12:00:00.000Z",
+                          "priceSource": "dexscreener",
+                          "priceStale": false,
+                          "priceTier": "cold",
                           "logoURI": "https://example.com/usdc.png"
                         }
                       ]
@@ -692,6 +899,151 @@
         "description": "Returns supported tokens grouped by chain ID. Use chains to limit the response to specific chain IDs and chainTypes to filter by EVM or SVM networks."
       }
     },
+    "/v1/prices": {
+      "get": {
+        "operationId": "getPrices",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "description": "Optional API key for higher rate limits and fee rules.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chainId",
+            "required": false,
+            "in": "query",
+            "description": "Chain ID for a single token price lookup. Required with `token` when `tokens` is not provided.",
+            "schema": {
+              "example": "8453",
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": false,
+            "in": "query",
+            "description": "Token address or symbol for a single token price lookup. Required with `chainId` when `tokens` is not provided.",
+            "schema": {
+              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tokens",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated batch of `chainId:token` entries. Maximum 50 requested entries.",
+            "schema": {
+              "example": "8453:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913,1:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token price snapshot response.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenPricesResponseDto"
+                },
+                "examples": {
+                  "success": {
+                    "summary": "Token price snapshots",
+                    "value": {
+                      "prices": [
+                        {
+                          "chainId": 8453,
+                          "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                          "priceUSD": "1.00",
+                          "source": "dexscreener",
+                          "updatedAt": "2026-06-22T12:00:00.000Z",
+                          "stale": false,
+                          "tier": "hot",
+                          "refreshing": false
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "missingTokenRequest": {
+                    "summary": "Missing token request",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Either tokens=chainId:token,... or both chainId and token are required.",
+                      "details": {
+                        "message": "Either tokens=chainId:token,... or both chainId and token are required."
+                      },
+                      "timestamp": "2026-06-22T12:00:00.000Z",
+                      "path": "/v1/prices"
+                    }
+                  },
+                  "tooManyTokens": {
+                    "summary": "Too many token price requests",
+                    "value": {
+                      "statusCode": 400,
+                      "code": "VALIDATION_ERROR",
+                      "message": "Too many token price requests. Max is 50.",
+                      "details": {
+                        "message": "Too many token price requests. Max is 50."
+                      },
+                      "timestamp": "2026-06-22T12:00:00.000Z",
+                      "path": "/v1/prices"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/prices"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get token price snapshots",
+        "tags": [
+          "V1"
+        ],
+        "description": "Returns cached token price snapshots for one token or up to 50 requested token entries. Stale prices are returned immediately and marked with `stale` and `refreshing` metadata when a background refresh is scheduled."
+      }
+    },
     "/v1/token": {
       "get": {
         "operationId": "getToken",
@@ -745,6 +1097,10 @@
                       "name": "USD Coin",
                       "coinKey": "USDC",
                       "priceUSD": "1.00",
+                      "priceUpdatedAt": "2026-06-22T12:00:00.000Z",
+                      "priceSource": "dexscreener",
+                      "priceStale": false,
+                      "priceTier": "cold",
                       "logoURI": "https://example.com/usdc.png"
                     }
                   }
@@ -920,6 +1276,26 @@
           "priceUSD": {
             "type": "string",
             "example": "1.00"
+          },
+          "priceUpdatedAt": {
+            "type": "string",
+            "example": "2026-06-22T12:00:00.000Z"
+          },
+          "priceSource": {
+            "type": "string",
+            "example": "dexscreener"
+          },
+          "priceStale": {
+            "type": "boolean",
+            "example": false
+          },
+          "priceTier": {
+            "type": "string",
+            "enum": [
+              "hot",
+              "cold"
+            ],
+            "example": "cold"
           },
           "logoURI": {
             "type": "string",
@@ -1101,6 +1477,241 @@
           "message"
         ]
       },
+      "TokenPriceResultDto": {
+        "type": "object",
+        "properties": {
+          "chainId": {
+            "type": "number",
+            "example": 8453
+          },
+          "token": {
+            "type": "string",
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          },
+          "priceUSD": {
+            "type": "string",
+            "example": "1.00"
+          },
+          "source": {
+            "type": "string",
+            "example": "dexscreener"
+          },
+          "updatedAt": {
+            "type": "string",
+            "example": "2026-06-22T12:00:00.000Z"
+          },
+          "stale": {
+            "type": "boolean",
+            "example": false
+          },
+          "tier": {
+            "type": "string",
+            "enum": [
+              "hot",
+              "cold"
+            ],
+            "example": "hot"
+          },
+          "refreshing": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": [
+          "chainId",
+          "token",
+          "stale",
+          "tier",
+          "refreshing"
+        ]
+      },
+      "TokenPricesResponseDto": {
+        "type": "object",
+        "properties": {
+          "prices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenPriceResultDto"
+            }
+          }
+        },
+        "required": [
+          "prices"
+        ]
+      },
+      "QuoteUsdPricesDto": {
+        "type": "object",
+        "properties": {
+          "originCurrency": {
+            "$ref": "#/components/schemas/TokenPriceResultDto"
+          },
+          "destinationCurrency": {
+            "$ref": "#/components/schemas/TokenPriceResultDto"
+          }
+        },
+        "required": [
+          "originCurrency",
+          "destinationCurrency"
+        ]
+      },
+      "SimulationDeviationDto": {
+        "type": "object",
+        "properties": {
+          "absolute": {
+            "type": "string",
+            "example": "-1200",
+            "description": "Simulated output minus advertised output in raw units."
+          },
+          "bps": {
+            "type": "number",
+            "example": -12,
+            "description": "Signed basis points. Negative means the adapter overstated output."
+          },
+          "percent": {
+            "type": "string",
+            "example": "-0.12%"
+          }
+        },
+        "required": [
+          "absolute",
+          "bps",
+          "percent"
+        ]
+      },
+      "SimulationProviderResultDto": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "TENDERLY",
+              "RPC",
+              "SOLANA_RUNTIME",
+              "NONE"
+            ],
+            "example": "TENDERLY"
+          },
+          "executionStatus": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "REVERTED",
+              "TIMEOUT",
+              "SKIPPED",
+              "UNSUPPORTED",
+              "ERROR"
+            ],
+            "example": "SUCCESS"
+          },
+          "outputValidation": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "UNVERIFIABLE",
+              "NOT_SIMULATED"
+            ],
+            "example": "VERIFIED"
+          },
+          "simulatedOutputAmount": {
+            "type": "string",
+            "example": "996100"
+          },
+          "deviation": {
+            "$ref": "#/components/schemas/SimulationDeviationDto"
+          },
+          "gasUsed": {
+            "type": "string",
+            "example": "142331"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Exceeded 700ms"
+          },
+          "latencyMs": {
+            "type": "number",
+            "example": 312
+          }
+        },
+        "required": [
+          "source",
+          "executionStatus",
+          "outputValidation",
+          "latencyMs"
+        ]
+      },
+      "SimulationDto": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "enum": [
+              "TENDERLY",
+              "RPC",
+              "SOLANA_RUNTIME",
+              "NONE"
+            ],
+            "example": "TENDERLY"
+          },
+          "executionStatus": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "REVERTED",
+              "TIMEOUT",
+              "SKIPPED",
+              "UNSUPPORTED",
+              "ERROR"
+            ],
+            "example": "SUCCESS"
+          },
+          "outputValidation": {
+            "type": "string",
+            "enum": [
+              "VERIFIED",
+              "UNVERIFIABLE",
+              "NOT_SIMULATED"
+            ],
+            "example": "VERIFIED"
+          },
+          "simulatedOutputAmount": {
+            "type": "string",
+            "example": "996100"
+          },
+          "advertisedOutputAmount": {
+            "type": "string",
+            "example": "997321"
+          },
+          "deviation": {
+            "$ref": "#/components/schemas/SimulationDeviationDto"
+          },
+          "gasUsed": {
+            "type": "string",
+            "example": "142331"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Simulation exceeded budget"
+          },
+          "latencyMs": {
+            "type": "number",
+            "example": 712
+          },
+          "providerResults": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SimulationProviderResultDto"
+            }
+          }
+        },
+        "required": [
+          "source",
+          "executionStatus",
+          "outputValidation",
+          "advertisedOutputAmount",
+          "latencyMs",
+          "providerResults"
+        ]
+      },
       "QuoteResponseDto": {
         "type": "object",
         "properties": {
@@ -1115,6 +1726,11 @@
           "minOutputAmount": {
             "type": "string",
             "example": "992334"
+          },
+          "estimatedTimeSec": {
+            "type": "number",
+            "example": 120,
+            "description": "Estimated bridge completion time in seconds. Returned only for bridge routes."
           },
           "adapter": {
             "enum": [
@@ -1131,7 +1747,10 @@
               "MAYAN_FAST_MCTP",
               "OKX",
               "RISE",
-              "NORDSTERN"
+              "NORDSTERN",
+              "KYBERSWAP",
+              "DFLOW",
+              "NEAR_INTENTS"
             ],
             "type": "string",
             "example": "OPENOCEAN"
@@ -1150,6 +1769,34 @@
             "items": {
               "$ref": "#/components/schemas/QuoteWarningDto"
             }
+          },
+          "approvalAddress": {
+            "type": "string",
+            "example": "0x1111111111111111111111111111111111111111",
+            "description": "Approval spender address for EVM-origin routes."
+          },
+          "transactionSize": {
+            "type": "object",
+            "properties": {
+              "raw": {
+                "type": "number",
+                "example": 812
+              },
+              "encoded": {
+                "type": "number",
+                "example": 1084
+              }
+            },
+            "description": "Serialized Solana transaction size when available."
+          },
+          "bridgeScan": {
+            "$ref": "#/components/schemas/BridgeScanMetadataDto"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/SimulationDto"
+          },
+          "usd": {
+            "$ref": "#/components/schemas/QuoteUsdPricesDto"
           }
         },
         "required": [
@@ -1158,6 +1805,437 @@
           "adapter",
           "calldata",
           "fees"
+        ]
+      },
+      "AdvancedRoutesRequestDto": {
+        "type": "object",
+        "properties": {
+          "senderAddress": {
+            "type": "string",
+            "example": "0x1111111111111111111111111111111111111111"
+          },
+          "receiverAddress": {
+            "type": "string",
+            "example": "0x2222222222222222222222222222222222222222"
+          },
+          "originChainId": {
+            "type": "number",
+            "example": 8453
+          },
+          "destinationChainId": {
+            "type": "number",
+            "example": 42161
+          },
+          "amount": {
+            "type": "string",
+            "example": "1000000"
+          },
+          "originCurrency": {
+            "type": "string",
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+          },
+          "destinationCurrency": {
+            "type": "string",
+            "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+          },
+          "integrator": {
+            "type": "string",
+            "example": "partner-app"
+          },
+          "fee": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.1,
+            "example": 0.01
+          },
+          "slippage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "example": 0.005
+          },
+          "includeBridges": {
+            "type": "string",
+            "description": "Comma-separated bridge adapter names to include.",
+            "example": "RELAY,ACROSS"
+          },
+          "includeExchanges": {
+            "type": "string",
+            "description": "Comma-separated exchange adapter names to include.",
+            "example": "OPENOCEAN,OKX"
+          },
+          "excludeBridges": {
+            "type": "string",
+            "description": "Comma-separated bridge adapter names to exclude.",
+            "example": "MAYAN_FAST_MCTP"
+          },
+          "excludeExchanges": {
+            "type": "string",
+            "description": "Comma-separated exchange adapter names to exclude.",
+            "example": "OKX"
+          },
+          "maxRoutes": {
+            "type": "number",
+            "minimum": 1,
+            "example": 2
+          }
+        },
+        "required": [
+          "senderAddress",
+          "originChainId",
+          "destinationChainId",
+          "amount",
+          "originCurrency",
+          "destinationCurrency"
+        ]
+      },
+      "AdvancedTokenRefDto": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "number"
+          },
+          "chainId": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "address",
+          "symbol",
+          "decimals",
+          "chainId"
+        ]
+      },
+      "AdvancedStepActionDto": {
+        "type": "object",
+        "properties": {
+          "fromChainId": {
+            "type": "number"
+          },
+          "toChainId": {
+            "type": "number"
+          },
+          "fromToken": {
+            "$ref": "#/components/schemas/AdvancedTokenRefDto"
+          },
+          "toToken": {
+            "$ref": "#/components/schemas/AdvancedTokenRefDto"
+          },
+          "fromAmount": {
+            "type": "string"
+          },
+          "slippage": {
+            "type": "number"
+          },
+          "fromAddress": {
+            "type": "string"
+          },
+          "toAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fromChainId",
+          "toChainId",
+          "fromToken",
+          "toToken",
+          "fromAmount"
+        ]
+      },
+      "AdvancedStepEstimateDto": {
+        "type": "object",
+        "properties": {
+          "fromAmount": {
+            "type": "string"
+          },
+          "quoteFromAmount": {
+            "type": "string"
+          },
+          "toAmount": {
+            "type": "string"
+          },
+          "toAmountMin": {
+            "type": "string"
+          },
+          "estimatedTimeSec": {
+            "type": "number"
+          },
+          "fees": {
+            "$ref": "#/components/schemas/ParsedFeesDto"
+          },
+          "approvalAddress": {
+            "type": "string"
+          },
+          "simulatedToAmount": {
+            "type": "string"
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/SimulationDto"
+          }
+        },
+        "required": [
+          "fromAmount",
+          "toAmount",
+          "toAmountMin",
+          "fees"
+        ]
+      },
+      "AdvancedStepExecutionOptionsDto": {
+        "type": "object",
+        "properties": {
+          "applyFee": {
+            "type": "boolean"
+          },
+          "requiresPreviousStepAmount": {
+            "type": "boolean"
+          },
+          "quoteRequest": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "routeRequest": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "applyFee"
+        ]
+      },
+      "BridgeScanMetadataDto": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "AdvancedTransactionRequestDto": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string"
+          },
+          "data": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "gas": {
+            "$ref": "#/components/schemas/GasEstimationDto"
+          },
+          "transactionSize": {
+            "type": "object",
+            "properties": {
+              "raw": {
+                "type": "number"
+              },
+              "encoded": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "required": [
+          "to",
+          "value"
+        ]
+      },
+      "AdvancedRouteStepDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "routeId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "swap",
+              "bridge"
+            ]
+          },
+          "tool": {
+            "type": "string",
+            "example": "RELAY"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AdvancedStepActionDto"
+          },
+          "estimate": {
+            "$ref": "#/components/schemas/AdvancedStepEstimateDto"
+          },
+          "integrator": {
+            "type": "string"
+          },
+          "fee": {
+            "type": "number"
+          },
+          "execution": {
+            "$ref": "#/components/schemas/AdvancedStepExecutionOptionsDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteWarningDto"
+            }
+          },
+          "bridgeScan": {
+            "$ref": "#/components/schemas/BridgeScanMetadataDto"
+          },
+          "transactionRequest": {
+            "$ref": "#/components/schemas/AdvancedTransactionRequestDto"
+          }
+        },
+        "required": [
+          "id",
+          "routeId",
+          "type",
+          "tool",
+          "action",
+          "estimate",
+          "execution"
+        ]
+      },
+      "AdvancedRouteDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "routeKind": {
+            "type": "string",
+            "enum": [
+              "single-step",
+              "multistep"
+            ]
+          },
+          "inputAmount": {
+            "type": "string"
+          },
+          "outputAmount": {
+            "type": "string"
+          },
+          "minOutputAmount": {
+            "type": "string"
+          },
+          "estimatedTimeSec": {
+            "type": "number"
+          },
+          "fees": {
+            "$ref": "#/components/schemas/ParsedFeesDto"
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QuoteWarningDto"
+            }
+          },
+          "adapter": {
+            "type": "string",
+            "example": "RELAY"
+          },
+          "isMultistep": {
+            "type": "boolean"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvancedRouteStepDto"
+            }
+          },
+          "simulation": {
+            "$ref": "#/components/schemas/SimulationDto"
+          }
+        },
+        "required": [
+          "id",
+          "routeKind",
+          "inputAmount",
+          "outputAmount",
+          "minOutputAmount",
+          "fees",
+          "adapter",
+          "isMultistep",
+          "steps"
+        ]
+      },
+      "AdvancedRoutesResponseDto": {
+        "type": "object",
+        "properties": {
+          "routes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdvancedRouteDto"
+            }
+          }
+        },
+        "required": [
+          "routes"
+        ]
+      },
+      "AdvancedExecutionContextDto": {
+        "type": "object",
+        "properties": {
+          "senderAddress": {
+            "type": "string"
+          },
+          "receiverAddress": {
+            "type": "string"
+          },
+          "amountOverride": {
+            "type": "string"
+          },
+          "previousStepReceivedAmount": {
+            "type": "string"
+          },
+          "slippage": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "required": [
+          "senderAddress",
+          "receiverAddress"
+        ]
+      },
+      "AdvancedStepTransactionRequestDto": {
+        "type": "object",
+        "properties": {
+          "step": {
+            "$ref": "#/components/schemas/AdvancedRouteStepDto"
+          },
+          "context": {
+            "$ref": "#/components/schemas/AdvancedExecutionContextDto"
+          }
+        },
+        "required": [
+          "step",
+          "context"
+        ]
+      },
+      "PopulatedAdvancedStepDto": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/AdvancedRouteStepDto"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "transactionRequest": {
+                "$ref": "#/components/schemas/AdvancedTransactionRequestDto"
+              }
+            },
+            "required": [
+              "transactionRequest"
+            ]
+          }
         ]
       },
       "StandardErrorResponseDto": {
@@ -1180,7 +2258,6 @@
               "UNKNOWN"
             ],
             "type": "string",
-            "example": "VALIDATION_ERROR",
             "description": "Machine-readable Delora error code.\n- NO_AVAILABLE_QUOTES: No bridge or exchange adapter returned an executable quote for the requested transfer.\n- WRONG_ADDRESS: A wallet address is missing, malformed, or incompatible with the requested chain type.\n- RATE_LIMIT: The request exceeded the configured rate limit for the IP address or API key.\n- ADAPTER_BAD_REQUEST: An upstream bridge or exchange adapter rejected the request as invalid.\n- ADAPTER_UNAUTHORIZED: An upstream bridge or exchange adapter rejected the request because credentials are missing or invalid.\n- ADAPTER_INTERNAL: An upstream bridge or exchange adapter failed with an internal error.\n- VALIDATION_ERROR: The request failed Delora API validation, including invalid query parameters, body fields, or address formats.\n- NOT_FOUND: The requested chain, token, or resource was not found.\n- UNKNOWN: The request failed with an unexpected error that does not map to a more specific code.",
             "x-enumDescriptions": [
               "No bridge or exchange adapter returned an executable quote for the requested transfer.",
@@ -1192,7 +2269,8 @@
               "The request failed Delora API validation, including invalid query parameters, body fields, or address formats.",
               "The requested chain, token, or resource was not found.",
               "The request failed with an unexpected error that does not map to a more specific code."
-            ]
+            ],
+            "example": "VALIDATION_ERROR"
           },
           "message": {
             "type": "string",
@@ -1427,7 +2505,10 @@
               "MAYAN_FAST_MCTP",
               "OKX",
               "RISE",
-              "NORDSTERN"
+              "NORDSTERN",
+              "KYBERSWAP",
+              "DFLOW",
+              "NEAR_INTENTS"
             ],
             "type": "string",
             "example": "RELAY"

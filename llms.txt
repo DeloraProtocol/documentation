@@ -23,13 +23,16 @@ For machine-readable schemas:
 1. Get Started: https://docs.delora.build/about/get-started
 2. API rate limits and authentication: https://docs.delora.build/api-reference/rate-limits
 3. Get a quote: https://docs.delora.build/api-reference/endpoint/get-a-quote-for-a-token-transfer
-4. Get chains: https://docs.delora.build/api-reference/endpoint/get-chains
-5. Get tools: https://docs.delora.build/api-reference/endpoint/get-tools
-6. Get tokens: https://docs.delora.build/api-reference/endpoint/get-tokens
-7. Get token: https://docs.delora.build/api-reference/endpoint/get-token
-8. Error responses and warnings: https://docs.delora.build/api-reference/warnings
-9. Widget overview: https://docs.delora.build/widget/overview
-10. MCP server overview: https://docs.delora.build/mcp-server/overview
+4. Discover advanced routes: https://docs.delora.build/api-reference/endpoint/post-advanced-routes
+5. Populate advanced step transaction: https://docs.delora.build/api-reference/endpoint/post-advanced-step-transaction
+6. Get chains: https://docs.delora.build/api-reference/endpoint/get-chains
+7. Get tools: https://docs.delora.build/api-reference/endpoint/get-tools
+8. Get tokens: https://docs.delora.build/api-reference/endpoint/get-tokens
+9. Get token prices: https://docs.delora.build/api-reference/endpoint/get-prices
+10. Get token: https://docs.delora.build/api-reference/endpoint/get-token
+11. Error responses and warnings: https://docs.delora.build/api-reference/warnings
+12. Widget overview: https://docs.delora.build/widget/overview
+13. MCP server overview: https://docs.delora.build/mcp-server/overview
 
 ## API
 
@@ -38,9 +41,12 @@ Base URL: `https://api.delora.build`
 Key endpoints:
 
 - `GET /v1/quotes` - Get the best executable quote for a token transfer or swap.
+- `POST /v1/advanced/routes` - Discover ranked advanced route plans with explicit steps.
+- `POST /v1/advanced/stepTransaction` - Populate one advanced route step with executable transaction data.
 - `GET /v1/chains` - List supported chains.
 - `GET /v1/tools` - List supported bridge and exchange tools.
 - `GET /v1/tokens` - List supported tokens grouped by chain ID.
+- `GET /v1/prices` - Get cached token price snapshots.
 - `GET /v1/token` - Get token metadata by chain and address or symbol.
 
 ## Sitemap

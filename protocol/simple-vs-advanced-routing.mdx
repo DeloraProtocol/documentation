@@ -2,52 +2,53 @@
 title: "Simple vs advanced routing"
 ---
 
-Delora API provides two ways to request execution paths: **`/quote`** and **`/routes`**. Both endpoints use the same routing engine, but they serve different needs depending on how much control and detail an integrator requires.
+Delora API provides two ways to request execution paths: **`/v1/quotes`** and **`/v1/advanced/routes`**. They serve different needs depending on how much control and detail an integrator requires.
 
 ---
 
-### `/quote` — Simplified Execution
+### `/v1/quotes` - Simplified Execution
 
-The `/quote` endpoint is designed for **ease of integration and smooth UX**.
+The `/v1/quotes` endpoint is designed for **ease of integration and smooth UX**.
 
 - Returns a single, optimized route (swap, bridge, or a combination).
 - Can include **multi-step flows** (e.g., bridge + swap), but the complexity is abstracted away.
 - Provides **ready-to-sign transaction data**, so the user only needs to confirm one execution.
 - Best choice for dApps that want one-click integration without handling multiple steps.
 
-**🔑 Takeaway**: `/quote` = simple, packaged, and user-friendly. Even complex routes are flattened into one transaction flow.
+**🔑 Takeaway**: `/v1/quotes` = simple, packaged, and user-friendly. Even complex routes are flattened into one transaction flow.
 
 ---
 
-### `/routes` — Advanced Control
+### `/v1/advanced/routes` - Advanced Control
 
-The `/routes` endpoint is designed for **flexibility and transparency**.
+The `/v1/advanced/routes` endpoint is designed for **flexibility and transparency**.
 
 - Returns multiple possible routes to the same destination.
 - Exposes the full structure of the route, including each step (bridge, swap, relayer interaction).
-- Requires generating per-step transaction data via `/stepTransaction`.
+- Requires generating per-step transaction data via `/v1/advanced/stepTransaction`.
 - Allows developers to implement custom logic such as:
   - fallback routes,
   - per-leg limits (minOut, slippage, deadlines),
   - monitoring and analytics at the step level.
+- Treats route results as estimates. Each selected step is re-quoted when `stepTransaction` is called.
 
-**🔑 Takeaway**: `/routes` = advanced routing for developers who need control over every step.
+**🔑 Takeaway**: `/v1/advanced/routes` = advanced routing for developers who need control over every step.
 
 ---
 
 ### When to Use
 
-- Use **`/quote`** when you want the fastest path to integration and a smooth UX — one endpoint, one signature, one execution.
-- Use **`/routes`** when you need more flexibility, visibility into all possible paths, or the ability to add custom execution logic.
+- Use **`/v1/quotes`** when you want the fastest path to integration and a smooth UX: one endpoint, one signature, one execution.
+- Use **`/v1/advanced/routes`** when you need more flexibility, visibility into all possible paths, or the ability to add custom execution logic.
 
 ---
 
 ### Example
 
-- **`With /quote`**:\
+- **`With /v1/quotes`**:\
   User wants to send USDC from Solana and receive DAI on Base. Delora may internally build a route = _USDC (Solana) → Bridge → USDC (Base) → Swap → DAI (Base)_.\
   The integrator only gets **one packaged transaction** for the user to sign.
-- **`With /routes`**:\
+- **`With /v1/advanced/routes`**:\
   The same request returns **several possible multi-step routes**, e.g.:
   - Route 1: Bridge via Wormhole + Swap on Uniswap.
   - Route 2: Bridge via Stargate + Swap on Curve.
