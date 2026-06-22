@@ -38,7 +38,7 @@
             "name": "receiverAddress",
             "required": false,
             "in": "query",
-            "description": "Receiver wallet address. Required when EVM and Solana are crossed.",
+            "description": "Receiver wallet address. Defaults to `senderAddress` for same chain-type routes (`EVM -> EVM` or `SVM -> SVM`) and is required when crossing chain types (`EVM -> SVM` or `SVM -> EVM`).",
             "schema": {
               "example": "0x2222222222222222222222222222222222222222",
               "type": "string"
@@ -68,7 +68,7 @@
             "name": "amount",
             "required": true,
             "in": "query",
-            "description": "Input amount in token base units as a positive integer string.",
+            "description": "Exact input amount in token base units as a positive integer string, before Delora and integrator fees.",
             "schema": {
               "example": "1000000",
               "type": "string"
@@ -98,7 +98,7 @@
             "name": "integrator",
             "required": false,
             "in": "query",
-            "description": "Integrator identifier. Required when `fee` is provided.",
+            "description": "Integrator identifier used for fee attribution. Required when `fee` is provided.",
             "schema": {
               "example": "partner-app",
               "type": "string"
@@ -108,7 +108,7 @@
             "name": "fee",
             "required": false,
             "in": "query",
-            "description": "Optional integrator fee fraction. `0.01` means 1%.",
+            "description": "Optional integrator fee fraction taken from the input amount. `0.01` means 1%. Must be between `0` and `0.1` inclusive and can be provided only with `integrator`.",
             "schema": {
               "minimum": 0,
               "maximum": 0.1,
@@ -132,7 +132,7 @@
             "name": "includeBridges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated bridge adapter names to include, for example `RELAY,ACROSS`. When set, only bridge-capable adapters in this list are queried for cross-chain routes.",
+            "description": "Comma-separated bridge adapter keys from `/v1/tools` to include, for example `RELAY,ACROSS`. Only bridge-capable or multi-capability adapters are valid.",
             "schema": {
               "example": "RELAY,ACROSS",
               "type": "string"
@@ -142,7 +142,7 @@
             "name": "includeExchanges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated exchange adapter names to include, for example `OPENOCEAN,OKX`. When set, only exchange-capable adapters in this list are queried for same-chain routes.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include, for example `OPENOCEAN,OKX`. Only exchange-capable or multi-capability adapters are valid.",
             "schema": {
               "example": "OPENOCEAN,OKX",
               "type": "string"
@@ -152,7 +152,7 @@
             "name": "excludeBridges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated bridge adapter names to exclude, for example `RELAY,ACROSS`.",
+            "description": "Comma-separated bridge adapter keys from `/v1/tools` to exclude, for example `RELAY,ACROSS`. Only bridge-capable or multi-capability adapters are valid.",
             "schema": {
               "example": "RELAY,ACROSS",
               "type": "string"
@@ -162,7 +162,7 @@
             "name": "excludeExchanges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated exchange adapter names to exclude, for example `OPENOCEAN,OKX`.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude, for example `OPENOCEAN,OKX`. Only exchange-capable or multi-capability adapters are valid.",
             "schema": {
               "example": "OPENOCEAN,OKX",
               "type": "string"
@@ -936,7 +936,7 @@
             "name": "tokens",
             "required": false,
             "in": "query",
-            "description": "Comma-separated batch of `chainId:token` entries. Maximum 50 requested entries.",
+            "description": "Comma-separated batch of `chainId:token` entries. Maximum 50 requested entries. When provided, `tokens` is used instead of the single-token `chainId` and `token` parameters.",
             "schema": {
               "example": "8453:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913,1:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "type": "string"
@@ -1275,19 +1275,23 @@
           },
           "priceUSD": {
             "type": "string",
-            "example": "1.00"
+            "example": "1.00",
+            "description": "Cached USD price as a decimal string, when available."
           },
           "priceUpdatedAt": {
             "type": "string",
-            "example": "2026-06-22T12:00:00.000Z"
+            "example": "2026-06-22T12:00:00.000Z",
+            "description": "Timestamp of the cached token price, when available."
           },
           "priceSource": {
             "type": "string",
-            "example": "dexscreener"
+            "example": "dexscreener",
+            "description": "Price source used for the cached token price, when available."
           },
           "priceStale": {
             "type": "boolean",
-            "example": false
+            "example": false,
+            "description": "Whether the cached token price is outside Delora's freshness window."
           },
           "priceTier": {
             "type": "string",
@@ -1295,7 +1299,8 @@
               "hot",
               "cold"
             ],
-            "example": "cold"
+            "example": "cold",
+            "description": "Price refresh tier. `hot` tokens are prioritized for fresher cached prices; `cold` tokens refresh less aggressively."
           },
           "logoURI": {
             "type": "string",
@@ -1490,19 +1495,23 @@
           },
           "priceUSD": {
             "type": "string",
-            "example": "1.00"
+            "example": "1.00",
+            "description": "Cached USD price as a decimal string, when available."
           },
           "source": {
             "type": "string",
-            "example": "dexscreener"
+            "example": "dexscreener",
+            "description": "Price source used for this cached value, when available."
           },
           "updatedAt": {
             "type": "string",
-            "example": "2026-06-22T12:00:00.000Z"
+            "example": "2026-06-22T12:00:00.000Z",
+            "description": "Timestamp of the cached token price, when available."
           },
           "stale": {
             "type": "boolean",
-            "example": false
+            "example": false,
+            "description": "Whether this cached value is outside Delora's freshness window."
           },
           "tier": {
             "type": "string",
@@ -1510,11 +1519,13 @@
               "hot",
               "cold"
             ],
-            "example": "hot"
+            "example": "hot",
+            "description": "Price refresh tier. `hot` entries are prioritized for fresher cached prices; `cold` entries refresh less aggressively."
           },
           "refreshing": {
             "type": "boolean",
-            "example": false
+            "example": false,
+            "description": "Whether a background refresh for this price is scheduled or already running."
           }
         },
         "required": [
@@ -1790,13 +1801,16 @@
             "description": "Serialized Solana transaction size when available."
           },
           "bridgeScan": {
-            "$ref": "#/components/schemas/BridgeScanMetadataDto"
+            "$ref": "#/components/schemas/BridgeScanMetadataDto",
+            "description": "Bridge tracking metadata returned when the selected bridge adapter provides it."
           },
           "simulation": {
-            "$ref": "#/components/schemas/SimulationDto"
+            "$ref": "#/components/schemas/SimulationDto",
+            "description": "Best-effort transaction simulation metadata returned when simulation is enabled for the selected route."
           },
           "usd": {
-            "$ref": "#/components/schemas/QuoteUsdPricesDto"
+            "$ref": "#/components/schemas/QuoteUsdPricesDto",
+            "description": "Cached USD price snapshots for the origin and destination quote tokens."
           }
         },
         "required": [
@@ -1812,72 +1826,83 @@
         "properties": {
           "senderAddress": {
             "type": "string",
-            "example": "0x1111111111111111111111111111111111111111"
+            "example": "0x1111111111111111111111111111111111111111",
+            "description": "Sender wallet address on the origin chain."
           },
           "receiverAddress": {
             "type": "string",
-            "example": "0x2222222222222222222222222222222222222222"
+            "example": "0x2222222222222222222222222222222222222222",
+            "description": "Receiver wallet address. Defaults to `senderAddress` for same chain-type routes (`EVM -> EVM` or `SVM -> SVM`) and is required when crossing chain types (`EVM -> SVM` or `SVM -> EVM`)."
           },
           "originChainId": {
             "type": "number",
-            "example": 8453
+            "example": 8453,
+            "description": "Origin chain ID."
           },
           "destinationChainId": {
             "type": "number",
-            "example": 42161
+            "example": 42161,
+            "description": "Destination chain ID."
           },
           "amount": {
             "type": "string",
-            "example": "1000000"
+            "example": "1000000",
+            "description": "Exact input amount in token base units as a positive integer string, before Delora and integrator fees."
           },
           "originCurrency": {
             "type": "string",
-            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+            "description": "Origin token address, or native asset marker supported by the backend."
           },
           "destinationCurrency": {
             "type": "string",
-            "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+            "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+            "description": "Destination token address, or native asset marker supported by the backend."
           },
           "integrator": {
             "type": "string",
-            "example": "partner-app"
+            "example": "partner-app",
+            "description": "Integrator identifier used for fee attribution. Required when `fee` is provided."
           },
           "fee": {
             "type": "number",
             "minimum": 0,
             "maximum": 0.1,
-            "example": 0.01
+            "example": 0.01,
+            "description": "Optional integrator fee fraction taken from the input amount. `0.01` means 1%. Must be between `0` and `0.1` inclusive and can be provided only with `integrator`."
           },
           "slippage": {
             "type": "number",
             "minimum": 0,
             "maximum": 1,
-            "example": 0.005
+            "example": 0.005,
+            "description": "Optional slippage fraction. `0.005` means 0.5%."
           },
           "includeBridges": {
             "type": "string",
-            "description": "Comma-separated bridge adapter names to include.",
+            "description": "Comma-separated bridge adapter keys from `/v1/tools` to include. Only bridge-capable or multi-capability adapters are valid.",
             "example": "RELAY,ACROSS"
           },
           "includeExchanges": {
             "type": "string",
-            "description": "Comma-separated exchange adapter names to include.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include. Only exchange-capable or multi-capability adapters are valid.",
             "example": "OPENOCEAN,OKX"
           },
           "excludeBridges": {
             "type": "string",
-            "description": "Comma-separated bridge adapter names to exclude.",
+            "description": "Comma-separated bridge adapter keys from `/v1/tools` to exclude. Only bridge-capable or multi-capability adapters are valid.",
             "example": "MAYAN_FAST_MCTP"
           },
           "excludeExchanges": {
             "type": "string",
-            "description": "Comma-separated exchange adapter names to exclude.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude. Only exchange-capable or multi-capability adapters are valid.",
             "example": "OKX"
           },
           "maxRoutes": {
             "type": "number",
             "minimum": 1,
-            "example": 2
+            "example": 2,
+            "description": "Maximum number of ranked advanced routes to return."
           }
         },
         "required": [
@@ -2068,7 +2093,8 @@
             "$ref": "#/components/schemas/AdvancedStepActionDto"
           },
           "estimate": {
-            "$ref": "#/components/schemas/AdvancedStepEstimateDto"
+            "$ref": "#/components/schemas/AdvancedStepEstimateDto",
+            "description": "Estimated result for this route step. Treat it as planning data; call `POST /v1/advanced/stepTransaction` before execution."
           },
           "integrator": {
             "type": "string"
@@ -2086,10 +2112,12 @@
             }
           },
           "bridgeScan": {
-            "$ref": "#/components/schemas/BridgeScanMetadataDto"
+            "$ref": "#/components/schemas/BridgeScanMetadataDto",
+            "description": "Bridge tracking metadata returned when the selected bridge adapter provides it."
           },
           "transactionRequest": {
-            "$ref": "#/components/schemas/AdvancedTransactionRequestDto"
+            "$ref": "#/components/schemas/AdvancedTransactionRequestDto",
+            "description": "Executable transaction payload returned on a populated step from `POST /v1/advanced/stepTransaction`."
           }
         },
         "required": [
@@ -2145,6 +2173,7 @@
           },
           "steps": {
             "type": "array",
+            "description": "Ordered route steps. Pass the selected step to `POST /v1/advanced/stepTransaction` immediately before signing.",
             "items": {
               "$ref": "#/components/schemas/AdvancedRouteStepDto"
             }
@@ -2170,6 +2199,7 @@
         "properties": {
           "routes": {
             "type": "array",
+            "description": "Ranked route plans. Each route contains one or more estimated steps.",
             "items": {
               "$ref": "#/components/schemas/AdvancedRouteDto"
             }
@@ -2183,21 +2213,26 @@
         "type": "object",
         "properties": {
           "senderAddress": {
-            "type": "string"
+            "type": "string",
+            "description": "Wallet address that signs and submits this step."
           },
           "receiverAddress": {
-            "type": "string"
+            "type": "string",
+            "description": "Final receiver wallet address for the route."
           },
           "amountOverride": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional manual input amount override for this live step quote."
           },
           "previousStepReceivedAmount": {
-            "type": "string"
+            "type": "string",
+            "description": "Actual output amount received from the previous step, in token base units. Use this for second and later steps so the next step is hydrated with the live received amount."
           },
           "slippage": {
             "type": "number",
             "minimum": 0,
-            "maximum": 1
+            "maximum": 1,
+            "description": "Optional slippage override for this live step quote. `0.005` means 0.5%."
           }
         },
         "required": [
@@ -2209,10 +2244,12 @@
         "type": "object",
         "properties": {
           "step": {
-            "$ref": "#/components/schemas/AdvancedRouteStepDto"
+            "$ref": "#/components/schemas/AdvancedRouteStepDto",
+            "description": "Step object from a route returned by `POST /v1/advanced/routes`."
           },
           "context": {
-            "$ref": "#/components/schemas/AdvancedExecutionContextDto"
+            "$ref": "#/components/schemas/AdvancedExecutionContextDto",
+            "description": "Runtime wallet and amount context used to re-quote and populate the selected step."
           }
         },
         "required": [
