@@ -3,9 +3,149 @@ title: "Get Started"
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
-Create an account in the [Delora Portal](http://portal.delora.build/) to manage your Delora integration from a single interface.
+Use this page to start a Delora integration through the interface that fits your product: direct API calls, the React Widget, or the MCP server for AI tools.
 
-The Portal lets you create and manage applications, monitor execution activity across networks, track accumulated fees, and claim earned funds. It provides a clear, centralized view of your integration and ongoing usage.
+## 1. Register in the Partner Portal
 
-Learn more about how fees work and how claiming is handled:\
-→ [Fee documentation](/protocol/fee-configuration)
+Create an account in the [Delora Partner Portal](https://portal.delora.build/) before going live.
+
+In the portal, configure:
+
+- your EVM and Solana wallet addresses for fee collection
+- your custom integrator string, for example `xyz`
+- your API key for expanded rate limits
+
+The Portal also lets you create and manage applications, monitor execution activity across networks, track accumulated fees, and claim earned funds.
+
+<Warning>
+Choose fee collection wallets carefully. Wallet addresses are immutable for collected fees, and earned fees are tied to the wallets configured for your integrator.
+</Warning>
+
+## 2. Choose an integration interface
+
+<CardGroup cols={3}>
+  <Card title="API" icon="code" href="#api-quick-start">
+    Build your own routing and transaction flow with Delora API.
+  </Card>
+
+  <Card title="Widget" icon="window" href="#widget-quick-start">
+    Embed a ready-made swap UI in your application.
+  </Card>
+
+  <Card title="MCP" icon="plug" href="#mcp-quick-start">
+    Connect AI tools and agents to Delora routing through MCP.
+  </Card>
+</CardGroup>
+
+## API quick start
+
+Use the REST API when you want full control over quoting, transaction construction, wallet UX, analytics, and backend behavior.
+
+<Steps>
+  <Step title="Read the quote API">
+    Start with [Get a quote for a token transfer](/api-reference/endpoint/get-a-quote-for-a-token-transfer) to understand request parameters, quote responses, executable `calldata`, fees, gas, and warnings.
+  </Step>
+
+  <Step title="Build the transaction flow">
+    Follow the chain-specific examples:
+
+    - [Solana transaction flow](/examples/transaction-flow/solana)
+    - [EVM transaction flow](/examples/transaction-flow/ethereum)
+  </Step>
+
+  <Step title="Send your API key from a server">
+    Pass your API key as the `x-api-key` HTTP header for expanded rate limits. See [Rate Limits and API Authentication](/api-reference/rate-limits).
+  </Step>
+
+  <Step title="Configure attribution and fees">
+    Send your portal integrator string with quote requests. If you monetize transactions, also send the `fee` parameter. See [Fee Configuration](/protocol/fee-configuration).
+  </Step>
+</Steps>
+
+```bash
+curl --location 'https://api.delora.build/v1/quotes?...&integrator=xyz&fee=0.01' \
+  --header 'x-api-key: YOUR_API_KEY'
+```
+
+## Widget quick start
+
+Use the Widget when you want to embed Delora trading flows with less custom UI work.
+
+<Steps>
+  <Step title="Install the package">
+    Follow [Install Widget](/widget/basic-setup/install-widget) to add `@deloraprotocol/widget` and render `TradeWidget`.
+  </Step>
+
+  <Step title="Configure the widget">
+    Set your integrator string, optional fee, theme, filters, initial tokens, and wallet options through `TradeWidget` props. See [Configure Widget](/widget/basic-setup/configure-widget).
+  </Step>
+
+  <Step title="Choose the wallet integration pattern">
+    Use the widget's built-in wallet UI or connect Delora to wallet state your app already owns. See [Integration Patterns](/widget/basic-setup/integration-patterns).
+  </Step>
+
+  <Step title="Monetize the widget">
+    Forward your portal integrator string and fee through the widget config. See [Monetize Widget](/widget/basic-setup/monetize-widget).
+  </Step>
+</Steps>
+
+```tsx
+import "@deloraprotocol/widget/styles.css";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+export function App() {
+  return (
+    <TradeWidget
+      theme="dark"
+      config={{
+        integrator: "xyz",
+        fee: 0.01,
+      }}
+    />
+  );
+}
+```
+
+<Danger>
+Do not expose your Delora API key in browser code. If a browser-based widget needs authenticated rate limits, keep the key on your backend and point `config.apiUrl` at your proxy.
+</Danger>
+
+## MCP quick start
+
+Use MCP when you want AI tools or agents to discover Delora chains, tokens, and quote tools through the Model Context Protocol instead of hand-written HTTP calls.
+
+<Steps>
+  <Step title="Connect the hosted server">
+    Add the hosted MCP endpoint to your MCP-compatible client:
+
+    ```json
+    {
+      "mcpServers": {
+        "delora": {
+          "type": "http",
+          "url": "https://mcp.delora.build/mcp"
+        }
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Add authentication when supported">
+    If your MCP client supports custom HTTP headers, pass `x-api-key: YOUR_API_KEY`. For local `stdio` usage, set `DELORA_API_KEY`. See [MCP Installation](/mcp-server/installation).
+  </Step>
+
+  <Step title="Use the routing tools">
+    Start with `get_chains`, `get_tokens` or `get_token`, and `get_quote`. See [Available Tools](/mcp-server/reference/available-tools) and [MCP Examples](/mcp-server/reference/examples).
+  </Step>
+
+  <Step title="Sign and submit externally">
+    MCP quote responses include unsigned transaction data. Your application, wallet, or backend must still sign and broadcast transactions.
+  </Step>
+</Steps>
+
+## Next steps
+
+- For API integrations, start with [Get a quote for a token transfer](/api-reference/endpoint/get-a-quote-for-a-token-transfer).
+- For Widget integrations, start with [Install Widget](/widget/basic-setup/install-widget).
+- For MCP integrations, start with [MCP Server](/mcp-server/overview).
+- For revenue setup across all interfaces, review [Fee Configuration](/protocol/fee-configuration).
