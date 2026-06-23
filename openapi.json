@@ -359,6 +359,31 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/advanced/routes"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "summary": "Discover advanced route plans",
@@ -460,6 +485,31 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/StandardErrorResponseDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "rateLimitExceeded": {
+                    "summary": "Rate limit exceeded",
+                    "value": {
+                      "statusCode": 429,
+                      "code": "RATE_LIMIT",
+                      "message": "Rate limit exceeded. Please try again later.",
+                      "details": {
+                        "message": "Rate limit exceeded. Please try again later."
+                      },
+                      "timestamp": "2026-05-15T16:58:45.603Z",
+                      "path": "/v1/advanced/stepTransaction"
+                    }
+                  }
                 }
               }
             }

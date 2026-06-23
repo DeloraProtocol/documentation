@@ -1,6 +1,6 @@
 ---
 title: Rate Limits and API Authentication
-description: Rate limits apply to requests made using your x-api-key and are calculated per API key across all endpoints.
+description: Rate limits are tracked by client IP and endpoint scope. A valid x-api-key selects the authenticated limit tier.
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
@@ -22,7 +22,19 @@ description: Rate limits apply to requests made using your x-api-key and are cal
 
 > Higher limits may be available for clients in the custom terms. Please [Contact Us](https://t.me/whoisfedelya) for more information.
 
+Rate limits are tracked by client IP and endpoint scope. Quote-related endpoints share one quote counter, while the rest of the public endpoints share a separate counter. A valid `x-api-key` selects the authenticated limit tier and may use a custom requests-per-minute limit configured for your integration.
+
 If you exceed your rate limits, you’ll receive a `429 Too Many Requests` HTTP response.
+
+## Rate Limit Headers
+
+API responses include rate limit headers:
+
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Request limit for the current window |
+| `X-RateLimit-Remaining` | Remaining requests in the current window |
+| `X-RateLimit-Reset` | ISO timestamp when the current window resets |
 
 ## How to Get an API Key
 
