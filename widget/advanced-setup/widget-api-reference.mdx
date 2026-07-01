@@ -34,6 +34,9 @@ Trade widget types:
 - `TradeWidgetProps`
 - `TradeWidgetConfig`
 - `TradeWidgetRpcUrlsByChainId`
+- `TradeWidgetWalletConfig`
+- `TradeWidgetWalletId`
+- `TradeWidgetPoweredByPosition`
 - `WalletNamespace`
 - `TradeWidgetStatus`
 - `TradeWidgetFilters`
@@ -132,7 +135,11 @@ See [Customize Widget](/widget/basic-setup/customize-widget) for the full theme-
 | `assetBaseUrl` | `string` | Base URL for relative image paths |
 | `termsUrl` | `string` | Terms of Use link in the connect modal |
 | `privacyPolicyUrl` | `string` | Privacy Policy link in the connect modal |
+| `requireWalletConsent` | `boolean` | Require consent before wallet selection. Defaults to `true`; `false` hides the footer. |
 | `walletConnectProjectId` | `string` | WalletConnect Cloud project id |
+| `wallets` | `TradeWidgetWalletConfig` | Built-in wallet allowlist, denylist, and preferred order |
+| `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Defaults to `true`. |
+| `poweredByDeloraPosition` | `TradeWidgetPoweredByPosition` | Label alignment. Defaults to `"center"`. |
 
 For browser-rendered widgets, prefer not to pass `apiKey` directly from the client. Keep it on your backend and proxy `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` through `config.apiUrl`.
 
@@ -144,6 +151,38 @@ If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
 - `${window.location.origin}/documentation/privacypolicy`
 
 For third-party embeds, it is usually better to set both links explicitly.
+
+When `requireWalletConsent` is `false`, the consent checkbox and both legal
+links are hidden, and wallet rows can be selected immediately.
+
+### Wallet and branding configuration types
+
+```ts
+type TradeWidgetWalletId =
+  | "metamask"
+  | "rabby-wallet"
+  | "walletconnect"
+  | "backpack"
+  | "phantom"
+  | "solflare"
+  | "trust-wallet"
+  | "okx-wallet"
+  | "coinbase-wallet"
+  | "magic-eden";
+
+interface TradeWidgetWalletConfig {
+  include?: TradeWidgetWalletId[];
+  exclude?: TradeWidgetWalletId[];
+  order?: TradeWidgetWalletId[];
+}
+
+type TradeWidgetPoweredByPosition = "left" | "center" | "right";
+```
+
+`include`, `exclude`, and `order` are independent. `include` is an allowlist,
+`exclude` is a denylist with precedence over `include`, and `order` only moves
+enabled wallets to the front without hiding unlisted wallets. These controls
+apply to widget-managed wallets, not host-provided `walletOptions`.
 
 ## Filters
 

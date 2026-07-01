@@ -73,6 +73,37 @@ For `TradeWidget`, the main widget surfaces stay square by default. Set `radius`
 
 The bundled themes use `Roboto Mono` and the stylesheet imports that font from Google Fonts. If you want to keep typography fully local to your app, override `fontFamily`. If you use a non-system font, load that font in the host app before passing it to the widget.
 
+## Powered by Delora label
+
+`TradeWidget` shows a theme-aware Powered by Delora label below the widget by
+default. The white artwork is used with the dark theme and the black artwork is
+used with the light theme. Selecting the label opens
+[`https://delora.build/`](https://delora.build/) in a new tab.
+
+Use `poweredByDeloraPosition` to align the label:
+
+```tsx
+<TradeWidget
+  theme="dark"
+  config={{
+    showPoweredByDelora: true,
+    poweredByDeloraPosition: "right",
+  }}
+/>
+```
+
+Supported positions are:
+
+- `"left"`
+- `"center"` (default)
+- `"right"`
+
+To remove the label entirely, set:
+
+```tsx
+<TradeWidget config={{ showPoweredByDelora: false }} />
+```
+
 ## Use host styling props
 
 `className` and `style` are applied to the widget root.

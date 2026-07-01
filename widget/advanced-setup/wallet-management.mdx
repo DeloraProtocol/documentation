@@ -80,11 +80,47 @@ Built-in behavior:
 - EVM wallets use injected providers or WalletConnect
 - Solana wallets use injected providers or Wallet Standard providers
 - wallet selection is persisted in browser `localStorage`
-- the connect modal requires the user to accept Terms and Privacy Policy before connection
+- the connect modal requires the user to accept Terms and Privacy Policy before connection by default
 
 If `config.termsUrl` or `config.privacyPolicyUrl` is omitted, the modal falls back to same-origin `/documentation/termsofuse` and `/documentation/privacypolicy` links. Third-party embeds should pass explicit URLs.
 
+Set `config.requireWalletConsent` to `false` to hide the entire consent footer
+and allow wallet selection without acceptance. When the footer is hidden,
+`termsUrl` and `privacyPolicyUrl` are not rendered.
+
 Set `config.walletConnectProjectId` to override the WalletConnect Cloud project id used by the built-in EVM QR flow.
+
+### Control the built-in wallet picker
+
+The `config.wallets` object controls only widget-managed wallet rows:
+
+```tsx
+<TradeWidget
+  config={{
+    wallets: {
+      order: ["walletconnect", "metamask", "solflare"],
+      exclude: ["rabby-wallet"],
+    },
+  }}
+/>
+```
+
+- `include` allows only the listed wallet ids.
+- `exclude` removes listed wallet ids and takes precedence over `include`.
+- `order` prioritizes listed, enabled wallets but leaves every other eligible wallet available in its normal group.
+
+To expose only WalletConnect, use `include: ["walletconnect"]`. Do not use
+`order` as an allowlist: ordering does not filter the picker.
+
+Supported ids are `metamask`, `rabby-wallet`, `walletconnect`, `backpack`,
+`phantom`, `solflare`, `trust-wallet`, `okx-wallet`, `coinbase-wallet`, and
+`magic-eden`.
+
+The same allowlist and denylist are checked during built-in session restoration.
+An excluded or non-included persisted wallet is not reconnected automatically.
+For partial wallet management, this configuration applies only to the namespaces
+that still use Delora's built-in wallet flow. Host-provided `walletOptions`
+remain controlled by the host.
 
 ## Auto wallet management
 

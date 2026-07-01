@@ -21,6 +21,13 @@ All runtime options live under the required `config` prop.
     walletConnectProjectId: "your-walletconnect-project-id",
     termsUrl: "/legal/terms",
     privacyPolicyUrl: "/legal/privacy",
+    requireWalletConsent: true,
+    wallets: {
+      order: ["walletconnect", "metamask"],
+      exclude: ["rabby-wallet"],
+    },
+    showPoweredByDelora: true,
+    poweredByDeloraPosition: "center",
   }}
 />
 ```
@@ -52,7 +59,11 @@ Use `apiUrl` when you want a custom upstream, such as your own backend proxy:
 | `assetBaseUrl` | `string` | Base URL for resolving relative token and network image paths |
 | `termsUrl` | `string` | URL used in the wallet consent footer |
 | `privacyPolicyUrl` | `string` | URL used in the wallet consent footer |
+| `requireWalletConsent` | `boolean` | Require acceptance before choosing a wallet. Defaults to `true`; `false` hides the consent footer. |
 | `walletConnectProjectId` | `string` | WalletConnect Cloud project id for the EVM QR flow |
+| `wallets` | `TradeWidgetWalletConfig` | Allowlist, denylist, and display order for widget-managed wallets |
+| `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Defaults to `true`. |
+| `poweredByDeloraPosition` | `"left" \| "center" \| "right"` | Horizontal label position. Defaults to `"center"`. |
 
 If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to the default Delora API base.
 
@@ -71,6 +82,77 @@ If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
 - `${window.location.origin}/documentation/privacypolicy`
 
 For third-party embeds, it is usually better to set both URLs explicitly.
+
+The consent footer is enabled by default. To remove the checkbox, links, and
+acceptance requirement from the connect modal, set:
+
+```tsx
+<TradeWidget
+  config={{
+    requireWalletConsent: false,
+  }}
+/>
+```
+
+When `requireWalletConsent` is `false`, `termsUrl` and `privacyPolicyUrl` are not
+rendered because the entire consent footer is hidden.
+
+## Configure built-in wallets
+
+Use `config.wallets` to control the widget-managed wallet picker. These three
+fields have independent purposes:
+
+- `include` is an allowlist. When present, only listed wallets are eligible.
+- `exclude` is a denylist. It removes listed wallets and takes precedence over `include`.
+- `order` moves listed, enabled wallets to the front in the specified order. It does not hide unlisted wallets.
+
+For example, offer only WalletConnect:
+
+```tsx
+<TradeWidget
+  config={{
+    wallets: {
+      include: ["walletconnect"],
+    },
+  }}
+/>
+```
+
+Or prioritize WalletConnect, MetaMask, and Solflare while keeping all other
+wallets except Rabby available:
+
+```tsx
+<TradeWidget
+  config={{
+    wallets: {
+      order: ["walletconnect", "metamask", "solflare"],
+      exclude: ["rabby-wallet"],
+    },
+  }}
+/>
+```
+
+Supported wallet ids are:
+
+- `metamask`
+- `rabby-wallet`
+- `walletconnect`
+- `backpack`
+- `phantom`
+- `solflare`
+- `trust-wallet`
+- `okx-wallet`
+- `coinbase-wallet`
+- `magic-eden`
+
+Wallet filtering also applies to persisted built-in sessions, so an excluded or
+non-included wallet is not restored automatically. Namespace compatibility still
+applies after configuration; for example, WalletConnect is available for EVM and
+Solflare is available for Solana.
+
+`config.wallets` controls only built-in wallet management. When the host supplies
+`walletOptions` through external wallet management, that host-provided array
+remains the source of truth.
 
 ## Initial selections
 
