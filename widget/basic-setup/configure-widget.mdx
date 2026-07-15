@@ -15,6 +15,16 @@ All runtime options live under the required `config` prop.
   config={{
     apiKey: "your-api-key",
     apiUrl: "https://your-app.com/api/delora",
+    rpcUrls: {
+      1: [
+        "https://your-primary-ethereum-rpc.example",
+        "https://your-fallback-ethereum-rpc.example",
+      ],
+      1000000001: [
+        "https://your-primary-solana-rpc.example",
+        "https://your-fallback-solana-rpc.example",
+      ],
+    },
     integrator: "my-dapp",
     fee: 0.01,
     slippage: 0.005,
@@ -32,9 +42,7 @@ All runtime options live under the required `config` prop.
 />
 ```
 
-If you do not set `apiUrl`, the widget uses the default Delora API base: `https://api.delora.build`.
-
-Use `apiUrl` when you want a custom upstream, such as your own backend proxy:
+By default, the widget uses `https://api.delora.build`. Set `apiUrl` when you want a custom upstream, such as your own backend proxy:
 
 ```tsx
 <TradeWidget
@@ -46,29 +54,7 @@ Use `apiUrl` when you want a custom upstream, such as your own backend proxy:
 />
 ```
 
-## Custom RPC URLs
-
-Use `config.rpcUrls` to give the widget one or more preferred RPC endpoints for a numeric chain ID. List URLs in priority order.
-
-```tsx
-<TradeWidget
-  config={{
-    rpcUrls: {
-      // Ethereum mainnet
-      1: [
-        "https://your-primary-ethereum-rpc.example",
-        "https://your-fallback-ethereum-rpc.example",
-      ],
-      // Solana mainnet
-      1000000001: ["https://your-solana-rpc.example"],
-    },
-  }}
-/>
-```
-
-`rpcUrls` has type `Partial<Record<number, string[]>>`. The widget removes blank entries and duplicates, gives your URLs priority in the supplied order when they are available, and retains built-in and Delora metadata endpoints as fallbacks. This setting only customizes chains already available in widget metadata; it does not add a new chain.
-
-Because the widget calls these endpoints from the browser, make sure each RPC endpoint accepts cross-origin browser requests.
+Use `rpcUrls` to provide preferred endpoints for a supported chain. Map each numeric chain ID to an ordered URL array; the widget tries those URLs first and keeps its default endpoints as fallbacks. For supported chain IDs, see [Get chains](/api-reference/endpoint/get-chains).
 
 | Field | Type | Description |
 | --- | --- | --- |
@@ -89,7 +75,7 @@ Because the widget calls these endpoints from the browser, make sure each RPC en
 | `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Defaults to `true`. |
 | `poweredByDeloraPosition` | `"left" \| "center" \| "right"` | Horizontal label position. Defaults to `"center"`. |
 
-If `apiUrl` is not set, the widget uses `https://api.delora.build`. If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to the default Delora API base.
+If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to `https://api.delora.build`.
 
 For browser-based widget integrations, prefer not to pass `apiKey` directly from the client. Instead:
 
