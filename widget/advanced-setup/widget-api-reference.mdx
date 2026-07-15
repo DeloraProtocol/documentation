@@ -125,7 +125,7 @@ See [Customize Widget](/widget/basic-setup/customize-widget) for the full theme-
 | Field | Type | Description |
 | --- | --- | --- |
 | `apiUrl` | `string` | Optional Delora API base. If omitted, the widget uses `https://api.delora.build`. You can point this to your own backend proxy. |
-| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | RPC override map by chain id |
+| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Preferred RPC endpoints by chain id |
 | `integrator` | `string` | Quote request integrator id |
 | `apiKey` | `string` | Optional Delora API key sent as `x-api-key`. Recommended only for trusted environments. |
 | `fee` | `number` | Quote fee value, range `0..0.1` |
@@ -154,6 +154,17 @@ For third-party embeds, it is usually better to set both links explicitly.
 
 When `requireWalletConsent` is `false`, the consent checkbox and both legal
 links are hidden, and wallet rows can be selected immediately.
+
+### `TradeWidgetRpcUrlsByChainId`
+
+```ts
+type TradeWidgetRpcUrlsByChainId = Partial<Record<number, string[]>>;
+```
+
+Each key is a numeric chain ID and each value is an ordered list of preferred
+RPC endpoints. The widget gives supplied endpoints priority when they are
+available, then falls back to its normal endpoints. See [Configure Widget](/widget/basic-setup/configure-widget#custom-rpc-urls)
+for behavior and an example.
 
 ### Wallet and branding configuration types
 

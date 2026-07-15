@@ -46,11 +46,35 @@ Use `apiUrl` when you want a custom upstream, such as your own backend proxy:
 />
 ```
 
+## Custom RPC URLs
+
+Use `config.rpcUrls` to give the widget one or more preferred RPC endpoints for a numeric chain ID. List URLs in priority order.
+
+```tsx
+<TradeWidget
+  config={{
+    rpcUrls: {
+      // Ethereum mainnet
+      1: [
+        "https://your-primary-ethereum-rpc.example",
+        "https://your-fallback-ethereum-rpc.example",
+      ],
+      // Solana mainnet
+      1000000001: ["https://your-solana-rpc.example"],
+    },
+  }}
+/>
+```
+
+`rpcUrls` has type `Partial<Record<number, string[]>>`. The widget removes blank entries and duplicates, gives your URLs priority in the supplied order when they are available, and retains built-in and Delora metadata endpoints as fallbacks. This setting only customizes chains already available in widget metadata; it does not add a new chain.
+
+Because the widget calls these endpoints from the browser, make sure each RPC endpoint accepts cross-origin browser requests.
+
 | Field | Type | Description |
 | --- | --- | --- |
 | `apiUrl` | `string` | Optional Delora API base used for `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` |
 | `apiKey` | `string` | Optional `x-api-key` header for Delora API requests. Avoid using this directly in browser-rendered widgets. |
-| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Per-chain RPC override map used for on-chain reads and execution helpers |
+| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Preferred per-chain RPC endpoints used for on-chain reads and execution helpers |
 | `integrator` | `string` | Forwarded to quote requests |
 | `fee` | `number` | Forwarded to quote requests. Valid range: `0..0.1` |
 | `slippage` | `number` | Initial slippage value. Valid range: `0..1` |
