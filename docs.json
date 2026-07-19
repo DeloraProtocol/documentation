@@ -7,6 +7,14 @@
     ]
   },
   "name": "Delora",
+  "seo": {
+    "metatags": {
+      "canonical": "https://docs.delora.build",
+      "og:image": "https://docs.delora.build/images/docs-og.png",
+      "twitter:card": "summary_large_image",
+      "google-site-verification": "REPLACE_WITH_GOOGLE_SEARCH_CONSOLE_TOKEN"
+    }
+  },
   "api": {
     "openapi": "openapi.yaml"
   },
