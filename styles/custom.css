@@ -2,3 +2,8 @@
   height: 33px !important;
   width: auto !important;
 }
+
+/* Keep frontmatter descriptions in metadata without showing them below the H1. */
+#header > div:has(> p:only-child) {
+  display: none;
+}
