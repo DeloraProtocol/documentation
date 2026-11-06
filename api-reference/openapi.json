@@ -123,7 +123,7 @@
             "name": "slippage",
             "required": false,
             "in": "query",
-            "description": "Optional slippage fraction. `0.005` means 0.5%.",
+            "description": "Optional slippage fraction. `0.005` means 0.5%. It is a budget for the whole route: when a route has several variable legs, such as a source swap followed by a bridge, the budget is split between them. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided.",
             "schema": {
               "minimum": 0,
               "maximum": 1,
@@ -135,7 +135,7 @@
             "name": "slippageMode",
             "required": false,
             "in": "query",
-            "description": "Automatic slippage policy. Set to `auto` to let Delora choose the route-specific slippage; when supplied, it takes precedence over `slippage`.",
+            "description": "Automatic slippage policy. Set to `auto` to let Delora choose the tolerance: 10 bps for recognised stablecoin pairs and 50 bps for every other pair, including major assets such as ETH/WETH and BNB/WBNB. The route-level budget is split across independent variable legs; fixed 1:1 wraps use none. When supplied, it takes precedence over `slippage`.",
             "schema": {
               "enum": [
                 "auto"
@@ -158,9 +158,9 @@
             "name": "includeExchanges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include, for example `OPENOCEAN,OKX`. Only exchange-capable or multi-capability adapters are valid.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include, for example `KYBERSWAP,OKX`. Only exchange-capable or multi-capability adapters are valid.",
             "schema": {
-              "example": "OPENOCEAN,OKX",
+              "example": "KYBERSWAP,OKX",
               "type": "string"
             }
           },
@@ -178,9 +178,9 @@
             "name": "excludeExchanges",
             "required": false,
             "in": "query",
-            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude, for example `OPENOCEAN,OKX`. Only exchange-capable or multi-capability adapters are valid.",
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude, for example `KYBERSWAP,OKX`. Only exchange-capable or multi-capability adapters are valid. Excluded exchanges are also not used for the source swap of a Relay or Eco route or for a Relay destination conversion.",
             "schema": {
-              "example": "OPENOCEAN,OKX",
+              "example": "KYBERSWAP,OKX",
               "type": "string"
             }
           }
@@ -197,47 +197,96 @@
                   "success": {
                     "summary": "Executable quote response",
                     "value": {
-                      "inputAmount": "1000000",
-                      "outputAmount": "997321",
-                      "minOutputAmount": "992334",
-                      "adapter": "OPENOCEAN",
+                      "inputAmount": "199700000",
+                      "outputAmount": "199672056",
+                      "isSimulatedAmount": false,
+                      "executionRoute": {
+                        "originChainId": 8453,
+                        "destinationChainId": 42161,
+                        "originCurrency": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                        "destinationCurrency": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                        "senderAddress": "0x1111111111111111111111111111111111111111",
+                        "receiverAddress": "0x1111111111111111111111111111111111111111"
+                      },
+                      "minOutputAmount": "199672056",
+                      "estimatedTimeSec": 2,
+                      "adapter": "ACROSS",
                       "calldata": {
-                        "to": "0x1111111111111111111111111111111111111111",
-                        "value": "0x0",
-                        "data": "0xabcdef"
+                        "to": "0x12B797D9d7947c4cb97e87178182835e31530597",
+                        "value": "0x00",
+                        "data": "0x..."
                       },
                       "fees": {
                         "total": {
-                          "amount": "2679",
+                          "amount": "55888",
                           "currencySymbol": "USDC",
-                          "currencyAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                          "chainId": 8453,
+                          "currencyAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                          "chainId": 42161,
                           "decimals": 6
                         },
                         "breakdown": [
                           {
-                            "type": "gas",
-                            "amount": "2679",
+                            "type": "relayer",
+                            "amount": "27944",
                             "currencySymbol": "USDC",
-                            "currencyAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                            "chainId": 8453,
-                            "decimals": 6,
-                            "amountUsd": "0.01"
+                            "currencyAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                            "chainId": 42161,
+                            "decimals": 6
+                          },
+                          {
+                            "type": "capital",
+                            "amount": "19970",
+                            "currencySymbol": "USDC",
+                            "currencyAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                            "chainId": 42161,
+                            "decimals": 6
+                          },
+                          {
+                            "type": "relayerGas",
+                            "amount": "7974",
+                            "currencySymbol": "USDC",
+                            "currencyAddress": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                            "chainId": 42161,
+                            "decimals": 6
                           }
-                        ],
-                        "totalUsd": "0.01"
-                      },
-                      "gas": {
-                        "gasPrice": "0x3b9aca00",
-                        "maxFeePerGas": "0x59682f00",
-                        "maxPriorityFeePerGas": "0x3b9aca00"
+                        ]
                       },
                       "warnings": [
-                        {
-                          "code": "SOLANA_INSUFFICIENT_BALANCE",
-                          "message": "Solana simulation reported insufficient balance."
+
+                      ],
+                      "approvalAddress": "0x12B797D9d7947c4cb97e87178182835e31530597",
+                      "usd": {
+                        "originCurrency": {
+                          "chainId": 8453,
+                          "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                          "priceUSD": "0.9998",
+                          "source": "defillama",
+                          "updatedAt": "2026-11-06T13:21:25.000Z",
+                          "stale": false,
+                          "tier": "hot",
+                          "refreshing": false,
+                          "validUntil": "2026-11-06T13:25:07.000Z",
+                          "quality": "verified",
+                          "displayUntil": "2026-11-07T13:21:25.000Z",
+                          "priceStatus": "live",
+                          "ageSeconds": 68
+                        },
+                        "destinationCurrency": {
+                          "chainId": 42161,
+                          "token": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+                          "priceUSD": "0.9998",
+                          "source": "defillama",
+                          "updatedAt": "2026-11-06T13:21:25.000Z",
+                          "stale": false,
+                          "tier": "hot",
+                          "refreshing": false,
+                          "validUntil": "2026-11-06T13:25:07.000Z",
+                          "quality": "verified",
+                          "displayUntil": "2026-11-07T13:21:25.000Z",
+                          "priceStatus": "live",
+                          "ageSeconds": 68
                         }
-                      ]
+                      }
                     }
                   }
                 }
@@ -266,6 +315,44 @@
                       },
                       "timestamp": "2026-05-15T16:58:45.603Z",
                       "path": "/v1/quotes"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No route can serve the request. `details.failures` lists why each adapter or route dropped out.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StandardErrorResponseDto"
+                },
+                "examples": {
+                  "noAvailableQuotes": {
+                    "summary": "No executable route",
+                    "value": {
+                      "statusCode": 422,
+                      "code": "NO_AVAILABLE_QUOTES",
+                      "message": "No adapters available for this request",
+                      "details": {
+                        "message": "No adapters available for this request",
+                        "code": "NO_AVAILABLE_QUOTES",
+                        "failures": [
+                          {
+                            "adapter": "ACROSS",
+                            "code": "UPSTREAM_ERROR",
+                            "message": "Across did not answer the quote request."
+                          },
+                          {
+                            "adapter": "MAYAN_SWIFT",
+                            "code": "NO_ROUTE",
+                            "message": "Mayan returned no route for this pair."
+                          }
+                        ]
+                      },
+                      "timestamp": "2026-11-06T13:22:12.833Z",
+                      "path": "/v1/quotes?..."
                     }
                   }
                 }
@@ -578,13 +665,17 @@
                     "value": {
                       "chains": [
                         {
-                          "key": "base",
+                          "key": "bas",
                           "name": "Base",
                           "chainType": "EVM",
                           "id": 8453,
                           "idHex": "0x2105",
                           "mainnet": true,
                           "logoURI": "https://example.com/base.png",
+                          "logoURIByTheme": {
+                            "light": "https://example.com/base-light.svg",
+                            "dark": "https://example.com/base-dark.svg"
+                          },
                           "tokenlistUrl": "https://tokens.example.com/base.json",
                           "multicallAddress": "0xcA11bde05977b3631167028862bE2a173976CA11",
                           "rpcUrls": [
@@ -702,7 +793,7 @@
             "in": "query",
             "description": "Comma-separated chain IDs used to filter supported tools.",
             "schema": {
-              "example": 18453
+              "example": "1,8453"
             }
           }
         ],
@@ -720,9 +811,9 @@
                     "value": {
                       "exchanges": [
                         {
-                          "key": "OPENOCEAN",
-                          "name": "OpenOcean",
-                          "logoURI": "https://example.com/openocean.png",
+                          "key": "KYBERSWAP",
+                          "name": "KyberSwap",
+                          "logoURI": "https://example.com/kyberswap.png",
                           "supportedChains": [
                             "1",
                             "8453"
@@ -824,9 +915,9 @@
             "name": "chains",
             "required": false,
             "in": "query",
-            "description": "Comma-separated chain IDs used to filter tokens.",
+            "description": "Comma-separated chain IDs used to filter tokens. Chains not listed by `/v1/chains` return no tokens.",
             "schema": {
-              "example": 84531,
+              "example": "8453,1",
               "type": "string"
             }
           },
@@ -862,7 +953,17 @@
                         "decimals": 6,
                         "chainId": 8453,
                         "name": "USD Coin",
-                        "coinKey": "USDC"
+                        "coinKey": "USDC",
+                        "verificationStatus": "verified",
+                        "priceUSD": "0.9998",
+                        "priceUpdatedAt": "2026-11-06T13:21:25.000Z",
+                        "priceSource": "defillama",
+                        "priceStale": false,
+                        "priceTier": "hot",
+                        "priceValidUntil": "2026-11-06T13:25:07.000Z",
+                        "priceQuality": "verified",
+                        "priceStatus": "live",
+                        "logoURI": "https://example.com/usdc.png"
                       }
                     ]
                   }
@@ -879,11 +980,15 @@
                           "chainId": 8453,
                           "name": "USD Coin",
                           "coinKey": "USDC",
-                          "priceUSD": "1.00",
-                          "priceUpdatedAt": "2026-06-22T12:00:00.000Z",
-                          "priceSource": "dexscreener",
+                          "verificationStatus": "verified",
+                          "priceUSD": "0.9998",
+                          "priceUpdatedAt": "2026-11-06T13:21:25.000Z",
+                          "priceSource": "defillama",
                           "priceStale": false,
-                          "priceTier": "cold",
+                          "priceTier": "hot",
+                          "priceValidUntil": "2026-11-06T13:25:07.000Z",
+                          "priceQuality": "verified",
+                          "priceStatus": "live",
                           "logoURI": "https://example.com/usdc.png"
                         }
                       ]
@@ -964,7 +1069,7 @@
         "tags": [
           "V1"
         ],
-        "description": "Returns supported tokens grouped by chain ID. Use chains to limit the response to specific chain IDs and chainTypes to filter by EVM or SVM networks."
+        "description": "Returns supported tokens grouped by chain ID, for the chains listed by `/v1/chains` only. Use chains to limit the response to specific chain IDs and chainTypes to filter by EVM or SVM networks; unsupported chain IDs are ignored."
       }
     },
     "/v1/prices": {
@@ -994,7 +1099,7 @@
             "name": "token",
             "required": false,
             "in": "query",
-            "description": "Token address or symbol for a single token price lookup. Required with `chainId` when `tokens` is not provided.",
+            "description": "Token address for a single token price lookup. Required with `chainId` when `tokens` is not provided. Symbols are not resolved; use `/v1/token` to find the address.",
             "schema": {
               "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
               "type": "string"
@@ -1004,7 +1109,7 @@
             "name": "tokens",
             "required": false,
             "in": "query",
-            "description": "Comma-separated batch of `chainId:token` entries. Maximum 50 requested entries. When provided, `tokens` is used instead of the single-token `chainId` and `token` parameters.",
+            "description": "Comma-separated batch of `chainId:tokenAddress` entries. Maximum 50 requested entries. When provided, `tokens` is used instead of the single-token `chainId` and `token` parameters.",
             "schema": {
               "example": "8453:0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913,1:0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
               "type": "string"
@@ -1027,12 +1132,17 @@
                         {
                           "chainId": 8453,
                           "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                          "priceUSD": "1.00",
-                          "source": "dexscreener",
-                          "updatedAt": "2026-06-22T12:00:00.000Z",
+                          "priceUSD": "0.9998",
+                          "source": "defillama",
+                          "updatedAt": "2026-11-06T13:21:25.000Z",
                           "stale": false,
                           "tier": "hot",
-                          "refreshing": false
+                          "refreshing": false,
+                          "validUntil": "2026-11-06T13:25:07.000Z",
+                          "quality": "verified",
+                          "displayUntil": "2026-11-07T13:21:25.000Z",
+                          "priceStatus": "live",
+                          "ageSeconds": 68
                         }
                       ]
                     }
@@ -1164,11 +1274,15 @@
                       "chainId": 8453,
                       "name": "USD Coin",
                       "coinKey": "USDC",
-                      "priceUSD": "1.00",
-                      "priceUpdatedAt": "2026-06-22T12:00:00.000Z",
-                      "priceSource": "dexscreener",
+                      "verificationStatus": "verified",
+                      "priceUSD": "0.9998",
+                      "priceUpdatedAt": "2026-11-06T13:21:25.000Z",
+                      "priceSource": "defillama",
                       "priceStale": false,
-                      "priceTier": "cold",
+                      "priceTier": "hot",
+                      "priceValidUntil": "2026-11-06T13:25:07.000Z",
+                      "priceQuality": "verified",
+                      "priceStatus": "live",
                       "logoURI": "https://example.com/usdc.png"
                     }
                   }
@@ -1631,7 +1745,7 @@
         "tags": [
           "Health"
         ],
-        "description": "Returns the current service health status."
+        "description": "Liveness only: reports that the process is up and serving. Says nothing about dependencies."
       }
     }
   },
@@ -1686,6 +1800,16 @@
             "type": "string",
             "example": "USDC"
           },
+          "verificationStatus": {
+            "enum": [
+              "verified",
+              "flagged",
+              "unknown"
+            ],
+            "type": "string",
+            "example": "verified",
+            "description": "verified: confirmed by a source; flagged: a source marks it risky; unknown: listed, but no source has a verdict. Native assets of supported chains are verified. Solana: Jupiter only (verified tag; flagged when its audit marks the mint suspicious). EVM: LI.FI (a single Hypernative verdict; a token LI.FI has not checked is unknown), except that a flagged token on Arbitrum's canonical bridge list is unknown."
+          },
           "priceUSD": {
             "type": "string",
             "example": "1.00",
@@ -1715,6 +1839,35 @@
             "example": "cold",
             "description": "Price refresh tier. `hot` tokens are prioritized for fresher cached prices; `cold` tokens refresh less aggressively."
           },
+          "priceValidUntil": {
+            "type": "string",
+            "example": "2026-11-06T13:25:07.000Z",
+            "description": "Time until which `priceUSD` is decision-grade. Returned with `priceQuality`."
+          },
+          "priceQuality": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "fallback",
+              "conflicted"
+            ],
+            "example": "verified",
+            "description": "`verified`: confirmed by an independent source. `fallback`: from a single source without independent confirmation. `conflicted`: sources disagree; such a price is not used for decisions."
+          },
+          "priceStatus": {
+            "type": "string",
+            "enum": [
+              "live",
+              "delayed"
+            ],
+            "example": "live",
+            "description": "`live`: the price is fresh and decision-grade. `delayed`: the price is display-only or older; do not use it for value-loss checks or USD amount input. Returned when a price is available."
+          },
+          "priceDisplayUntil": {
+            "type": "string",
+            "example": "2026-11-07T13:21:25.000Z",
+            "description": "For a `delayed` price, the time until which it may still be displayed."
+          },
           "logoURI": {
             "type": "string",
             "example": "https://example.com/usdc.png"
@@ -1726,7 +1879,8 @@
           "decimals",
           "chainId",
           "name",
-          "coinKey"
+          "coinKey",
+          "verificationStatus"
         ]
       },
       "QuoteCalldataDto": {
@@ -1939,6 +2093,40 @@
             "type": "boolean",
             "example": false,
             "description": "Whether a background refresh for this price is scheduled or already running."
+          },
+          "validUntil": {
+            "type": "string",
+            "example": "2026-11-06T13:25:07.000Z",
+            "description": "Time until which `priceUSD` is decision-grade. Returned with `quality`."
+          },
+          "quality": {
+            "type": "string",
+            "enum": [
+              "verified",
+              "fallback",
+              "conflicted"
+            ],
+            "example": "verified",
+            "description": "`verified`: confirmed by an independent source. `fallback`: from a single source without independent confirmation. `conflicted`: sources disagree; such a price is not used for decisions."
+          },
+          "displayUntil": {
+            "type": "string",
+            "example": "2026-11-07T13:21:25.000Z",
+            "description": "Time until which `priceUSD` may still be displayed after it stops being decision-grade. Never use it for decisions."
+          },
+          "priceStatus": {
+            "type": "string",
+            "enum": [
+              "live",
+              "delayed"
+            ],
+            "example": "live",
+            "description": "`live`: the price is fresh and decision-grade. `delayed`: the price is display-only or older; do not use it for value-loss checks or USD amount input. Returned when a price is available."
+          },
+          "ageSeconds": {
+            "type": "number",
+            "example": 68,
+            "description": "Seconds since the source time of the price. Returned when a price is available."
           }
         },
         "required": [
@@ -1978,178 +2166,77 @@
           "destinationCurrency"
         ]
       },
-      "SimulationDeviationDto": {
-        "type": "object",
-        "properties": {
-          "absolute": {
-            "type": "string",
-            "example": "-1200",
-            "description": "Simulated output minus advertised output in raw units."
-          },
-          "bps": {
-            "type": "number",
-            "example": -12,
-            "description": "Signed basis points. Negative means the adapter overstated output."
-          },
-          "percent": {
-            "type": "string",
-            "example": "-0.12%"
-          }
-        },
-        "required": [
-          "absolute",
-          "bps",
-          "percent"
-        ]
-      },
-      "SimulationProviderResultDto": {
-        "type": "object",
-        "properties": {
-          "source": {
-            "type": "string",
-            "enum": [
-              "TENDERLY",
-              "RPC",
-              "SOLANA_RUNTIME",
-              "NONE"
-            ],
-            "example": "TENDERLY"
-          },
-          "executionStatus": {
-            "type": "string",
-            "enum": [
-              "SUCCESS",
-              "REVERTED",
-              "TIMEOUT",
-              "SKIPPED",
-              "UNSUPPORTED",
-              "ERROR"
-            ],
-            "example": "SUCCESS"
-          },
-          "outputValidation": {
-            "type": "string",
-            "enum": [
-              "VERIFIED",
-              "UNVERIFIABLE",
-              "NOT_SIMULATED"
-            ],
-            "example": "VERIFIED"
-          },
-          "simulatedOutputAmount": {
-            "type": "string",
-            "example": "996100"
-          },
-          "deviation": {
-            "$ref": "#/components/schemas/SimulationDeviationDto"
-          },
-          "gasUsed": {
-            "type": "string",
-            "example": "142331"
-          },
-          "reason": {
-            "type": "string",
-            "example": "Exceeded 700ms"
-          },
-          "latencyMs": {
-            "type": "number",
-            "example": 312
-          }
-        },
-        "required": [
-          "source",
-          "executionStatus",
-          "outputValidation",
-          "latencyMs"
-        ]
-      },
-      "SimulationDto": {
-        "type": "object",
-        "properties": {
-          "source": {
-            "type": "string",
-            "enum": [
-              "TENDERLY",
-              "RPC",
-              "SOLANA_RUNTIME",
-              "NONE"
-            ],
-            "example": "TENDERLY"
-          },
-          "executionStatus": {
-            "type": "string",
-            "enum": [
-              "SUCCESS",
-              "REVERTED",
-              "TIMEOUT",
-              "SKIPPED",
-              "UNSUPPORTED",
-              "ERROR"
-            ],
-            "example": "SUCCESS"
-          },
-          "outputValidation": {
-            "type": "string",
-            "enum": [
-              "VERIFIED",
-              "UNVERIFIABLE",
-              "NOT_SIMULATED"
-            ],
-            "example": "VERIFIED"
-          },
-          "simulatedOutputAmount": {
-            "type": "string",
-            "example": "996100"
-          },
-          "advertisedOutputAmount": {
-            "type": "string",
-            "example": "997321"
-          },
-          "deviation": {
-            "$ref": "#/components/schemas/SimulationDeviationDto"
-          },
-          "gasUsed": {
-            "type": "string",
-            "example": "142331"
-          },
-          "reason": {
-            "type": "string",
-            "example": "Simulation exceeded budget"
-          },
-          "latencyMs": {
-            "type": "number",
-            "example": 712
-          },
-          "providerResults": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SimulationProviderResultDto"
-            }
-          }
-        },
-        "required": [
-          "source",
-          "executionStatus",
-          "outputValidation",
-          "advertisedOutputAmount",
-          "latencyMs",
-          "providerResults"
-        ]
-      },
       "QuoteResponseDto": {
         "type": "object",
         "properties": {
           "inputAmount": {
             "type": "string",
-            "example": "1000000"
+            "example": "1000000",
+            "description": "Input amount in base units after Delora and integrator fees are deducted from the requested `amount`."
           },
           "outputAmount": {
             "type": "string",
-            "example": "997321"
+            "example": "997321",
+            "description": "Estimated output amount in destination-token base units."
+          },
+          "isSimulatedAmount": {
+            "type": "boolean",
+            "example": false,
+            "description": "`true` when `outputAmount` was measured by simulating the returned transaction; `false` when it is the provider's estimate."
+          },
+          "executionRoute": {
+            "type": "object",
+            "description": "The route the returned transaction executes. The token fields describe the route the selected adapter executes, which can differ from the requested tokens.",
+            "properties": {
+              "originChainId": {
+                "type": "number"
+              },
+              "destinationChainId": {
+                "type": "number"
+              },
+              "originCurrency": {
+                "type": "string"
+              },
+              "destinationCurrency": {
+                "type": "string"
+              },
+              "senderAddress": {
+                "type": "string"
+              },
+              "receiverAddress": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "originChainId",
+              "destinationChainId",
+              "originCurrency",
+              "destinationCurrency",
+              "senderAddress"
+            ],
+            "example": {
+              "originChainId": 8453,
+              "destinationChainId": 42161,
+              "originCurrency": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "destinationCurrency": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
+              "senderAddress": "0x1111111111111111111111111111111111111111",
+              "receiverAddress": "0x1111111111111111111111111111111111111111"
+            }
           },
           "minOutputAmount": {
             "type": "string",
-            "example": "992334"
+            "example": "992334",
+            "description": "Minimum output the transaction accepts, in destination-token base units. Show `outputAmount` as the expected amount; this value is the floor."
+          },
+          "sourceSwapProvider": {
+            "type": "string",
+            "example": "KYBERSWAP",
+            "description": "Exchange that swaps the input token on the origin chain before the bridge or intent leg, when the route includes such a swap."
+          },
+          "destinationSwapProvider": {
+            "type": "string",
+            "example": "polygon-polymarket-pusd",
+            "description": "Identifier of the conversion on the destination chain, when the route converts the bridged token on arrival."
           },
           "estimatedTimeSec": {
             "type": "number",
@@ -2174,10 +2261,13 @@
               "NORDSTERN",
               "KYBERSWAP",
               "DFLOW",
-              "NEAR_INTENTS"
+              "NEAR_INTENTS",
+              "ECO",
+              "FLY",
+              "ONE_INCH"
             ],
             "type": "string",
-            "example": "OPENOCEAN"
+            "example": "ACROSS"
           },
           "calldata": {
             "$ref": "#/components/schemas/QuoteCalldataDto"
@@ -2200,26 +2290,16 @@
             "description": "Approval spender address for EVM-origin routes."
           },
           "transactionSize": {
-            "type": "object",
-            "properties": {
-              "raw": {
-                "type": "number",
-                "example": 812
-              },
-              "encoded": {
-                "type": "number",
-                "example": 1084
+            "description": "Serialized Solana transaction size when available.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionSizeDto"
               }
-            },
-            "description": "Serialized Solana transaction size when available."
+            ]
           },
           "bridgeScan": {
             "$ref": "#/components/schemas/BridgeScanMetadataDto",
             "description": "Bridge tracking metadata returned when the selected bridge adapter provides it."
-          },
-          "simulation": {
-            "$ref": "#/components/schemas/SimulationDto",
-            "description": "Best-effort transaction simulation metadata returned when simulation is enabled for the selected route."
           },
           "usd": {
             "$ref": "#/components/schemas/QuoteUsdPricesDto",
@@ -2229,6 +2309,8 @@
         "required": [
           "inputAmount",
           "outputAmount",
+          "isSimulatedAmount",
+          "executionRoute",
           "adapter",
           "calldata",
           "fees"
@@ -2289,7 +2371,7 @@
             "minimum": 0,
             "maximum": 1,
             "example": 0.005,
-            "description": "Optional slippage fraction. `0.005` means 0.5%."
+            "description": "Optional slippage fraction. `0.005` means 0.5%. It is a budget for the whole route: when a route has several variable legs, such as a source swap followed by a bridge, the budget is split between them. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided."
           },
           "slippageMode": {
             "type": "string",
@@ -2297,7 +2379,7 @@
               "auto"
             ],
             "example": "auto",
-            "description": "Automatic slippage policy. Set to `auto` to let Delora choose the route-specific slippage; when supplied, it takes precedence over `slippage`."
+            "description": "Automatic slippage policy. Set to `auto` to let Delora choose the tolerance: 10 bps for recognised stablecoin pairs and 50 bps for every other pair, including major assets such as ETH/WETH and BNB/WBNB. The route-level budget is split across independent variable legs; fixed 1:1 wraps use none. When supplied, it takes precedence over `slippage`."
           },
           "includeBridges": {
             "type": "string",
@@ -2306,8 +2388,8 @@
           },
           "includeExchanges": {
             "type": "string",
-            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include. Only exchange-capable or multi-capability adapters are valid.",
-            "example": "OPENOCEAN,OKX"
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to include, for example `KYBERSWAP,OKX`. Only exchange-capable or multi-capability adapters are valid.",
+            "example": "KYBERSWAP,OKX"
           },
           "excludeBridges": {
             "type": "string",
@@ -2316,8 +2398,8 @@
           },
           "excludeExchanges": {
             "type": "string",
-            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude. Only exchange-capable or multi-capability adapters are valid.",
-            "example": "OKX"
+            "description": "Comma-separated exchange adapter keys from `/v1/tools` to exclude, for example `KYBERSWAP,OKX`. Only exchange-capable or multi-capability adapters are valid. Excluded exchanges are also not used for the source swap of a Relay or Eco route or for a Relay destination conversion.",
+            "example": "KYBERSWAP,OKX"
           },
           "maxRoutes": {
             "type": "number",
@@ -2424,11 +2506,9 @@
           "approvalAddress": {
             "type": "string"
           },
-          "simulatedToAmount": {
-            "type": "string"
-          },
-          "simulation": {
-            "$ref": "#/components/schemas/SimulationDto"
+          "isSimulatedAmount": {
+            "type": "boolean",
+            "description": "`true` when `toAmount` was measured by simulating the step's transaction."
           }
         },
         "required": [
@@ -2476,19 +2556,28 @@
           "value": {
             "type": "string"
           },
+          "gasPrice": {
+            "type": "string",
+            "description": "Legacy EVM gas price in wei, as a hex string, when provided."
+          },
+          "maxFeePerGas": {
+            "type": "string",
+            "description": "EIP-1559 max fee per gas in wei, as a hex string, when provided."
+          },
+          "maxPriorityFeePerGas": {
+            "type": "string",
+            "description": "EIP-1559 max priority fee per gas in wei, as a hex string, when provided."
+          },
           "gas": {
             "$ref": "#/components/schemas/GasEstimationDto"
           },
           "transactionSize": {
-            "type": "object",
-            "properties": {
-              "raw": {
-                "type": "number"
-              },
-              "encoded": {
-                "type": "number"
+            "description": "Serialized Solana transaction size when available.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TransactionSizeDto"
               }
-            }
+            ]
           }
         },
         "required": [
@@ -2576,6 +2665,10 @@
           "outputAmount": {
             "type": "string"
           },
+          "isSimulatedAmount": {
+            "type": "boolean",
+            "description": "`true` when `outputAmount` was measured by simulating the route's transaction."
+          },
           "minOutputAmount": {
             "type": "string"
           },
@@ -2605,8 +2698,13 @@
               "$ref": "#/components/schemas/AdvancedRouteStepDto"
             }
           },
-          "simulation": {
-            "$ref": "#/components/schemas/SimulationDto"
+          "usd": {
+            "description": "Cached USD price snapshots for the origin and destination tokens.",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/QuoteUsdPricesDto"
+              }
+            ]
           }
         },
         "required": [
@@ -3309,6 +3407,13 @@
                         "type": "number"
                       }
                     ]
+                  },
+                  "failures": {
+                    "type": "array",
+                    "description": "Returned with `NO_AVAILABLE_QUOTES`: one entry per adapter or route that could not serve the request.",
+                    "items": {
+                      "$ref": "#/components/schemas/QuoteFailureDto"
+                    }
                   }
                 }
               },
@@ -3391,7 +3496,7 @@
         "properties": {
           "key": {
             "type": "string",
-            "example": "base"
+            "example": "bas"
           },
           "name": {
             "type": "string",
@@ -3420,6 +3525,22 @@
           "logoURI": {
             "type": "string",
             "example": "https://example.com/base.png"
+          },
+          "logoURIByTheme": {
+            "type": "object",
+            "description": "Monochrome chain logos for light and dark backgrounds.",
+            "properties": {
+              "light": {
+                "type": "string"
+              },
+              "dark": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "light",
+              "dark"
+            ]
           },
           "tokenlistUrl": {
             "type": "string",
@@ -3498,7 +3619,10 @@
               "NORDSTERN",
               "KYBERSWAP",
               "DFLOW",
-              "NEAR_INTENTS"
+              "NEAR_INTENTS",
+              "ECO",
+              "FLY",
+              "ONE_INCH"
             ],
             "type": "string",
             "example": "RELAY"
@@ -3560,6 +3684,132 @@
         },
         "required": [
           "status"
+        ]
+      },
+      "TransactionSizeDto": {
+        "type": "object",
+        "properties": {
+          "raw": {
+            "type": "number",
+            "example": 815,
+            "description": "Serialized transaction size in bytes."
+          },
+          "encoded": {
+            "type": "number",
+            "example": 1088,
+            "description": "Length of the base64-encoded transaction in `calldata.data`."
+          }
+        },
+        "required": [
+          "raw",
+          "encoded"
+        ]
+      },
+      "QuoteFailureDto": {
+        "type": "object",
+        "description": "Why one adapter or route could not serve the request.",
+        "properties": {
+          "adapter": {
+            "type": "string",
+            "example": "ACROSS"
+          },
+          "code": {
+            "type": "string",
+            "example": "AMOUNT_TOO_LOW",
+            "description": "Reason code, such as `NO_ROUTE`, `AMOUNT_TOO_LOW`, `UPSTREAM_ERROR`, or `SIMULATION_REVERTED`. See API errors for the list. New codes may be added."
+          },
+          "message": {
+            "type": "string",
+            "example": "Across requires a larger input amount for this route."
+          },
+          "details": {
+            "type": "object",
+            "description": "Optional context, such as the provider's amount limits.",
+            "properties": {
+              "requestedAmount": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "bridgeInputAmount": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "minimumAmount": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "maximumAmount": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "originChainId": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "destinationChainId": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "inputToken": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "outputToken": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "upstreamCode": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "upstreamMessage": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              },
+              "upstreamId": {
+                "type": [
+                  "string",
+                  "number",
+                  "boolean"
+                ]
+              }
+            }
+          }
+        },
+        "required": [
+          "adapter",
+          "code",
+          "message"
         ]
       }
     }

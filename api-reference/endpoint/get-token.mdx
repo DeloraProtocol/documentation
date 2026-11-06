@@ -3,3 +3,7 @@ title: "Get token"
 openapi: "GET /v1/token"
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
+
+`verificationStatus` is `verified` when a source confirms the token, `flagged` when a source marks it risky, and `unknown` when the token is listed but no source has a verdict. Warn users before they trade a `flagged` token.
+
+Price fields such as `priceUSD` and `priceStatus` are returned when a cached price is available. Do not use a `delayed` price for value-loss checks. See [Get token prices](/api-reference/endpoint/get-prices).

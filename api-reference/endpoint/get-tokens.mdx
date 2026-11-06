@@ -3,3 +3,9 @@ title: "Get tokens"
 openapi: "GET /v1/tokens"
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
+
+The response covers only chains listed by [`/v1/chains`](/api-reference/endpoint/get-chains); unsupported chain IDs in `chains` are ignored.
+
+Each token has a `verificationStatus`: `verified` when a source confirms it, `flagged` when a source marks it risky, and `unknown` when it is listed but no source has a verdict. Warn users before they trade a `flagged` token.
+
+The response is large. Request it with `Accept-Encoding: gzip` and cache it on your side.
