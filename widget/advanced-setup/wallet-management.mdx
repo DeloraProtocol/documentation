@@ -33,6 +33,8 @@ Install the optional package only when the host app already manages wallets:
 npm install @deloraprotocol/widget-wallet-management
 ```
 
+Use `@deloraprotocol/widget-wallet-management` 0.2.0 or later with `@deloraprotocol/widget` 1.1.1 or later. Solana trades fail with 0.1.0 on widget 1.1+, because its Solana adapter cannot send a transaction.
+
 Install the peer wallet stack you actually use:
 
 ```bash
@@ -239,10 +241,10 @@ function WidgetWithSolanaWalletAdapter() {
 - connected public key
 - wallet name and icon when available
 - connect, disconnect, and error handlers
-- a Solana provider wrapper that exposes `signTransaction`
+- a Solana provider wrapper that exposes `signAndSendTransaction`, backed by the adapter's `sendTransaction`
 - optional wallet rows derived from Solana Wallet Adapter wallets
 
-For Solana execution, the wallet must be able to sign a transaction. If the connected adapter does not expose `signTransaction`, execution cannot continue.
+For Solana execution, the wallet must be able to sign and send a transaction. If the connected wallet does not support `signAndSendTransaction`, execution cannot continue.
 
 ## Connect button modes
 
@@ -503,8 +505,10 @@ For Wallet Standard Solana flows, also provide:
 
 For Solana execution, the widget uses:
 
-- Wallet Standard `signAndSendTransaction` when available
-- otherwise the connected wallet's `signTransaction`
+- Wallet Standard `signAndSendTransaction` when a Wallet Standard account is available
+- otherwise the provider's own `signAndSendTransaction`
+
+A Solana provider that can only `signTransaction` cannot execute trades.
 
 When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can show its own wallet chooser and call the host's `connectWalletOption` logic. Each option's `availableNamespaces` should reflect the ecosystems that wallet can actually connect to.
 
