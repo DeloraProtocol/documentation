@@ -8,32 +8,37 @@ description: "Theme tokens and styling options for the Delora widget UI."
 
 - `theme`
 - `vars`
+- `varsByTheme`
+- `motion`
 - `className`
 - `style`
+
+Presentation options that do not change quote or execution behavior live in `config`: `formUi`, `headerUi`, `modalUi`, `walletUi.connectWalletPresentation`, and the Powered by Delora label.
 
 ## Built-in themes
 
 ```tsx
 <TradeWidget theme="dark" config={{}} />
 <TradeWidget theme="light" config={{}} />
+<TradeWidget theme="system" config={{}} />
 ```
 
-Theme defaults:
-
-- `TradeWidget`: `"dark"`
+- `"dark"` is the default.
+- `"system"` follows the viewer's operating-system color scheme and switches with it.
 
 ## Override theme variables
 
-Use `vars` to override the widget's CSS variables.
+Use `vars` to override the widget's CSS variables for every theme.
 
 ```tsx
 <TradeWidget
   theme="dark"
   config={{}}
   vars={{
-    fontFamily: "'Roboto Mono', monospace",
-    radius: "0px",
+    fontFamily: "'Inter', system-ui, sans-serif",
+    radius: "12px",
     actionButtonRadius: "999px",
+    actionButtonBg: "#22c55e",
     accent: "#22c55e",
     border: "#1f2937",
     surface: "#050816",
@@ -64,23 +69,131 @@ The `vars` object supports these fields:
 | `shadow` | Box shadow token for elevated surfaces |
 | `radius` | Shared border radius token |
 | `actionButtonRadius` | Main CTA button radius token |
+| `actionButtonBg` | Primary action background |
+| `actionButtonFg` | Primary action text color |
+| `actionButtonHoverBg` | Primary action background on hover |
+| `actionButtonActiveBg` | Primary action background while pressed |
+| `actionButtonDisabledBg` | Primary action background while it cannot be used |
+| `actionButtonDisabledFg` | Primary action text color while it cannot be used |
 | `fontFamily` | Root font family |
-| `fontSize` | Root font size |
+| `fontSize` | Root font size. The widget derives its type scale from it. |
 | `lineHeight` | Root line height |
 | `letterSpacing` | Root letter spacing |
 
-For `TradeWidget`, the main widget surfaces stay square by default. Set `radius` only when you want rounded panels. Use `actionButtonRadius` when you want to round the main bottom CTA independently.
+### Per-theme variables
 
-The bundled themes use `Roboto Mono` and the stylesheet imports that font from Google Fonts. If you want to keep typography fully local to your app, override `fontFamily`. If you use a non-system font, load that font in the host app before passing it to the widget.
+`varsByTheme` applies variables to one theme only, on top of `vars`. With `theme="system"`, this keeps a brand palette readable in both color schemes.
+
+```tsx
+<TradeWidget
+  theme="system"
+  vars={{ radius: "12px", actionButtonBg: "#7C3AED" }}
+  varsByTheme={{
+    light: { bg: "#FAFAFA" },
+    dark: { bg: "#0B0B0F" },
+  }}
+  config={{}}
+/>
+```
+
+### Primary action colors
+
+The primary action (Connect wallet, Swap, Bridge, Confirm, and the primary button in warning dialogs) takes its colors from the `actionButton*` variables. Unset values keep the theme's neutral button.
+
+Setting only `actionButtonBg` is enough: the hover and pressed fills are mixed from it, and the text color is chosen for contrast when the background is a hex or `rgb()` color. Set `actionButtonFg` yourself for other color notations. The disabled state stays neutral unless you set `actionButtonDisabledBg` and `actionButtonDisabledFg`.
+
+## Corners
+
+The widget is square by default. `radius` rounds the form and every dialog alike: warning dialogs, the wallet, settings, and slippage dialogs, and the startup error card. Rows inside dialogs take a proportionally smaller radius. Use `actionButtonRadius` to round the main button independently.
+
+## Fonts
+
+The widget stylesheet makes no third-party requests. The widget uses Roboto when the page already provides it and the system UI font otherwise.
+
+To load Roboto from Google Fonts, import the optional font stylesheet:
+
+```ts
+import "@deloraprotocol/widget/styles.css";
+import "@deloraprotocol/widget/fonts.css";
+```
+
+You can also load Roboto yourself or pass your own typeface through `vars.fontFamily`. If you use a non-system font, load it in the host app before passing it to the widget.
+
+## Motion
+
+`motion` controls animation:
+
+- `"auto"` (default) animates unless the viewer's system asks for reduced motion
+- `"reduced"` keeps color and fade changes but nothing that moves: no sliding drawer, spinner, pulse, or shimmer. The quote countdown still fills, because it tells the user when the next quote arrives.
+- `"none"` turns every animation and transition off
+
+```tsx
+<TradeWidget motion="reduced" config={{}} />
+```
+
+A host can ask for less motion than the viewer's system setting, never more.
+
+## Header controls
+
+The quote refresh button and the settings button above the form can be hidden independently. Both are visible by default.
+
+```tsx
+<TradeWidget
+  config={{
+    headerUi: {
+      showQuoteRefreshControl: false,
+      showSettingsControl: false,
+    },
+  }}
+/>
+```
+
+- Hiding the quote refresh control does not disable quote expiry checks. The main button still offers **Refresh quote** when needed.
+- Hiding settings removes the in-widget entry point for slippage and provider preferences. Configured defaults continue to apply.
+
+## Form details
+
+`formUi` changes only the presentation of the trading form. It does not change quote details, approval, signing, or execution.
+
+```tsx
+<TradeWidget
+  config={{
+    formUi: {
+      title: "Trade assets",
+      sourceLabel: "Send",
+      destinationLabel: "Get",
+      quickAmountButtons: "always",
+      quoteDetailsPlacement: "top",
+    },
+  }}
+/>
+```
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `title` | — | Visible title in the form header. Omit it to keep the form untitled. |
+| `sourceLabel` | `"Pay"` | Replaces the leading word of the sell row; the network name is kept. |
+| `destinationLabel` | `"Receive"` | Replaces the leading word of the buy row; the network name is kept. |
+| `quickAmountButtons` | `"auto"` | `"auto"` shows amount shortcuts on hover or focus when a balance exists, `"always"` always shows them, and `"hidden"` removes them. |
+| `quoteDetailsPlacement` | `"auto"` | Where the quote details beside the rate open. `"auto"` opens below and moves above when below would be cut off; `"top"` and `"bottom"` always open on that side. Escape closes them. |
+
+## Dialogs
+
+Dialogs such as the token and network pickers, settings, warnings, and trade progress open over the widget. `modalUi.backdrop` decides what they dim:
+
+- `"widget"` (default) dims and blurs only the widget and leaves the host page as it is
+- `"page"` dims and blurs the whole page
+- `"none"` dims nothing
+
+```tsx
+<TradeWidget config={{ modalUi: { backdrop: "page" } }} />
+```
+
+A click beside a dialog closes it in every mode. The Connect Wallet drawer always covers the page, because it slides in from the edge of the screen. See [Wallet & Receiver Management](../advanced-setup/wallet-management#wallet-picker-presentation).
 
 ## Powered by Delora label
 
-`TradeWidget` shows a theme-aware Powered by Delora label below the widget by
-default. The white artwork is used with the dark theme and the black artwork is
-used with the light theme. Selecting the label opens
-[`https://delora.build/`](https://delora.build/) in a new tab.
-
-Use `poweredByDeloraPosition` to align the label:
+The Powered by Delora label is off by default. Set `showPoweredByDelora: true` to show a theme-aware label below the widget. The white artwork is used with the dark theme and the black artwork with the light theme. Selecting the label opens [`https://delora.build/`](https://delora.build/) in a new tab.
 
 ```tsx
 <TradeWidget
@@ -97,12 +210,6 @@ Supported positions are:
 - `"left"`
 - `"center"` (default)
 - `"right"`
-
-To remove the label entirely, set:
-
-```tsx
-<TradeWidget config={{ showPoweredByDelora: false }} />
-```
 
 ## Use host styling props
 

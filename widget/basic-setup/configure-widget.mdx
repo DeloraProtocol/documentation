@@ -4,16 +4,15 @@ description: "Props and runtime settings for configuring TradeWidget."
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
-Use `TradeWidget` props to control the widget's runtime behavior, preselected assets, and available networks or tokens.
+Use `TradeWidget` props to control the widget's runtime behavior, routing, preselected assets, and available networks or tokens. Appearance options are covered in [Customize Widget](./customize-widget), and wallet options in [Wallet & Receiver Management](../advanced-setup/wallet-management).
 
 ## Runtime configuration
 
-All runtime options live under the required `config` prop.
+All runtime options live under the required `config` prop. Every field is optional.
 
 ```tsx
 <TradeWidget
   config={{
-    apiKey: "your-api-key",
     apiUrl: "https://your-app.com/api/delora",
     rpcUrls: {
       1: [
@@ -22,27 +21,62 @@ All runtime options live under the required `config` prop.
       ],
       1000000001: [
         "https://your-primary-solana-rpc.example",
-        "https://your-fallback-solana-rpc.example",
       ],
     },
     integrator: "my-dapp",
     fee: 0.01,
+    routeMode: "all",
     slippage: 0.005,
-    walletConnectProjectId: "your-walletconnect-project-id",
-    termsUrl: "/legal/terms",
-    privacyPolicyUrl: "/legal/privacy",
-    requireWalletConsent: true,
+    maxSlippage: 0.03,
+    quoteRefresh: { intervalSeconds: 30, maxAutoRefreshes: 10 },
+    excludeBridges: ["GASZIP"],
+    walletConnectProjectId: "your-reown-project-id",
     wallets: {
       order: ["walletconnect", "metamask"],
       exclude: ["rabby-wallet"],
     },
-    showPoweredByDelora: true,
-    poweredByDeloraPosition: "center",
+    tokenCatalog: "curated",
+    rememberSelection: true,
   }}
 />
 ```
 
-By default, the widget uses `https://api.delora.build`. Set `apiUrl` when you want a custom upstream, such as your own backend proxy:
+| Field | Type | Default | Description |
+| --- | --- | --- | --- |
+| `apiUrl` | `string` | `https://api.delora.build` | Delora API base for every widget request. Must be an absolute HTTPS URL; HTTP is accepted only for `localhost`, `127.0.0.1`, and `[::1]`. See [Use a backend proxy](#use-a-backend-proxy). |
+| `apiKey` | `string` | — | Sent as `x-api-key` on every Delora API request. The key is visible in the user's browser; prefer a backend proxy. |
+| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | — | Preferred RPC endpoints per chain ID, tried before the defaults. See [RPC endpoints](#rpc-endpoints). |
+| `integrator` | `string` | — | Your Partner Portal integrator string, forwarded to quote requests. It also scopes the user's saved selections and preferences. |
+| `fee` | `number` | — | Integrator fee fraction forwarded to quote requests. Valid range: `0..0.1`. See [Monetize Widget](./monetize-widget). |
+| `routeMode` | `"all" \| "swap-only" \| "bridge-only"` | `"all"` | Which trades the form allows. See [Route modes](#route-modes). |
+| `slippage` | `number` | Auto | Starting slippage as a fraction, `0..1` (`0.005` is 0.5%). When unset, the widget starts on Auto. |
+| `maxSlippage` | `number` | — | Highest slippage a user may choose, above `0` and up to `1`. Auto is not offered while it is set. |
+| `lockSlippage` | `boolean` | `false` | Fixes slippage to `slippage` (Auto when unset). Users can see the value but not change it. |
+| `quoteRefresh` | `TradeWidgetQuoteRefreshConfig` | 60 s, 5 renewals | How often a shown quote renews itself. See [Quote lifecycle](#quote-lifecycle-and-refresh-behavior). |
+| `excludeBridges` | `string[]` | — | Bridge keys from `/v1/tools` that are never used. See [Exclude bridges and exchanges](#exclude-bridges-and-exchanges). |
+| `excludeExchanges` | `string[]` | — | Exchange keys from `/v1/tools` that are never used. |
+| `tokenCatalog` | `"curated" \| "all"` | `"curated"` | Order of the token list. See [Token list](#token-list). |
+| `tokenOrder` | `{ sell?: TradeWidgetTokenSelection[]; buy?: TradeWidgetTokenSelection[] }` | — | Tokens to list first in each picker. |
+| `tokenPickerUi` | `TradeWidgetTokenPickerUiConfig` | — | Native-token pin, dust threshold, and page size of the token picker. |
+| `tokenLogos` | `TradeWidgetTokenLogo[]` | — | Your own logo for specific tokens. |
+| `rememberSelection` | `boolean` | `true` | Restores the user's last networks and tokens after a reload. See [Persistence](#persistence). |
+| `assetBaseUrl` | `string` | `apiUrl` | Base URL for relative token and network image paths. |
+| `requireWalletConsent` | `boolean` | `false` | Requires accepting Delora's Terms of Use and Privacy Policy before a wallet connects. See [Wallet consent](#wallet-consent). |
+| `walletConnectProjectId` | `string` | Delora's project | Your Reown (WalletConnect) project ID for the built-in WalletConnect flow. |
+| `wallets` | `TradeWidgetWalletConfig` | — | Allowlist, denylist, and order of built-in wallets. See [Configure built-in wallets](#configure-built-in-wallets). |
+| `walletDiscovery` | `TradeWidgetWalletDiscoveryConfig` | `"all"`, or `"known-only"` when `wallets.include` is set | Whether installed wallets that are not on Delora's list appear in the built-in picker. |
+| `walletUi` | `TradeWidgetWalletUiConfig` | — | Wallet picker presentation and the wallet and receiver controls. See [Wallet & Receiver Management](../advanced-setup/wallet-management#wallet-controls-in-the-form). |
+| `headerUi` | `TradeWidgetHeaderUiConfig` | — | Shows or hides the quote refresh and settings buttons. See [Customize Widget](./customize-widget#header-controls). |
+| `formUi` | `TradeWidgetFormUiConfig` | — | Form title, labels, amount shortcuts, and quote details placement. See [Customize Widget](./customize-widget#form-details). |
+| `modalUi` | `TradeWidgetModalUiConfig` | — | What an open dialog dims. See [Customize Widget](./customize-widget#dialogs). |
+| `showPoweredByDelora` | `boolean` | `false` | Shows the linked Powered by Delora label. |
+| `poweredByDeloraPosition` | `"left" \| "center" \| "right"` | `"center"` | Horizontal position of the label. |
+
+Invalid `fee`, `slippage`, `maxSlippage`, `quoteRefresh`, `tokenPickerUi`, `rpcUrls`, and `tokenLogos` values are ignored, the default applies, and the widget reports each problem once through `onError` with `source: "configuration"`.
+
+## Use a backend proxy
+
+By default, the widget calls `https://api.delora.build`. Set `apiUrl` when you want a custom upstream, such as your own backend proxy:
 
 ```tsx
 <TradeWidget
@@ -54,62 +88,91 @@ By default, the widget uses `https://api.delora.build`. Set `apiUrl` when you wa
 />
 ```
 
-Use `rpcUrls` to provide preferred endpoints for a supported chain. Map each numeric chain ID to an ordered URL array; the widget tries those URLs first and keeps its default endpoints as fallbacks. For supported chain IDs, see [Connected chains](/integrations/connected-chains).
+`apiUrl` must be an absolute HTTPS URL without credentials. Plain HTTP is accepted only for local development on `localhost`, `127.0.0.1`, or `[::1]`, because quote requests include wallet addresses and can include your API key.
 
-| Field | Type | Description |
-| --- | --- | --- |
-| `apiUrl` | `string` | Optional Delora API base used for `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` |
-| `apiKey` | `string` | Optional `x-api-key` header for Delora API requests. Avoid using this directly in browser-rendered widgets. |
-| `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Preferred per-chain RPC endpoints used for on-chain reads and execution helpers |
-| `integrator` | `string` | Forwarded to quote requests |
-| `fee` | `number` | Forwarded to quote requests. Valid range: `0..0.1` |
-| `slippage` | `number` | Initial slippage value. Valid range: `0..1` |
-| `excludeBridges` | `string[]` | Quote denylist for bridges |
-| `excludeExchanges` | `string[]` | Quote denylist for exchanges |
-| `assetBaseUrl` | `string` | Base URL for resolving relative token and network image paths |
-| `termsUrl` | `string` | URL used in the wallet consent footer |
-| `privacyPolicyUrl` | `string` | URL used in the wallet consent footer |
-| `requireWalletConsent` | `boolean` | Require acceptance before choosing a wallet. Defaults to `true`; `false` hides the consent footer. |
-| `walletConnectProjectId` | `string` | WalletConnect Cloud project id for the EVM QR flow |
-| `wallets` | `TradeWidgetWalletConfig` | Allowlist, denylist, and display order for widget-managed wallets |
-| `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Defaults to `true`. |
-| `poweredByDeloraPosition` | `"left" \| "center" \| "right"` | Horizontal label position. Defaults to `"center"`. |
-
-### Automatic slippage
-
-The widget's **Auto** slippage option sends `slippageMode=auto` to Delora instead of a numeric `slippage` value. A configured numeric `slippage`, a numeric preset, or a custom value sends numeric `slippage` instead.
-
-If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to `https://api.delora.build`.
-
-For browser-based widget integrations, prefer not to pass `apiKey` directly from the client. Instead:
+For browser-based widget integrations, do not pass `apiKey` from the client. Instead:
 
 - keep your Delora API key on your backend
-- expose a proxy that forwards `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` to `https://api.delora.build`
+- expose a proxy that forwards these requests to `https://api.delora.build` and adds the `x-api-key` header:
+  - `GET /v1/chains`
+  - `GET /v1/tokens`
+  - `GET /v1/tools`
+  - `GET /v1/prices`
+  - `GET /v1/quotes`
+  - `POST /v1/advanced/routes`
+  - `POST /v1/advanced/stepTransaction`
 - point `config.apiUrl` to that proxy
 - if your proxy does not also serve Delora relative image assets, set `assetBaseUrl: "https://api.delora.build"` or proxy those asset paths as well
 
-`TradeWidget` already supports this pattern because all Delora API reads go through `config.apiUrl`.
+The widget uses the two advanced-route endpoints in the `swap-only` and `bridge-only` modes, and in the default mode when `/v1/quotes` finds no route. A proxy that forwards only `/v1/quotes` breaks those trades.
 
-If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
+If `assetBaseUrl` is not set, it falls back to `config.apiUrl` and then to `https://api.delora.build`.
 
-- `${window.location.origin}/documentation/termsofuse`
-- `${window.location.origin}/documentation/privacypolicy`
+### Other network requests
 
-For third-party embeds, it is usually better to set both URLs explicitly.
+Some requests go from the user's browser directly to third parties, not through `apiUrl`. If your site sets a Content Security Policy, allow them in `connect-src`:
 
-The consent footer is enabled by default. To remove the checkbox, links, and
-acceptance requirement from the connect modal, set:
+- the RPC endpoints of the supported chains: your `rpcUrls`, the `rpcUrls` returned by `/v1/chains`, and the widget's built-in fallbacks
+- bridge status APIs used to follow a cross-chain transfer to completion: `api.relay.link`, `app.across.to`, `explorer-api.mayan.finance`, `api.symbiosis.finance`, `1click.chaindefuser.com` (NEAR Intents), and `backend.gas.zip`
+- WalletConnect, when the user connects through it
+- `fonts.googleapis.com` and `fonts.gstatic.com`, only if you import `@deloraprotocol/widget/fonts.css`
+
+## RPC endpoints
+
+Use `rpcUrls` to provide preferred endpoints for a supported chain. Map each numeric chain ID to an ordered URL array. The widget tries your URLs first and keeps Delora's endpoints from `/v1/chains` and its built-in endpoints as fallbacks. For supported chain IDs, see [Connected chains](/integrations/connected-chains).
+
+Each URL must use HTTPS, or HTTP only to a local node, and must not contain `user:password@`. A refused URL is skipped and reported once through `onError` with `source: "configuration"`; the message names the chain but never the URL.
+
+<Warning>
+Every RPC URL is visible in the user's browser. If the URL contains a provider key, restrict that key to your site's domain.
+</Warning>
+
+## Route modes
+
+`routeMode` decides which trades the form allows:
+
+- `"all"` (default): same-chain swaps and cross-chain transfers. The widget selects a route automatically.
+- `"swap-only"`: both sides stay on one chain, and every bridge is excluded.
+- `"bridge-only"`: the source and destination chains must differ, every exchange is excluded, and every step of the route must be a bridge.
+
+```tsx
+<TradeWidget config={{ integrator: "my-dapp", routeMode: "swap-only" }} />
+```
+
+The restricted modes request routes from `/v1/advanced/routes`, so the widget can check each route step and reject a route that breaks the mode before it can be signed. The form is labeled **Swap** or **Bridge** and has no control for switching modes.
+
+## Slippage
+
+Without `slippage`, the widget starts on **Auto**: it sends `slippageMode=auto`, and the Delora API picks the tolerance for each pair. A configured numeric `slippage`, a numeric preset, or a custom value sends numeric `slippage` instead. The settings panel offers Auto, 0.1%, 0.5%, and a custom value.
+
+- Slippage can go up to 100% (`1`), the API's own limit. The user must confirm any value above 5% before the trade, and no configuration turns that confirmation off.
+- A user's own choice in settings is saved and applies on later visits.
+- `maxSlippage` caps what a user may choose. Presets above the cap are not offered, custom input above it is refused, and a saved value above it is ignored. Auto is not offered while a cap is set, because the API picks its tolerance per quote and the widget cannot hold it to the cap. The widget then starts on `slippage` (capped), or on 0.5%, or on the cap when that is lower.
+- `lockSlippage: true` fixes slippage to `slippage`, or to Auto when `slippage` is unset. Settings still show the value, marked as set by the app, but users cannot change it. A value the user saved earlier is neither applied nor overwritten.
+
+```tsx
+<TradeWidget config={{ slippage: 0.003, lockSlippage: true }} />
+```
+
+## Exclude bridges and exchanges
+
+`excludeBridges` and `excludeExchanges` take adapter keys from [`/v1/tools`](/api-reference/endpoint/get-tools), such as `RELAY`, `ACROSS`, or `KYBERSWAP`. The widget never uses an excluded adapter.
+
+Host exclusions are mandatory. The settings panel shows them as locked, and users cannot turn them back on. Users can add their own exclusions in settings. Those saved preferences are scoped by integrator, route mode, and host exclusions, so different embeds on one site do not inherit each other's choices.
+
+## Wallet consent
+
+The Terms & Privacy consent checkbox is off by default. Set `requireWalletConsent: true` when your compliance flow requires explicit acceptance before a wallet connects:
 
 ```tsx
 <TradeWidget
   config={{
-    requireWalletConsent: false,
+    requireWalletConsent: true,
   }}
 />
 ```
 
-When `requireWalletConsent` is `false`, `termsUrl` and `privacyPolicyUrl` are not
-rendered because the entire consent footer is hidden.
+The checkbox always links Delora's own [Terms of Use](https://delora.build/documentation/termsofuse) and [Privacy Policy](https://delora.build/documentation/privacypolicy). An embed cannot replace these links.
 
 ## Configure built-in wallets
 
@@ -154,19 +217,34 @@ Supported wallet ids are:
 - `backpack`
 - `phantom`
 - `solflare`
+- `tokenpocket`
 - `trust-wallet`
 - `okx-wallet`
 - `coinbase-wallet`
 - `magic-eden`
+
+The picker also shows other installed browser wallets that it discovers. When `wallets.include` is set, discovery is limited to known wallets so that your allowlist holds. Use `walletDiscovery` to change that:
+
+```tsx
+<TradeWidget
+  config={{
+    wallets: { include: ["metamask", "phantom"] },
+    walletDiscovery: {
+      injected: "all", // EIP-6963 EVM wallets
+      walletStandard: "all", // Wallet Standard Solana wallets
+    },
+  }}
+/>
+```
 
 Wallet filtering also applies to persisted built-in sessions, so an excluded or
 non-included wallet is not restored automatically. Namespace compatibility still
 applies after configuration; for example, WalletConnect is available for EVM and
 Solflare is available for Solana.
 
-`config.wallets` controls only built-in wallet management. When the host supplies
+`config.wallets` and `config.walletDiscovery` control only built-in wallet management. When the host supplies
 `walletOptions` through external wallet management, that host-provided array
-remains the source of truth.
+remains the source of truth. See [Wallet & Receiver Management](../advanced-setup/wallet-management) for discovery details, the drawer presentation, and WalletConnect sessions.
 
 ## Initial selections
 
@@ -188,7 +266,37 @@ You can preselect both networks and tokens.
 />
 ```
 
-If an initial network or token is not available in loaded metadata, the widget reports it through `onError`. The same happens when a host-provided initial selection becomes invalid after filters are applied.
+The `initial*` props are read on the first mount only. If an initial network or token is not available in loaded metadata, the widget reports it through `onError`. The same happens when a host-provided initial selection becomes invalid after filters are applied.
+
+## Control the selected networks from your app
+
+Use `sellNetworkId` and `buyNetworkId` to request a network change after mount, for example from a network switcher in your own header. The widget keeps the rest of the form and loads only the token metadata it is missing for the requested network.
+
+- Removing the prop leaves the current selection in place.
+- A request outside the side's filters leaves the current selection in place and reports an error.
+- Users can still choose networks inside the widget. `onSellNetworkChange` and `onBuyNetworkChange` report the first resolved network and every later selection, so your app can stay in sync.
+
+```tsx
+import { useState } from "react";
+import { TradeWidget } from "@deloraprotocol/widget";
+
+function TradeWithHeader() {
+  const [sellNetworkId, setSellNetworkId] = useState<number>();
+
+  return (
+    <>
+      <button onClick={() => setSellNetworkId(8453)}>Select Base</button>
+      <TradeWidget
+        config={{ integrator: "my-dapp" }}
+        sellNetworkId={sellNetworkId}
+        onSellNetworkChange={setSellNetworkId}
+      />
+    </>
+  );
+}
+```
+
+`onSellTokenChange` and `onBuyTokenChange` report the selected tokens in the same `{ chainId, address }` shape as `initialSellToken`, so you can save a selection and pass it back on the next load. See [Widget Events](../advanced-setup/widget-events).
 
 ## Lock tokens or networks
 
@@ -258,31 +366,123 @@ Important filter behavior:
 - Conflicting filters produce `onError` events with `source: "configuration"`
 - If no networks remain on a side after filtering, the widget enters a configuration error state
 
+## Token list
+
+Each token picker lists the network's own coin first, then the user's holdings by value, then the token catalog.
+
+`tokenCatalog` sets the catalog order:
+
+- `"curated"` (default) places a reviewed set of high-liquidity contract addresses ahead of the complete Delora token list for each chain. It compares contract addresses, never symbols, so a lookalike token cannot enter the recommendations. It never removes the other supported tokens.
+- `"all"` keeps the order of `/v1/tokens`.
+
+Searching by ticker, name, or contract address covers the complete catalog in both modes, and side filters still apply.
+
+### Token order
+
+`tokenOrder` promotes exact network and contract pairs separately in the sell and buy pickers. Listed tokens appear first; duplicate or unavailable entries are ignored. It never hides other tokens and does not change quote routing.
+
+```tsx
+<TradeWidget
+  config={{
+    tokenOrder: {
+      sell: [{ chainId: 1, address: "0xA0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" }],
+      buy: [{ chainId: 8453, address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" }],
+    },
+  }}
+/>
+```
+
+### Token picker settings
+
+`tokenPickerUi` adjusts the picker. Every option defaults to Delora's behavior:
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `pinNativeToken` | `true` | Keeps the network's own coin (ETH, SOL, BNB, …) as the first row. `tokenOrder` entries still come before it. |
+| `dustThresholdUsd` | `0.01` | A holding worth this many US dollars or less, from `0` to `100`, ranks as if it had no balance, so small leftovers do not crowd out real holdings. Its balance is still shown. `0` promotes every priced holding. |
+| `pageSize` | `60` | Rows shown before more load on scroll, from `20` to `200`. |
+
+A value out of range falls back to the default and is reported once through `onError` with `source: "configuration"`.
+
+### Token logos
+
+`tokenLogos` replaces the logo of an exact token everywhere the widget draws it: the picker, the form, confirmations, and the trade's progress. It takes priority over every other logo.
+
+```tsx
+<TradeWidget
+  config={{
+    tokenLogos: [
+      {
+        chainId: 8453,
+        address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+        logoURI: "https://cdn.example.com/usdc.svg",
+      },
+    ],
+  }}
+/>
+```
+
+`logoURI` must be an absolute HTTPS URL or an inline `data:image/…` image (PNG, JPEG, WebP, GIF, AVIF, or SVG). An entry that does not fit keeps the catalog logo and is reported once through `onError` with `source: "configuration"`.
+
 ## Custom token lookup
 
-When a side does not use `includeTokens`, the token selector can import a token by contract or mint address if the address is valid for the active network. Imported tokens become part of the current browser session and can also be restored from persisted selection state.
+When a side does not use `includeTokens`, users can paste a contract or mint address in the token picker. A token that is not in the catalog is looked up on chain, in either catalog mode, and listed with its on-chain name, symbol, and decimals. A Solana mint pasted while an EVM network is open switches the picker to Solana.
 
 When `includeTokens` is set for a side, custom token import is disabled on that side.
 
+## Token warnings
+
+The widget warns about a risky token when the user picks it, before it replaces the current one. Tokens in Delora's reviewed list are never warned about. Other tokens use the `verificationStatus` returned by `/v1/tokens`:
+
+- `verified` and `unknown` tokens show no warning.
+- A token imported by address, and so absent from the catalog, shows an **Unverified** badge and a warning. Users can choose not to see this warning again.
+- A `flagged` token shows a **Flagged** badge and a stronger warning every time it is picked, with no option to hide it.
+
+A token that reached the form another way, such as a host default or a side swap, is checked before the trade.
+
 ## Persistence
 
-The widget stores the latest selected sell and buy networks and tokens in browser `localStorage`, so the next mount can restore the previous selection when the host app does not explicitly override it.
+The widget stores state in the browser's `localStorage`:
 
-Slippage and internal wallet choices are also persisted separately.
+- **Last selection.** The networks and tokens the user last chose are restored after a reload; the amount is not kept. The selection is stored per `integrator` for 30 days. Host `initial*`, controlled, and locked selections take precedence per side, a saved token that is no longer available under the current filters is dropped, and a token imported by address is read from the chain again before it is restored. Set `rememberSelection: false` to start from your configuration every time.
+- **Slippage and provider preferences** chosen in settings.
+- **Built-in wallet sessions**, subject to `config.wallets`.
+- **Last-known balances**, refreshed in the background.
+
+After a reload, the widget also restores a submitted trade for the same source wallet in the same tab and keeps following it without resending or signing anything.
 
 ## Quote lifecycle and refresh behavior
 
-The widget does not request a quote on every keystroke. Quote loading has a small client-side lifecycle:
+The widget does not request a quote on every keystroke:
 
-- sell input is debounced by about 1 second before a quote request is sent
-- successful quotes auto-refresh every 60 seconds while the current selection stays stable
-- auto-refresh stops after 5 consecutive refresh cycles until the user changes the selection or amount
-- the quote countdown ring in the UI can also be clicked to request a manual refresh immediately
+- typing in the sell amount is debounced by 350 ms before a quote request is sent
+- a shown quote renews itself every 60 seconds, up to 5 times, and then waits for the user
+- a quote older than 90 seconds is never executed; pressing the action button refreshes it first
+- the countdown in the header can be clicked to request a new quote immediately
 
-The widget also applies a local cooldown around quote refreshes to avoid excessive request loops:
+`quoteRefresh` changes the renewal timing:
+
+```tsx
+<TradeWidget
+  config={{
+    quoteRefresh: {
+      intervalSeconds: 30, // 10 to 75, default 60
+      maxAutoRefreshes: 10, // 0 to 20, default 5; 0 turns renewal off
+    },
+  }}
+/>
+```
+
+The countdown only runs while a renewal is scheduled; otherwise the control is a plain refresh button. Hiding it with `headerUi.showQuoteRefreshControl: false` does not disable expiry checks.
+
+When a quote request fails, the widget retries it automatically with exponential backoff, from 2 seconds up to 30 seconds, at most 5 times for the same form values.
+
+The widget also applies a local cooldown around quote requests to avoid excessive request loops:
 
 - more than 15 quote requests within 5 seconds starts a local cooldown
 - the cooldown lasts 5 seconds
 - during that window, the widget can emit `onError({ source: "quote", statusCode: 429 })` even if the backend did not return 429
 
 If you build analytics or retry logic around quote errors, treat this as widget-side throttling as well as possible API-side rate limiting.
+
+Quotes can appear before both wallets are connected. Such a preview quote uses stand-in addresses, carries no executable transaction data, and is reported by `onQuote` with `isPreview: true`. The widget requests a new quote with the real addresses before the trade can be signed.

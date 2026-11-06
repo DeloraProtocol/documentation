@@ -4,7 +4,7 @@ description: "Reference for exported components, props, and types in the Delora 
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
-This page summarizes the supported third-party integration API for `@deloraprotocol/widget` and the optional `@deloraprotocol/widget-wallet-management` adapter package.
+This page summarizes the supported third-party integration API for `@deloraprotocol/widget` 1.1.x and the optional `@deloraprotocol/widget-wallet-management` adapter package.
 
 Most integrations center on the trading widget surface:
 
@@ -23,22 +23,44 @@ Components and hooks:
 - `TradeWidgetWalletProvider`
 - `useTradeWidgetWalletManagement`
 
+Stylesheets:
+
+- `@deloraprotocol/widget/styles.css`: required widget styles
+- `@deloraprotocol/widget/fonts.css`: optional, loads the default Roboto typeface from Google Fonts
+
 Shared widget props and theme types:
 
 - `MyWidgetProps`
 - `MyWidgetTheme`
 - `MyWidgetVars`
+- `TradeWidgetThemeMode`
+- `TradeWidgetMotion`
+- `TradeWidgetRootStyle`
 
 Trade widget types:
 
 - `TradeWidgetProps`
+- `TradeWidgetHandle`
 - `TradeWidgetConfig`
+- `TradeWidgetRouteMode`
 - `TradeWidgetRpcUrlsByChainId`
+- `TradeWidgetQuoteRefreshConfig`
+- `TradeWidgetTokenCatalogMode`
+- `TradeWidgetTokenPickerUiConfig`
+- `TradeWidgetTokenLogo`
 - `TradeWidgetWalletConfig`
 - `TradeWidgetWalletId`
+- `TradeWidgetWalletDiscoveryConfig`
+- `TradeWidgetWalletUiConfig`
+- `TradeWidgetConnectWalletPresentation`
+- `TradeWidgetHeaderUiConfig`
+- `TradeWidgetFormUiConfig`
+- `TradeWidgetModalUiConfig`
 - `TradeWidgetPoweredByPosition`
 - `WalletNamespace`
 - `TradeWidgetStatus`
+- `TradeWidgetStatusReason`
+- `TradeWidgetStatusPayload`
 - `TradeWidgetFilters`
 - `TradeWidgetSideFilters`
 - `TradeWidgetTokenSelection`
@@ -46,9 +68,15 @@ Trade widget types:
 - `TradeWidgetActionPayload`
 - `TradeWidgetConnectPayload`
 - `TradeWidgetTransactionPayload`
+- `TradeWidgetTokenChangePayload`
+- `TradeWidgetWalletStatus`
+- `TradeWidgetWalletState`
+- `TradeWidgetWalletStatePayload`
 - `TradeWidgetErrorPayload`
 - `Token`
+- `TokenVerificationStatus`
 - `Network`
+- `INativeCurrency`
 
 Wallet-management and provider types:
 
@@ -67,6 +95,8 @@ Wallet-management and provider types:
 - `WalletVisualId`
 - `WalletStandardSolanaAccount`
 - `WalletStandardSolanaProvider`
+
+All type exports are type-only.
 
 ## `MyWidget` and `MyWidgetProps`
 
@@ -87,6 +117,7 @@ Common `MyWidgetVars` fields include:
 
 - `radius` for shared surface radius
 - `actionButtonRadius` for the main CTA radius
+- `actionButtonBg`, `actionButtonFg`, `actionButtonHoverBg`, `actionButtonActiveBg`, `actionButtonDisabledBg`, and `actionButtonDisabledFg` for the primary action colors
 - `fontFamily`, `fontSize`, `lineHeight`, and `letterSpacing` for typography
 - color and surface tokens such as `bg`, `fg`, `border`, `surface`, and `surfaceAlt`
 
@@ -94,66 +125,164 @@ See [Customize Widget](/widget/basic-setup/customize-widget) for the full theme-
 
 ## `TradeWidgetProps`
 
-`TradeWidgetProps` extends normal root `div` props, except the DOM `onError` prop is replaced by the widget error callback.
+`TradeWidgetProps` extends normal root `div` props, except the DOM `onError` prop is replaced by the widget error callback. `TradeWidget` also accepts a `ref` of type `TradeWidgetHandle`.
 
 | Prop | Type | Description |
 | --- | --- | --- |
 | `config` | `TradeWidgetConfig` | Required widget runtime config object |
 | `filters` | `TradeWidgetFilters` | Optional sell-side and buy-side filtering rules |
-| `theme` | `"light" \| "dark"` | Built-in theme. Default: `"dark"` |
-| `vars` | `Partial<MyWidgetVars>` | Theme token overrides |
+| `theme` | `"light" \| "dark" \| "system"` | Built-in theme. `"system"` follows the viewer's color scheme. Default: `"dark"` |
+| `vars` | `Partial<MyWidgetVars>` | Theme token overrides for every theme |
+| `varsByTheme` | `Partial<Record<"light" \| "dark", Partial<MyWidgetVars>>>` | Theme token overrides for one theme, applied over `vars` |
+| `motion` | `"auto" \| "reduced" \| "none"` | Animation level. Default: `"auto"` |
 | `className` | `string` | Applied to the widget root element |
 | `style` | `React.CSSProperties` | Inline root styles applied after generated CSS variables |
-| `initialSellToken` | `TradeWidgetTokenSelection` | Preselect sell token |
-| `initialBuyToken` | `TradeWidgetTokenSelection` | Preselect buy token |
-| `initialSellNetworkId` | `number` | Preselect sell network |
-| `initialBuyNetworkId` | `number` | Preselect buy network |
+| `initialSellToken` | `TradeWidgetTokenSelection` | Preselect sell token on first mount |
+| `initialBuyToken` | `TradeWidgetTokenSelection` | Preselect buy token on first mount |
+| `initialSellNetworkId` | `number` | Preselect sell network on first mount |
+| `initialBuyNetworkId` | `number` | Preselect buy network on first mount |
+| `sellNetworkId` | `number` | Requests a sell network change after mount |
+| `buyNetworkId` | `number` | Requests a buy network change after mount |
 | `lockSellToken` | `boolean` | Prevent changing the sell token |
 | `lockBuyToken` | `boolean` | Prevent changing the buy token |
 | `lockSellNetwork` | `boolean` | Prevent changing the sell network |
 | `lockBuyNetwork` | `boolean` | Prevent changing the buy network |
-| `onQuote` | `(payload) => void` | Quote resolved callback |
-| `onConnect` | `(payload) => void` | Wallet connected callback |
-| `onApprove` | `(payload) => void` | Approval transaction submitted callback |
-| `onSwap` | `(payload) => void` | Swap transaction submitted callback |
-| `onTxSubmitted` | `(payload) => void` | Generic transaction submitted callback |
-| `onTxConfirmed` | `(payload) => void` | Generic transaction confirmed callback |
-| `onError` | `(payload) => void` | Error callback |
+| `onQuote` | `(payload: TradeWidgetQuotePayload) => void` | Quote resolved callback |
+| `onStatusChange` | `(payload: TradeWidgetStatusPayload) => void` | Initial status, then every status change |
+| `onConnect` | `(payload: TradeWidgetConnectPayload) => void` | Wallet connected callback |
+| `onWalletStateChange` | `(payload: TradeWidgetWalletStatePayload) => void` | Initial wallet state, then every change |
+| `onSellNetworkChange` | `(networkId: number) => void` | Sell network selected, including the first resolved selection |
+| `onBuyNetworkChange` | `(networkId: number) => void` | Buy network selected, including the first resolved selection |
+| `onSellTokenChange` | `(payload: TradeWidgetTokenChangePayload \| null) => void` | Sell token selected, including the first resolved selection |
+| `onBuyTokenChange` | `(payload: TradeWidgetTokenChangePayload \| null) => void` | Buy token selected, including the first resolved selection |
+| `onSellAmountChange` | `(amount: string) => void` | Sell amount changed, as a decimal string in token units |
+| `onApprove` | `(payload: TradeWidgetTransactionPayload) => void` | Approval transaction submitted callback |
+| `onSwap` | `(payload: TradeWidgetTransactionPayload) => void` | Swap or bridge transaction submitted callback |
+| `onTxSubmitted` | `(payload: TradeWidgetTransactionPayload) => void` | Generic transaction submitted callback |
+| `onTxConfirmed` | `(payload: TradeWidgetTransactionPayload) => void` | Generic transaction confirmed callback |
+| `onError` | `(payload: TradeWidgetErrorPayload) => void` | Error callback |
+
+See [Widget Events](/widget/advanced-setup/widget-events) for when each callback fires.
+
+## `TradeWidgetHandle`
+
+```ts
+interface TradeWidgetHandle {
+  openWalletModal(target?: "origin" | "destination"): void;
+}
+```
+
+`openWalletModal` opens the widget's wallet connection flow for the requested side, using the same behavior as the widget's own controls, including an externally managed wallet when one is supplied. It is ignored while a trade's progress is shown instead of the form.
+
+```tsx
+import { useRef } from "react";
+import { TradeWidget, type TradeWidgetHandle } from "@deloraprotocol/widget";
+
+function TradePage() {
+  const widgetRef = useRef<TradeWidgetHandle>(null);
+
+  return (
+    <>
+      <button onClick={() => widgetRef.current?.openWalletModal("origin")}>
+        Connect wallet
+      </button>
+      <TradeWidget ref={widgetRef} config={{}} />
+    </>
+  );
+}
+```
 
 ## `TradeWidgetConfig`
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `apiUrl` | `string` | Optional Delora API base. If omitted, the widget uses `https://api.delora.build`. You can point this to your own backend proxy. |
+| `apiUrl` | `string` | Optional Delora API base. If omitted, the widget uses `https://api.delora.build`. Must be an absolute HTTPS URL; HTTP only for local development. You can point this to your own backend proxy. |
 | `rpcUrls` | `TradeWidgetRpcUrlsByChainId` | Preferred endpoints, mapped from numeric chain IDs to ordered URL arrays |
 | `integrator` | `string` | Quote request integrator id |
 | `apiKey` | `string` | Optional Delora API key sent as `x-api-key`. Recommended only for trusted environments. |
 | `fee` | `number` | Quote fee value, range `0..0.1` |
-| `slippage` | `number` | Initial slippage, range `0..1` |
-| `excludeBridges` | `string[]` | Bridge denylist for quote requests |
-| `excludeExchanges` | `string[]` | Exchange denylist for quote requests |
+| `slippage` | `number` | Starting slippage, range `0..1`. Unset means Auto. |
+| `maxSlippage` | `number` | Highest slippage a user may choose, above `0` and up to `1`. Hides Auto. |
+| `lockSlippage` | `boolean` | Fixes slippage to `slippage` (Auto when unset). Default: `false` |
+| `quoteRefresh` | `TradeWidgetQuoteRefreshConfig` | Automatic quote renewal timing |
+| `excludeBridges` | `string[]` | Bridge keys from `/v1/tools` that are never used |
+| `excludeExchanges` | `string[]` | Exchange keys from `/v1/tools` that are never used |
 | `assetBaseUrl` | `string` | Base URL for relative image paths |
-| `termsUrl` | `string` | Terms of Use link in the connect modal |
-| `privacyPolicyUrl` | `string` | Privacy Policy link in the connect modal |
-| `requireWalletConsent` | `boolean` | Require consent before wallet selection. Defaults to `true`; `false` hides the footer. |
-| `walletConnectProjectId` | `string` | WalletConnect Cloud project id |
+| `requireWalletConsent` | `boolean` | Require acceptance of Delora's Terms of Use and Privacy Policy before wallet connection. Default: `false` |
+| `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Default: `false` |
+| `poweredByDeloraPosition` | `TradeWidgetPoweredByPosition` | Label alignment. Default: `"center"` |
+| `walletConnectProjectId` | `string` | Reown (WalletConnect) project id |
 | `wallets` | `TradeWidgetWalletConfig` | Built-in wallet allowlist, denylist, and preferred order |
-| `showPoweredByDelora` | `boolean` | Show the linked Powered by Delora label. Defaults to `true`. |
-| `poweredByDeloraPosition` | `TradeWidgetPoweredByPosition` | Label alignment. Defaults to `"center"`. |
+| `walletDiscovery` | `TradeWidgetWalletDiscoveryConfig` | Which discovered browser wallets the built-in picker shows |
+| `routeMode` | `TradeWidgetRouteMode` | `"all"`, `"swap-only"`, or `"bridge-only"`. Default: `"all"` |
+| `walletUi` | `TradeWidgetWalletUiConfig` | Wallet picker presentation and wallet controls |
+| `headerUi` | `TradeWidgetHeaderUiConfig` | Quote refresh and settings buttons |
+| `formUi` | `TradeWidgetFormUiConfig` | Form title, labels, amount shortcuts, and quote details placement |
+| `modalUi` | `TradeWidgetModalUiConfig` | What an open dialog dims |
+| `tokenPickerUi` | `TradeWidgetTokenPickerUiConfig` | Native-token pin, dust threshold, and page size |
+| `tokenLogos` | `TradeWidgetTokenLogo[]` | Host logos for specific tokens |
+| `tokenCatalog` | `TradeWidgetTokenCatalogMode` | `"curated"` or `"all"`. Default: `"curated"` |
+| `rememberSelection` | `boolean` | Restore the user's last networks and tokens. Default: `true` |
+| `tokenOrder` | `{ sell?: TradeWidgetTokenSelection[]; buy?: TradeWidgetTokenSelection[] }` | Tokens listed first in each picker |
 
-For browser-rendered widgets, prefer not to pass `apiKey` directly from the client. Keep it on your backend and proxy `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/quotes` through `config.apiUrl`.
+For browser-rendered widgets, prefer not to pass `apiKey` directly from the client. Keep it on your backend and proxy the widget's Delora requests through `config.apiUrl`. See [Configure Widget](/widget/basic-setup/configure-widget#use-a-backend-proxy) for the endpoint list.
 
 If your proxy does not serve Delora-relative image assets, set `assetBaseUrl` explicitly or proxy those asset paths as well.
 
-If `termsUrl` or `privacyPolicyUrl` is omitted, the connect modal falls back to:
+When `requireWalletConsent` is `true`, the connect flow shows a consent checkbox that links Delora's own Terms of Use and Privacy Policy. The links cannot be replaced.
 
-- `${window.location.origin}/documentation/termsofuse`
-- `${window.location.origin}/documentation/privacypolicy`
+### Configuration types
 
-For third-party embeds, it is usually better to set both links explicitly.
+```ts
+type TradeWidgetRouteMode = "all" | "swap-only" | "bridge-only";
 
-When `requireWalletConsent` is `false`, the consent checkbox and both legal
-links are hidden, and wallet rows can be selected immediately.
+interface TradeWidgetRpcUrlsByChainId {
+  [chainId: number]: string[] | undefined;
+}
+
+interface TradeWidgetQuoteRefreshConfig {
+  /** Seconds between automatic renewals, 10 to 75 (default 60). */
+  intervalSeconds?: number;
+  /** Automatic renewals per quote, 0 to 20 (default 5). 0 turns renewal off. */
+  maxAutoRefreshes?: number;
+}
+
+type TradeWidgetTokenCatalogMode = "curated" | "all";
+
+interface TradeWidgetTokenPickerUiConfig {
+  /** Default true. */
+  pinNativeToken?: boolean;
+  /** 0 to 100, default 0.01. */
+  dustThresholdUsd?: number;
+  /** 20 to 200, default 60. */
+  pageSize?: number;
+}
+
+interface TradeWidgetTokenLogo extends TradeWidgetTokenSelection {
+  /** Absolute HTTPS URL, or an inline data:image/… (PNG, JPEG, WebP, GIF, AVIF, or SVG). */
+  logoURI: string;
+}
+
+interface TradeWidgetHeaderUiConfig {
+  showQuoteRefreshControl?: boolean;
+  showSettingsControl?: boolean;
+}
+
+interface TradeWidgetFormUiConfig {
+  title?: string;
+  sourceLabel?: string;
+  destinationLabel?: string;
+  quickAmountButtons?: "auto" | "always" | "hidden";
+  quoteDetailsPlacement?: "auto" | "top" | "bottom";
+}
+
+interface TradeWidgetModalUiConfig {
+  backdrop?: "widget" | "page" | "none";
+}
+
+type TradeWidgetThemeMode = "light" | "dark" | "system";
+type TradeWidgetMotion = "auto" | "reduced" | "none";
+```
 
 ### Wallet and branding configuration types
 
@@ -165,6 +294,7 @@ type TradeWidgetWalletId =
   | "backpack"
   | "phantom"
   | "solflare"
+  | "tokenpocket"
   | "trust-wallet"
   | "okx-wallet"
   | "coinbase-wallet"
@@ -174,6 +304,26 @@ interface TradeWidgetWalletConfig {
   include?: TradeWidgetWalletId[];
   exclude?: TradeWidgetWalletId[];
   order?: TradeWidgetWalletId[];
+}
+
+interface TradeWidgetWalletDiscoveryConfig {
+  /** EIP-6963 injected EVM wallets. Defaults to "all" unless wallets.include is set. */
+  injected?: "all" | "known-only";
+  /** Wallet Standard Solana wallets. Defaults to "all" unless wallets.include is set. */
+  walletStandard?: "all" | "known-only";
+}
+
+type TradeWidgetConnectWalletPresentation = "modal" | "drawer-right" | "drawer-left";
+
+interface TradeWidgetWalletUiConfig {
+  /** Default "modal". */
+  connectWalletPresentation?: TradeWidgetConnectWalletPresentation;
+  /** Default true. */
+  showOriginWalletControl?: boolean;
+  /** Default true. */
+  showDestinationWalletControl?: boolean;
+  /** Default true. */
+  allowReceiverAddressInput?: boolean;
 }
 
 type TradeWidgetPoweredByPosition = "left" | "center" | "right";
@@ -218,8 +368,26 @@ type TradeWidgetStatus =
   | "approve-pending"
   | "awaiting-swap-signature"
   | "swap-pending"
+  | "awaiting-bridge-signature"
+  | "bridge-pending"
   | "success"
-  | "error";
+  | "error"
+  | "untracked";
+
+type TradeWidgetStatusReason =
+  | "no-route"
+  | "amount-too-low"
+  | "insufficient-balance"
+  | "insufficient-network-fee"
+  | "invalid-receiver"
+  | "rate-limited"
+  | "quote-failed"
+  | "execution-failed";
+
+interface TradeWidgetStatusPayload {
+  status: TradeWidgetStatus;
+  reason?: TradeWidgetStatusReason;
+}
 ```
 
 ## Event payloads
@@ -227,6 +395,8 @@ type TradeWidgetStatus =
 ```ts
 interface TradeWidgetQuotePayload {
   namespace: "EVM" | "SVM";
+  /** True when a missing wallet or recipient is replaced for price discovery. */
+  isPreview?: boolean;
   senderAddress: string;
   receiverAddress: string;
   sellNetwork: Network;
@@ -235,8 +405,12 @@ interface TradeWidgetQuotePayload {
   buyToken: Token;
   sellAmount: string;
   buyAmount: string;
-  slippage: number;
+  slippage?: number;
+  slippageMode?: "auto";
   quote: QuoteResponse;
+  quoteMode?: "legacy" | "advanced";
+  routeId?: string;
+  isMultistep?: boolean;
 }
 
 interface TradeWidgetActionPayload {
@@ -250,7 +424,8 @@ interface TradeWidgetActionPayload {
   buyToken: Token;
   sellAmount: string;
   buyAmount: string;
-  slippage: number;
+  slippage?: number;
+  slippageMode?: "auto";
   quote: QuoteResponse | null;
   txData: {
     to?: string;
@@ -261,6 +436,13 @@ interface TradeWidgetActionPayload {
   gasCostUSD: string | null;
   txHash?: string;
   receipt?: unknown;
+  quoteMode?: "legacy" | "advanced";
+  routeId?: string;
+  stepId?: string;
+  stepIndex?: number;
+  stepType?: string;
+  tool?: string;
+  isMultistep?: boolean;
 }
 
 interface TradeWidgetTransactionPayload extends TradeWidgetActionPayload {}
@@ -269,6 +451,25 @@ interface TradeWidgetConnectPayload {
   namespace: "EVM" | "SVM";
   address: string;
   walletName?: string;
+}
+
+interface TradeWidgetTokenChangePayload extends TradeWidgetTokenSelection {
+  token: Token;
+}
+
+type TradeWidgetWalletStatus = "disconnected" | "connecting-wallet" | "connected";
+
+interface TradeWidgetWalletState {
+  status: TradeWidgetWalletStatus;
+  namespace: "EVM" | "SVM" | null;
+  address: string | null;
+  walletName?: string;
+  walletIconUrl?: string | null;
+}
+
+interface TradeWidgetWalletStatePayload {
+  origin: TradeWidgetWalletState;
+  destination: TradeWidgetWalletState;
 }
 
 interface TradeWidgetErrorPayload {
@@ -280,13 +481,67 @@ interface TradeWidgetErrorPayload {
     | "wallet"
     | "balances"
     | "execution"
-    | "unsupported";
+    | "unsupported"
+    | "render";
   message: string;
   status?: number;
   statusCode?: number;
   error?: unknown;
 }
 ```
+
+`QuoteResponse` is the response of [`GET /v1/quotes`](/api-reference/endpoint/get-a-quote-for-a-token-transfer). For an advanced route (`quoteMode: "advanced"`), `onQuote` receives only a summary in `quote`: `adapter`, `inputAmount`, `outputAmount`, `isSimulatedAmount`, `minOutputAmount`, `estimatedTimeSec`, and `warnings`, with no `calldata`. For a preview quote (`isPreview: true`), `calldata` and `approvalAddress` are removed.
+
+## `Token` and `Network`
+
+```ts
+interface Token {
+  symbol: string;
+  name?: string;
+  imageUrl: string;
+  contractAddress: string;
+  chainId: number;
+  decimals: number;
+  priceUSD?: string;
+  priceUpdatedAt?: string;
+  priceSource?: string;
+  priceStale?: boolean;
+  priceValidUntil?: string;
+  priceDisplayUntil?: string;
+  priceQuality?: "verified" | "fallback" | "conflicted";
+  priceStatus?: "live" | "delayed";
+  priceTier?: "hot" | "cold";
+  /** From /v1/tokens. Absent for a token imported by address. */
+  verificationStatus?: TokenVerificationStatus | null;
+}
+
+type TokenVerificationStatus = "verified" | "flagged" | "unknown" | "unverified";
+
+interface Network {
+  id: number;
+  name: string;
+  key: string;
+  chainType: string;
+  rpcUrls: string[];
+  logoURI?: string;
+  logoURIByTheme?: { light: string; dark: string };
+  idHex?: string;
+  explorerUrl?: string;
+  txExplorerUrl?: string;
+  deloraDiamond?: string;
+  nativeCurrency: INativeCurrency;
+}
+
+interface INativeCurrency {
+  address?: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+  logoURI?: string;
+}
+```
+
+`unverified` comes only from older API versions; the current API returns `unknown` instead.
 
 ## Wallet management types
 
@@ -336,7 +591,7 @@ If you pass an `origin` or `destination` object into `TradeWidgetWalletProvider`
 
 ## `@deloraprotocol/widget-wallet-management` exports
 
-This package is optional. Install it when you want Delora to reuse wallet state from common host wallet libraries instead of writing a `TradeWidgetManagedWallet` object by hand.
+This package is optional. Install it when you want Delora to reuse wallet state from common host wallet libraries instead of writing a `TradeWidgetManagedWallet` object by hand. This section describes version 0.1.0.
 
 Subpath exports:
 

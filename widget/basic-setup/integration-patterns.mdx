@@ -83,8 +83,8 @@ import {
       address: connectedAddress ?? null,
       walletName: "My App Wallet",
       evmProvider,
-      connect: async ({ namespace }) => {
-        await openWalletModal(namespace);
+      connect: async (params) => {
+        await openWalletModal(params?.namespace);
         return true;
       },
       disconnect: async () => {

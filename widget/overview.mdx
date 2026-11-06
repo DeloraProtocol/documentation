@@ -4,7 +4,9 @@ description: "Core capabilities and integration patterns for the Delora widget p
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
-Delora Widget lets you embed Delora trading flows into a React application. The main package is published as `@deloraprotocol/widget`, and its main export is `TradeWidget`, which loads chain and token metadata, requests quotes from `/v1/quotes`, and lets users execute trades from the same UI.
+Delora Widget lets you embed Delora trading flows into a React application. The main package is published as `@deloraprotocol/widget`, and its main export is `TradeWidget`, which loads chain and token metadata, finds a route through the Delora API, and lets users execute the trade from the same UI.
+
+This section describes `@deloraprotocol/widget` 1.1.x.
 
 The package also includes:
 
@@ -16,19 +18,24 @@ For apps that already use Wagmi, RainbowKit, Reown, Dynamic, or Solana Wallet Ad
 
 ## What the widget supports
 
-- Delora metadata loading from `/v1/chains` and `/v1/tokens`
-- Quote requests to `/v1/quotes`
-- Internal wallet connection UI for EVM and Solana wallets
+- Same-chain swaps and cross-chain transfers in one form, or only swaps or only bridges with `routeMode`
+- Delora metadata and prices from `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/prices`
+- Quotes from `/v1/quotes`, and step-by-step routes from `/v1/advanced/routes` when the restricted route modes or the route itself require them
+- Built-in wallet connection for EVM and Solana, with discovery of installed browser wallets and WalletConnect
+- A centered wallet picker or a side drawer
 - External wallet integration through `TradeWidgetWalletProvider`
 - Optional Wagmi and Solana Wallet Adapter integration through `@deloraprotocol/widget-wallet-management`
 - Separate origin and destination wallet flows
 - Receiver selection through a connected destination wallet or a pasted address
+- A curated token list, host token ordering and logos, and import of unlisted tokens by contract address
+- Warnings for flagged or unverified tokens, high slippage, and large value loss
 - Side-specific network and token filters
-- Initial token and network selection
-- Locking sell or buy tokens and networks
-- Auto-refreshing quotes with a built-in countdown and manual refresh
-- Theme customization through `theme`, `vars`, `className`, and `style`
-- Event hooks for quotes, wallet connections, transaction submission, confirmation, and errors
+- Initial, host-controlled, and locked token and network selections
+- Restoring the user's last networks and tokens after a reload
+- Automatic slippage, slippage caps, and configurable quote refresh
+- Progress tracking for submitted trades, including delivery on the destination chain for bridges
+- Theme customization through `theme` (including `"system"`), `vars`, `varsByTheme`, `motion`, `className`, and `style`
+- Event hooks for quotes, status changes, selections, wallet state, transaction submission and confirmation, and errors
 
 ## Quick start
 
@@ -48,11 +55,15 @@ export function App() {
 
 Passing `config.apiUrl` is not required. If it is omitted, the widget falls back to `https://api.delora.build`.
 
-The package currently ships one main trading UI. The main integration choice is wallet ownership, not a visual variant such as compact or drawer mode.
+The widget has one trading form. `routeMode` can restrict it to same-chain swaps or cross-chain bridges, and the wallet picker can open as a centered modal or a side drawer. The main integration choice is wallet ownership; see [Integration Patterns](./basic-setup/integration-patterns).
 
 ## Built for embedded use
 
 The widget ships compiled CSS, so host applications do not need Tailwind or PostCSS configuration. Styles are scoped under the widget root instead of using global Tailwind preflight rules, which keeps the widget isolated from most host styling.
+
+An unexpected rendering error stays inside the widget: it shows a restart prompt, reports the error through `onError` with `source: "render"`, and the host page keeps running.
+
+The interface is in English only; there is no language or locale option.
 
 ## Next steps
 
@@ -60,5 +71,7 @@ The widget ships compiled CSS, so host applications do not need Tailwind or Post
 - [Integration Patterns](./basic-setup/integration-patterns)
 - [Configure Widget](./basic-setup/configure-widget)
 - [Customize Widget](./basic-setup/customize-widget)
+- [Monetize Widget](./basic-setup/monetize-widget)
+- [Widget Events](./advanced-setup/widget-events)
 - [Wallet & Receiver Management](./advanced-setup/wallet-management)
 - [Widget API Reference](./advanced-setup/widget-api-reference)
