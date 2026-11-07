@@ -23,8 +23,9 @@ Request an exact-input quote for a same-chain swap or cross-chain transfer. The 
 ## Slippage
 
 - Without `slippage` or `slippageMode`, the route uses 0.5% (`0.005`).
-- A numeric `slippage` is a budget for the whole route. When the route has several variable legs, such as a source swap followed by a bridge, the budget is split between them.
-- `slippageMode=auto` lets Delora choose the tolerance: 10 bps for recognised stablecoin pairs and 50 bps for every other pair. It takes precedence over a numeric `slippage` value.
+- A numeric `slippage` applies to the whole route, not to each step.
+- `slippageMode=auto` lets Delora choose the tolerance for each pair: tighter for stablecoin pairs, wider for other pairs. It takes precedence over a numeric `slippage` value.
+- `minOutputAmount` in the response is the floor that results from the chosen tolerance.
 
 ## Choose providers
 

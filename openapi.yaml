@@ -85,7 +85,7 @@ paths:
         - name: slippage
           required: false
           in: query
-          description: 'Optional slippage fraction. `0.005` means 0.5%. It is a budget for the whole route: when a route has several variable legs, such as a source swap followed by a bridge, the budget is split between them. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided.'
+          description: Optional slippage fraction. `0.005` means 0.5%. It applies to the whole route, not to each step. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided.
           schema:
             minimum: 0
             maximum: 1
@@ -94,7 +94,7 @@ paths:
         - name: slippageMode
           required: false
           in: query
-          description: 'Automatic slippage policy. Set to `auto` to let Delora choose the tolerance: 10 bps for recognised stablecoin pairs and 50 bps for every other pair, including major assets such as ETH/WETH and BNB/WBNB. The route-level budget is split across independent variable legs; fixed 1:1 wraps use none. When supplied, it takes precedence over `slippage`.'
+          description: 'Set to `auto` to let Delora choose the tolerance for each pair: tighter for stablecoin pairs, wider for other pairs. The quote''s `minOutputAmount` shows the result. When supplied, it takes precedence over `slippage`.'
           schema:
             enum:
               - auto
@@ -1659,13 +1659,13 @@ components:
           minimum: 0
           maximum: 1
           example: 0.005
-          description: 'Optional slippage fraction. `0.005` means 0.5%. It is a budget for the whole route: when a route has several variable legs, such as a source swap followed by a bridge, the budget is split between them. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided.'
+          description: Optional slippage fraction. `0.005` means 0.5%. It applies to the whole route, not to each step. Defaults to `0.005` when neither `slippage` nor `slippageMode` is provided.
         slippageMode:
           type: string
           enum:
             - auto
           example: auto
-          description: 'Automatic slippage policy. Set to `auto` to let Delora choose the tolerance: 10 bps for recognised stablecoin pairs and 50 bps for every other pair, including major assets such as ETH/WETH and BNB/WBNB. The route-level budget is split across independent variable legs; fixed 1:1 wraps use none. When supplied, it takes precedence over `slippage`.'
+          description: 'Set to `auto` to let Delora choose the tolerance for each pair: tighter for stablecoin pairs, wider for other pairs. The quote''s `minOutputAmount` shows the result. When supplied, it takes precedence over `slippage`.'
         includeBridges:
           type: string
           description: Comma-separated bridge adapter keys from `/v1/tools` to include. Only bridge-capable or multi-capability adapters are valid.

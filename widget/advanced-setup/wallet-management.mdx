@@ -27,7 +27,7 @@ Wallet integration is split into two layers.
 | `@deloraprotocol/widget` | Built-in wallet management and low-level manual adapters | `TradeWidget`, `TradeWidgetWalletProvider`, `useTradeWidgetWalletManagement` |
 | `@deloraprotocol/widget-wallet-management` | Ready-made adapters for common host wallet stacks | Wagmi adapter, Solana Wallet Adapter adapter, composite adapter, auto-detect provider |
 
-Install the optional package only when the host app already manages wallets:
+Install the optional package only when the host app already manages wallets. Use version 0.2.0 or later with `@deloraprotocol/widget` 1.1.1 or later; the Solana adapter in 0.1.0 cannot execute trades with current widget versions.
 
 ```bash
 npm install @deloraprotocol/widget-wallet-management
@@ -329,7 +329,7 @@ function WidgetWithSolanaWalletAdapter() {
 - connected public key
 - wallet name and icon when available
 - connect, disconnect, and error handlers
-- a Solana provider wrapper that exposes `signTransaction`
+- a Solana provider wrapper that exposes `signAndSendTransaction`, which sends through Solana Wallet Adapter's `sendTransaction`
 - optional wallet rows derived from Solana Wallet Adapter wallets
 
 For Solana execution, the widget requires `signAndSendTransaction`. See [Provider access and execution](#provider-access-and-execution).
