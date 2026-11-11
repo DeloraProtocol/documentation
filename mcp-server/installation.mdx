@@ -223,7 +223,8 @@ Add the hosted server as a custom connector:
 
 1. Open **Settings → Connectors** and choose **Add custom connector**.
 2. Enter a name, such as `Delora`, and the URL `https://mcp.delora.build/mcp`.
-3. No sign-in is needed. To use your API key, add an `x-api-key` request header.
+3. Under **Authentication**, keep **No sign-in**. Delora MCP does not use OAuth.
+4. Optional: to use your API key, choose **Add header** under **Request headers**, enter `x-api-key` as the name and your key as the value.
 
 On Team and Enterprise plans, an Owner adds the connector under **Organization settings → Connectors**, and members then connect to it.
 
