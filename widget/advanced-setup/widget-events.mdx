@@ -4,7 +4,7 @@ description: "Callback hooks emitted by TradeWidget."
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
-`TradeWidget` exposes callbacks for quote resolution, wallet connections, transaction lifecycle reporting, and error handling.
+`TradeWidget` exposes callbacks for quote resolution, form status, selections, wallet state, transaction lifecycle reporting, and error handling.
 
 ## Example
 
@@ -12,10 +12,13 @@ description: "Callback hooks emitted by TradeWidget."
 <TradeWidget
   config={{}}
   onQuote={(payload) => {
-    console.log("quote", payload);
+    console.log("quote", payload.quoteMode, payload.isPreview);
   }}
-  onConnect={(payload) => {
-    console.log("wallet connected", payload);
+  onStatusChange={({ status, reason }) => {
+    console.log("status", status, reason);
+  }}
+  onWalletStateChange={({ origin, destination }) => {
+    console.log("wallets", origin.status, destination.status);
   }}
   onTxSubmitted={(payload) => {
     console.log("submitted", payload.action, payload.txHash);
@@ -33,33 +36,81 @@ description: "Callback hooks emitted by TradeWidget."
 
 | Callback | When it fires | Payload |
 | --- | --- | --- |
-| `onQuote` | After a new quote is resolved | `TradeWidgetQuotePayload` |
+| `onQuote` | After a new quote or advanced route is resolved | `TradeWidgetQuotePayload` |
+| `onStatusChange` | Once with the initial status, then on every change of the form's stage or a trade's outcome | `TradeWidgetStatusPayload` |
 | `onConnect` | After a wallet connection succeeds | `TradeWidgetConnectPayload` |
+| `onWalletStateChange` | Once after mount, then whenever either wallet's status, namespace, address, name, or icon changes | `TradeWidgetWalletStatePayload` |
+| `onSellNetworkChange` | On the first resolved sell network and every later selection | `number` (chain ID) |
+| `onBuyNetworkChange` | On the first resolved buy network and every later selection | `number` (chain ID) |
+| `onSellTokenChange` | On the first resolved sell token, every later selection, and `null` once no token is selected | `TradeWidgetTokenChangePayload \| null` |
+| `onBuyTokenChange` | On the first resolved buy token, every later selection, and `null` once no token is selected | `TradeWidgetTokenChangePayload \| null` |
+| `onSellAmountChange` | Whenever the sell amount changes | `string` |
 | `onApprove` | When the widget submits a standalone approval transaction | `TradeWidgetTransactionPayload` |
-| `onSwap` | When the widget submits a swap transaction | `TradeWidgetTransactionPayload` |
-| `onTxSubmitted` | When any approval or swap transaction is submitted | `TradeWidgetTransactionPayload` |
+| `onSwap` | When the widget submits a swap or bridge transaction | `TradeWidgetTransactionPayload` |
+| `onTxSubmitted` | When any approval, swap, or bridge transaction is submitted | `TradeWidgetTransactionPayload` |
 | `onTxConfirmed` | When a submitted transaction is confirmed | `TradeWidgetTransactionPayload` |
-| `onError` | When metadata, configuration, selection, quote, wallet, balances, execution, or unsupported errors occur | `TradeWidgetErrorPayload` |
+| `onError` | When metadata, configuration, selection, quote, wallet, balances, execution, unsupported, or render errors occur | `TradeWidgetErrorPayload` |
 
-## Event behavior notes
+Host callbacks are notifications, not transaction gates. They cannot approve, reject, or resubmit a transaction. If a callback throws, the widget reports the error through `onError`, and the transaction outcome does not change.
+
+## Quote events
 
 - `onQuote` is deduplicated, so identical resolved quotes are not emitted repeatedly
 - `onQuote` can fire after the initial quote load, a manual refresh, or an auto-refresh when the resolved quote changed
-- `onConnect` only reports `namespace`, `address`, and `walletName`; it does not identify whether the connection came from the origin or destination side
-- `onApprove` and `onSwap` are submission hooks, not simple button-click hooks
-- `onTxSubmitted` is the generic submission event for both `approve` and `swap`
-- `onTxConfirmed` is the generic confirmation event for both `approve` and `swap`
+- `onQuote` fires for both `/v1/quotes` quotes and advanced routes. Advanced payloads have `quoteMode: "advanced"`, the `routeId`, and `isMultistep`.
+- `slippage` is set when the quote used a numeric slippage; `slippageMode: "auto"` is set when it used Auto
 - `onError` with `source: "quote"` and `statusCode: 429` can come either from the Delora API or from the widget's own local quote cooldown
+
+Quotes can appear before both wallets are connected. When a quote uses a stand-in sender or receiver, `isPreview` is `true` and the payload's `quote` has no `calldata` or `approvalAddress`. The widget requests a new quote with the real addresses once they are available; only that quote can be executed.
+
+## Status events
+
+`onStatusChange` reports `{ status, reason? }`: an initial snapshot, then every change of the form's stage.
+
+| Status | Meaning |
+| --- | --- |
+| `loading-metadata` | Chains and tokens are loading |
+| `idle` | The form is ready for input |
+| `connecting-wallet` | A wallet connection is in progress |
+| `finding-quote` | A quote request is in flight |
+| `checking-allowance` | The widget is reading the token allowance |
+| `awaiting-approve-signature`, `approve-pending` | Waiting for the approval signature, then for the approval transaction |
+| `awaiting-swap-signature`, `swap-pending` | Waiting for the swap signature, then for the swap transaction |
+| `awaiting-bridge-signature`, `bridge-pending` | Waiting for the bridge signature, then for the bridge transaction |
+| `success` | The trade finished. For a bridge, this means the destination received the funds, not that the source transaction confirmed. |
+| `error` | The form cannot go ahead, or a trade did not finish. `reason` says why. |
+| `untracked` | The trade was sent, but the widget cannot follow it to completion. Check the explorer. |
+
+`reason` is one of `no-route`, `amount-too-low`, `insufficient-balance`, `insufficient-network-fee`, `invalid-receiver`, `rate-limited`, `quote-failed`, or `execution-failed`.
+
+`success`, `untracked`, and an `error` with reason `execution-failed` are reported once, when the trade ends. A trade restored after a reload that had already finished is not reported again.
+
+## Selection and wallet events
+
+- `onSellNetworkChange` and `onBuyNetworkChange` report the selected chain ID, including the first resolved selection. Use them with the `sellNetworkId` and `buyNetworkId` props to keep a host network switcher in sync. See [Configure Widget](../basic-setup/configure-widget#control-the-selected-networks-from-your-app).
+- `onSellTokenChange` and `onBuyTokenChange` report `{ chainId, address, token }`. The `chainId` and `address` fields use the same shape as `initialSellToken`, so a host can save the selection, for example in the URL, and restore it on the next load.
+- `onSellAmountChange` reports the sell amount in token units as a decimal string whenever it changes: typing, an amount shortcut, a USD entry, or clearing after a trade. `""` means the field was cleared. The initial empty field is not reported.
+- `onConnect` only reports `namespace`, `address`, and `walletName`; it does not identify whether the connection came from the origin or destination side
+- `onWalletStateChange` sends one snapshot of both sides after mount and whenever status, namespace, address, wallet name, or icon changes. A restored session therefore sends a later connected snapshot, and disconnecting sends a disconnected snapshot. Use it instead of `onConnect` when you also need restoration and disconnection updates.
+
+## Transaction events
+
+- `onApprove` and `onSwap` are submission hooks, not simple button-click hooks
+- `onTxSubmitted` fires after the wallet accepts an approval or swap, followed by `onApprove` or `onSwap` for that action
+- `onTxConfirmed` is the generic confirmation event for both `approve` and `swap`, and fires only after confirmation
+- transactions from an advanced route include `quoteMode: "advanced"`, `routeId`, `stepId`, `stepIndex`, `stepType`, `tool`, and `isMultistep`, and their `quote` is `null`
 
 In batched EVM flows that combine approval and swap into a single EIP-5792 call, the widget may only emit the swap-side transaction event because there is no separate approval transaction hash.
 
 The widget also applies a local quote lifecycle around refreshes:
 
-- successful quotes auto-refresh every 60 seconds while the selection stays stable
-- auto-refresh stops after 5 consecutive refresh cycles
+- successful quotes auto-refresh every 60 seconds while the selection stays stable, configurable with `config.quoteRefresh`
+- auto-refresh stops after 5 consecutive refresh cycles by default
 - more than 15 quote requests within 5 seconds triggers a local cooldown
 - the cooldown lasts 5 seconds
 - during that window, `onError` can emit a quote error with `statusCode: 429` even if the backend did not return 429
+
+See [Quote lifecycle and refresh behavior](../basic-setup/configure-widget#quote-lifecycle-and-refresh-behavior).
 
 ## Error sources
 
@@ -73,5 +124,11 @@ The widget also applies a local quote lifecycle around refreshes:
 - `balances`
 - `execution`
 - `unsupported`
+- `render`
 
-The payload can also include `status`, `statusCode`, and the original error object.
+The payload can also include `status`, `statusCode`, and the original error object in `error`.
+
+Two sources need attention from the integrator:
+
+- `render`: the widget hit an unexpected error while rendering. The error stays contained, the widget shows a restart prompt, and the host page keeps running.
+- `configuration`: a problem with the integration. This includes invalid config values and quote API warnings meant for you, such as `INTEGRATOR_WALLET_NOT_CONFIGURED_FEE_SKIPPED`, which means the integrator fee is not being collected. Each warning code is reported once per widget instance, with the warning object in `error`.

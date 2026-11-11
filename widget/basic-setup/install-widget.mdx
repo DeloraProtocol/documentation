@@ -14,6 +14,10 @@ npm install @deloraprotocol/widget react react-dom
 
 `react` and `react-dom` are peer dependencies. The package expects React 18 or newer.
 
+The package declares Node.js 22.12 or later in `engines`. Older Node.js versions print an engine warning on install, or fail when `engine-strict` is enabled.
+
+`ethers`, `@solana/web3.js`, `@walletconnect/ethereum-provider`, and `@wallet-standard/app` are regular dependencies that your bundler resolves, so an app that already uses one of them ships a single copy when the versions are compatible. WalletConnect is loaded only when a user opens it.
+
 ## Optional wallet-management package
 
 Install `@deloraprotocol/widget-wallet-management` only when your app already owns wallet connection state and you want Delora to reuse it through Wagmi or Solana Wallet Adapter.
@@ -46,9 +50,11 @@ Use subpath imports such as `@deloraprotocol/widget-wallet-management/wagmi` or 
 
 ```ts
 import "@deloraprotocol/widget/styles.css";
+// Optional: loads the default Roboto typeface from Google Fonts.
+import "@deloraprotocol/widget/fonts.css";
 ```
 
-The package ships compiled CSS, so the host app does not need Tailwind.
+The package ships compiled CSS, so the host app does not need Tailwind. `styles.css` makes no third-party requests. Without `fonts.css`, the widget uses Roboto when the page already provides it and the system UI font otherwise. See [Customize Widget](./customize-widget#fonts).
 
 ## Render the trade widget
 
@@ -70,9 +76,9 @@ The `config` prop is required, but all fields inside `TradeWidgetConfig` are opt
 
 ## Minimal install notes
 
-- Default API base: `https://api.delora.build`
-- Metadata endpoints used by the widget: `/v1/chains`, `/v1/tokens`, and `/v1/tools`
-- Quote endpoint used by the widget: `/v1/quotes`
+- Default API base: `https://api.delora.build`. A custom `config.apiUrl` must be an absolute HTTPS URL; HTTP is accepted only for local development.
+- Metadata and price endpoints used by the widget: `/v1/chains`, `/v1/tokens`, `/v1/tools`, and `/v1/prices`
+- Quote endpoints used by the widget: `/v1/quotes`, `/v1/advanced/routes`, and `/v1/advanced/stepTransaction`
 - Optional host-wallet adapters: `@deloraprotocol/widget-wallet-management`
-- For browser-based embeds that need authenticated rate limits, keep your Delora API key on your backend and point `config.apiUrl` to your proxy. See [Configure Widget](./configure-widget)
+- For browser-based embeds that need authenticated rate limits, keep your Delora API key on your backend and point `config.apiUrl` to your proxy. See [Configure Widget](./configure-widget#use-a-backend-proxy)
 - If your app already manages wallets or receiver state, see [Wallet & Receiver Management](../advanced-setup/wallet-management)

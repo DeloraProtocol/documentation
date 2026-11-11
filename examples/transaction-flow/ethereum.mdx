@@ -74,11 +74,13 @@ export const executeSwap = async (provider: ethers.providers.Web3Provider) => {
   });
 
   if (originCurrency !== ethers.constants.AddressZero) {
+    const spender = quote.approvalAddress ?? quote.calldata.to;
     const token = new Contract(originCurrency, ERC20_ABI, wallet);
-    const allowance = await token.allowance(walletAddress, quote.calldata.to);
-    
-    if (allowance.lt(BigNumber.from(quote.inputAmount))) {
-      await (await token.approve(quote.calldata.to, ethers.constants.MaxUint256)).wait();
+    const allowance = await token.allowance(walletAddress, spender);
+
+    // The transaction pulls the full requested amount; quote.inputAmount excludes fees.
+    if (allowance.lt(BigNumber.from(amount))) {
+      await (await token.approve(spender, ethers.constants.MaxUint256)).wait();
     }
   }
 
@@ -219,11 +221,13 @@ For ERC-20 tokens (non-native), the contract must be approved to spend tokens on
 
 ```ts TypeScript
 if (originCurrency !== ethers.constants.AddressZero) {
+  const spender = quote.approvalAddress ?? quote.calldata.to;
   const token = new Contract(originCurrency, ERC20_ABI, wallet);
-  const allowance = await token.allowance(walletAddress, quote.calldata.to);
-  
-  if (allowance.lt(BigNumber.from(quote.inputAmount))) {
-    await (await token.approve(quote.calldata.to, ethers.constants.MaxUint256)).wait();
+  const allowance = await token.allowance(walletAddress, spender);
+
+  // The transaction pulls the full requested amount; quote.inputAmount excludes fees.
+  if (allowance.lt(BigNumber.from(amount))) {
+    await (await token.approve(spender, ethers.constants.MaxUint256)).wait();
   }
 }
 ```
@@ -233,8 +237,9 @@ if (originCurrency !== ethers.constants.AddressZero) {
 **Notes:**
 
 - Native tokens (ETH, BNB, etc.) don't require approval
-- The spender address (`quote.calldata.to`) is the contract that will execute the swap
-- Using `MaxUint256` avoids repeated approvals, but you can use the exact amount for better security
+- Approve `quote.approvalAddress`, the contract that pulls the tokens
+- Approve at least the requested `amount`. `quote.inputAmount` is the amount after Delora and integrator fees, so it is smaller than what the transaction pulls
+- Using `MaxUint256` avoids repeated approvals, but you can approve the exact `amount` for better security
 
 ### 4. Transaction execution
 

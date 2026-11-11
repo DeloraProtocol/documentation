@@ -56,8 +56,8 @@ Key endpoints:
 - `GET /v1/prices` - Get cached token price snapshots.
 - `GET /v1/token` - Get token metadata by chain and address or symbol.
 - `GET /v1/transactions` - List transactions tracked for the authenticated integrator.
-- `GET /v1/transactions/{txHash}` - Get one tracked transaction by source or destination hash.
-- `GET /v1/transactions/{txHash}/status` - Get the lightweight current tracking status for one transaction.
+- `GET /v1/transactions/{lookupKey}` - Get one tracked transaction by Delora `transactionId`, source hash, or destination hash.
+- `GET /v1/transactions/{lookupKey}/status` - Get the lightweight current tracking status for one transaction.
 
 Transaction Tracking endpoints require `x-api-key` and return data only for the integrator associated with that key.
 

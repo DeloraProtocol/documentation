@@ -17,10 +17,7 @@ The widget exposes two quote-level monetization inputs: `integrator` and `fee`.
 
 ## How it works
 
-Both values are forwarded to Delora `/v1/quotes` requests:
-
-- `integrator` is sent as the `integrator` query parameter
-- `fee` is sent as the `fee` query parameter
+Both values are forwarded with every route request: as query parameters on `/v1/quotes`, and as body fields on `/v1/advanced/routes`, which the widget uses in the `swap-only` and `bridge-only` modes and as a fallback in the default mode. The fee therefore applies whichever endpoint finds the route.
 
 The widget itself does not calculate payouts locally. It simply forwards the values to the Delora API and executes the quote it receives back.
 
@@ -28,7 +25,7 @@ The widget itself does not calculate payouts locally. It simply forwards the val
 
 | Field | Type | Description |
 | --- | --- | --- |
-| `integrator` | `string` | Optional integrator identifier attached to quote requests |
+| `integrator` | `string` | Optional integrator identifier attached to quote requests. Use the integrator string from the [Partner Portal](https://portal.delora.build). |
 | `fee` | `number` | Optional fee value in the range `0..0.1` |
 
 Example: `fee: 0.03` means a 3% fee value is sent to the quote API.
@@ -40,6 +37,23 @@ The widget validates `fee` before requesting quotes.
 - valid range: `0..0.1`
 - invalid values are ignored
 - invalid values trigger `onError({ source: "configuration" })`
+
+## Check that fees are collected
+
+If the Delora API cannot collect your fee, for example because no fee wallet is configured for the chain, the quote still succeeds and carries a warning such as `INTEGRATOR_WALLET_NOT_CONFIGURED_FEE_SKIPPED`. The widget does not show these warnings to the person trading. It reports each warning code once per widget instance through `onError` with `source: "configuration"`, and the warning object is in `error`.
+
+```tsx
+<TradeWidget
+  config={{ integrator: "my-dapp", fee: 0.01 }}
+  onError={(payload) => {
+    if (payload.source === "configuration") {
+      console.warn("Delora widget configuration:", payload.message, payload.error);
+    }
+  }}
+/>
+```
+
+See [Warnings](/api-reference/warnings) for the fee-related warning codes.
 
 ## Related docs
 

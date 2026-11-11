@@ -1,12 +1,101 @@
 ---
 title: API errors
-description: HTTP error behavior for Delora API endpoints, including Transaction Tracking.
+description: HTTP error behavior for Delora API endpoints, including quotes and Transaction Tracking.
 "og:image": "https://docs.delora.build/images/docs-og.png"
 ---
 
 Delora returns a JSON error body with `statusCode`, `code`, `message`, `timestamp`, and, when available, `details` and `path`.
 
+```json
+{
+  "statusCode": 400,
+  "code": "VALIDATION_ERROR",
+  "message": "`senderAddress` must be a valid EVM address.",
+  "details": {
+    "message": "`senderAddress` must be a valid EVM address."
+  },
+  "timestamp": "2026-11-06T13:22:10.512Z",
+  "path": "/v1/quotes?..."
+}
+```
+
 For authentication and authorization failures, treat the HTTP status as authoritative. Do not rely on the current `code` value as a stable authorization enum.
+
+## Error codes
+
+| `code` | Meaning |
+| --- | --- |
+| `VALIDATION_ERROR` | The request failed validation: a missing or invalid parameter, body field, or address format. |
+| `NO_AVAILABLE_QUOTES` | No bridge or exchange can serve the request. See [Quote errors](#quote-errors). |
+| `AMOUNT_TOO_LOW` | The amount is below the minimum of the available routes. |
+| `WRONG_ADDRESS` | A wallet address is missing, malformed, or does not match the chain type. |
+| `NOT_FOUND` | The requested chain, token, or resource was not found. |
+| `RATE_LIMIT` | The request exceeded the rate limit. See [Rate Limits](/api-reference/rate-limits). |
+| `SLIPPAGE_EXCEEDED` | The expected output fell below the route's permitted minimum. |
+| `ADAPTER_BAD_REQUEST`, `ADAPTER_UNAUTHORIZED`, `ADAPTER_INTERNAL` | An upstream bridge or exchange rejected the request or failed. |
+| `UNKNOWN` | An unexpected error that does not map to a more specific code. |
+
+## Quote errors
+
+These apply to `GET /v1/quotes`, `POST /v1/advanced/routes`, and `POST /v1/advanced/stepTransaction`.
+
+| HTTP status | When it occurs | Client action |
+| --- | --- | --- |
+| `400` | A parameter is missing or invalid, for example an address that does not match the chain, or `fee` without `integrator`. | Correct the request; do not retry unchanged. |
+| `422` | No route can serve the request. The code is `NO_AVAILABLE_QUOTES`, or `AMOUNT_TOO_LOW` when a provider reported the amount below its minimum. | Check `details.failures` when present. Try another amount, token, or route; retrying unchanged rarely helps. |
+| `429` | The request limit was exceeded. | Back off and retry later. |
+
+A `422` from these endpoints uses one of two codes:
+
+- `AMOUNT_TOO_LOW`: route discovery found no route, and at least one provider reported the amount below its minimum. `message` is that provider's message, and `details.failures` lists every provider that dropped out.
+- `NO_AVAILABLE_QUOTES`: no route can serve the request for any other reason.
+
+`details.failures` is included only when Delora collected per-route reasons, and it can be an empty array. It is absent when `POST /v1/advanced/routes` finds no route, so rely on `code` and `message` and treat `failures` as optional. When present, it lists why each adapter or route dropped out:
+
+```json
+{
+  "statusCode": 422,
+  "code": "NO_AVAILABLE_QUOTES",
+  "message": "No adapters available for this request",
+  "details": {
+    "message": "No adapters available for this request",
+    "code": "NO_AVAILABLE_QUOTES",
+    "failures": [
+      {
+        "adapter": "ACROSS",
+        "code": "UPSTREAM_ERROR",
+        "message": "Across did not answer the quote request."
+      },
+      {
+        "adapter": "MAYAN_SWIFT",
+        "code": "NO_ROUTE",
+        "message": "Mayan returned no route for this pair."
+      }
+    ]
+  },
+  "timestamp": "2026-11-06T13:22:12.833Z",
+  "path": "/v1/quotes?..."
+}
+```
+
+Each failure has `adapter`, `code`, and `message`, and can include `details` with context such as `minimumAmount`, `maximumAmount`, `requestedAmount`, `upstreamCode`, or `upstreamMessage`.
+
+Common failure codes:
+
+| Failure `code` | Meaning |
+| --- | --- |
+| `NO_ROUTE` | The provider has no route for this pair or amount. |
+| `UNSUPPORTED_ROUTE`, `ROUTE_NOT_ENABLED` | The provider does not support this token or chain combination. |
+| `AMOUNT_TOO_LOW`, `AMOUNT_TOO_HIGH` | The amount is outside the provider's limits. `details` may include the limit. |
+| `ROUTE_POLICY_BLOCKED` | Delora's routing policy does not use this provider for this route. |
+| `UPSTREAM_ERROR` | The provider did not answer or returned an error. |
+| `NO_EXECUTABLE_ROUTE` | The provider quoted the pair, but no quote can be executed through Delora. |
+| `SIMULATION_REVERTED` | The built transaction reverted in simulation, for example because the sender lacks the balance. |
+| `CALLDATA_UNAVAILABLE` | The provider quoted the route but returned no executable transaction. |
+| `SOLANA_TX_TOO_LARGE` | The provider built a Solana transaction larger than the 1232-byte limit. |
+| `ROUTE_SHAPE_REFUSED` | The provider returned a transaction shape Delora does not execute. |
+
+Failure codes are diagnostic and adapter-specific, and new codes may be added. Show them to developers or log them, but do not build business logic that depends on an exhaustive list.
 
 ## Transaction Tracking errors
 

@@ -16,7 +16,7 @@ The widget also keeps origin and destination wallet state separate:
 - `origin` is the sell-side wallet and signs the transaction
 - `destination` is the optional receiver-side wallet on the buy side
 
-Users can also paste a receiver address instead of connecting a destination wallet.
+Users can also paste a receiver address instead of connecting a destination wallet, unless `config.walletUi.allowReceiverAddressInput` is `false`.
 
 ## Packages
 
@@ -27,13 +27,11 @@ Wallet integration is split into two layers.
 | `@deloraprotocol/widget` | Built-in wallet management and low-level manual adapters | `TradeWidget`, `TradeWidgetWalletProvider`, `useTradeWidgetWalletManagement` |
 | `@deloraprotocol/widget-wallet-management` | Ready-made adapters for common host wallet stacks | Wagmi adapter, Solana Wallet Adapter adapter, composite adapter, auto-detect provider |
 
-Install the optional package only when the host app already manages wallets:
+Install the optional package only when the host app already manages wallets. Use version 0.2.0 or later with `@deloraprotocol/widget` 1.1.1 or later; the Solana adapter in 0.1.0 cannot execute trades with current widget versions.
 
 ```bash
 npm install @deloraprotocol/widget-wallet-management
 ```
-
-Use `@deloraprotocol/widget-wallet-management` 0.2.0 or later with `@deloraprotocol/widget` 1.1.1 or later. Solana trades fail with 0.1.0 on widget 1.1+, because its Solana adapter cannot send a transaction.
 
 Install the peer wallet stack you actually use:
 
@@ -72,6 +70,7 @@ The built-in wallet list currently includes:
 - Backpack
 - Phantom
 - Solflare
+- TokenPocket
 - Trust Wallet
 - OKX Wallet
 - Coinbase Wallet
@@ -82,15 +81,31 @@ Built-in behavior:
 - EVM wallets use injected providers or WalletConnect
 - Solana wallets use injected providers or Wallet Standard providers
 - wallet selection is persisted in browser `localStorage`
-- the connect modal requires the user to accept Terms and Privacy Policy before connection by default
+- wallet consent is off by default; see [Wallet consent](#wallet-consent)
 
-If `config.termsUrl` or `config.privacyPolicyUrl` is omitted, the modal falls back to same-origin `/documentation/termsofuse` and `/documentation/privacypolicy` links. Third-party embeds should pass explicit URLs.
+### Wallet discovery
 
-Set `config.requireWalletConsent` to `false` to hide the entire consent footer
-and allow wallet selection without acceptance. When the footer is hidden,
-`termsUrl` and `privacyPolicyUrl` are not rendered.
+The built-in picker discovers installed browser wallets instead of requiring a Delora-specific integration for each brand:
 
-Set `config.walletConnectProjectId` to override the WalletConnect Cloud project id used by the built-in EVM QR flow.
+- EVM wallets are discovered through EIP-6963, with a legacy injected-provider fallback for older extensions.
+- Solana wallets are discovered through Wallet Standard. A wallet is shown only when it supports a Solana chain, a connectable account, and `solana:signAndSendTransaction`, which Delora execution requires.
+- When several extensions are installed, the widget connects the one the user picked and never falls back to the first available provider.
+- Installed wallets are listed first. WalletConnect stays available as a QR and mobile option, and known wallets that are not installed are collapsed under **Need a wallet?** with links to their official install pages.
+- When one installed wallet reports both an EVM and a Solana provider, the widget combines them into one multichain row only if both report the same name and icon.
+
+By default, every compatible installed wallet is shown, including wallets that are not on Delora's list. When `config.wallets.include` is set, discovery is limited to known wallets so that your allowlist holds. Set `config.walletDiscovery.injected` (EVM) or `config.walletDiscovery.walletStandard` (Solana) to `"all"` or `"known-only"` to choose explicitly. `"all"` overrides the allowlist for unlisted wallets: they appear even when `include` is set, and neither `include` nor `exclude` can hide them.
+
+### Wallet consent
+
+The Terms & Privacy consent checkbox is off by default. Set `config.requireWalletConsent` to `true` when your compliance flow requires explicit acceptance before a wallet connects. The checkbox always links Delora's own [Terms of Use](https://delora.build/documentation/termsofuse) and [Privacy Policy](https://delora.build/documentation/privacypolicy); an embed cannot replace these links.
+
+### WalletConnect sessions
+
+Set `config.walletConnectProjectId` to your Reown (WalletConnect) project ID and allow your site's origin in that project's settings. If it is omitted, the widget uses Delora's project ID.
+
+- The origin wallet, the destination wallet, and every widget on the page that uses the same project ID share one WalletConnect session. Disconnecting that session disconnects all of them.
+- Only an explicit connect action opens the QR modal. Restoring a saved session never starts a new connection request.
+- The widget requests every EVM network in its catalog as an optional chain, and the wallet can approve a subset. Before signing, the widget checks that the session has approved the selected network and asks the user to reconnect if it has not.
 
 ### Control the built-in wallet picker
 
@@ -115,14 +130,87 @@ To expose only WalletConnect, use `include: ["walletconnect"]`. Do not use
 `order` as an allowlist: ordering does not filter the picker.
 
 Supported ids are `metamask`, `rabby-wallet`, `walletconnect`, `backpack`,
-`phantom`, `solflare`, `trust-wallet`, `okx-wallet`, `coinbase-wallet`, and
-`magic-eden`.
+`phantom`, `solflare`, `tokenpocket`, `trust-wallet`, `okx-wallet`,
+`coinbase-wallet`, and `magic-eden`.
 
 The same allowlist and denylist are checked during built-in session restoration.
 An excluded or non-included persisted wallet is not reconnected automatically.
 For partial wallet management, this configuration applies only to the namespaces
 that still use Delora's built-in wallet flow. Host-provided `walletOptions`
 remain controlled by the host.
+
+### Wallet picker presentation
+
+The wallet picker opens as a centered modal by default. Set `walletUi.connectWalletPresentation` to `"drawer-right"` or `"drawer-left"` to slide it in as a full-height panel from that edge of the screen:
+
+```tsx
+<TradeWidget
+  config={{
+    walletUi: { connectWalletPresentation: "drawer-right" },
+  }}
+/>
+```
+
+Every presentation uses the same wallet discovery, consent, network selection, and connection flow. The drawer becomes full-width on narrow screens and always covers the page. With `motion="reduced"` or `motion="none"`, it opens and closes without sliding.
+
+## Wallet controls in the form
+
+`walletUi` can hide the widget's own wallet buttons, for example when your app already shows one wallet control in its header:
+
+```tsx
+<TradeWidget
+  config={{
+    walletUi: {
+      showOriginWalletControl: false,
+      showDestinationWalletControl: false,
+      // Kept independent, so users can still paste a recipient.
+      allowReceiverAddressInput: true,
+    },
+  }}
+/>
+```
+
+| Field | Default | Description |
+| --- | --- | --- |
+| `connectWalletPresentation` | `"modal"` | `"modal"`, `"drawer-right"`, or `"drawer-left"` |
+| `showOriginWalletControl` | `true` | Shows the sell-side wallet control |
+| `showDestinationWalletControl` | `true` | Shows the receiver-side wallet control |
+| `allowReceiverAddressInput` | `true` | Lets users paste a receiver address |
+
+### Open the wallet picker from your app
+
+`TradeWidget` accepts a `ref` with an `openWalletModal(target?)` method. Use it with `onWalletStateChange` to drive the widget's wallet flow from your own UI:
+
+```tsx
+import { useRef, useState } from "react";
+import {
+  TradeWidget,
+  type TradeWidgetHandle,
+  type TradeWidgetWalletStatePayload,
+} from "@deloraprotocol/widget";
+
+function TradeWithHeader() {
+  const widgetRef = useRef<TradeWidgetHandle>(null);
+  const [wallets, setWallets] = useState<TradeWidgetWalletStatePayload>();
+
+  return (
+    <>
+      <button onClick={() => widgetRef.current?.openWalletModal("origin")}>
+        {wallets?.origin.address ?? "Connect wallet"}
+      </button>
+      <TradeWidget
+        ref={widgetRef}
+        config={{ walletUi: { showOriginWalletControl: false } }}
+        onWalletStateChange={setWallets}
+      />
+    </>
+  );
+}
+```
+
+- `openWalletModal("origin")` opens the sell-side wallet flow, and `openWalletModal("destination")` the receiver-side flow. Both use the same connection behavior as the widget's own controls, including an externally managed wallet when one is supplied.
+- The call is ignored while a trade's progress is shown instead of the form.
+- `onWalletStateChange` sends one snapshot of both sides after mount and whenever status, namespace, address, wallet name, or icon changes, including session restores and disconnects.
 
 ## Auto wallet management
 
@@ -241,10 +329,10 @@ function WidgetWithSolanaWalletAdapter() {
 - connected public key
 - wallet name and icon when available
 - connect, disconnect, and error handlers
-- a Solana provider wrapper that exposes `signAndSendTransaction`, backed by the adapter's `sendTransaction`
+- a Solana provider wrapper that exposes `signAndSendTransaction`, which sends through Solana Wallet Adapter's `sendTransaction`
 - optional wallet rows derived from Solana Wallet Adapter wallets
 
-For Solana execution, the wallet must be able to sign and send a transaction. If the connected wallet does not support `signAndSendTransaction`, execution cannot continue.
+For Solana execution, the widget requires `signAndSendTransaction`. See [Provider access and execution](#provider-access-and-execution).
 
 ## Connect button modes
 
@@ -337,8 +425,8 @@ import {
       address: connectedAddress ?? null,
       walletName: "My App Wallet",
       evmProvider,
-      connect: async ({ namespace }) => {
-        await openWalletModal(namespace);
+      connect: async (params) => {
+        await openWalletModal(params?.namespace);
         return true;
       },
       disconnect: async () => {
@@ -459,6 +547,8 @@ At runtime, users can:
 
 Pasted receiver addresses are validated and normalized for the active buy-side chain before execution. If a separate destination wallet is connected, it can be disconnected independently from the origin wallet.
 
+Set `walletUi.allowReceiverAddressInput: false` to remove the pasted-address option, or `walletUi.showDestinationWalletControl: false` to hide the destination wallet control. See [Wallet controls in the form](#wallet-controls-in-the-form).
+
 This works with all wallet-management modes:
 
 - built-in wallet management
@@ -503,12 +593,12 @@ For Wallet Standard Solana flows, also provide:
 - `walletStandardSolanaAccount`
 - `getConnectedWalletStandardSolanaAccount()`
 
-For Solana execution, the widget uses:
+For Solana execution, the widget requires the wallet to sign and send the transaction itself. Provide one of:
 
-- Wallet Standard `signAndSendTransaction` when a Wallet Standard account is available
-- otherwise the provider's own `signAndSendTransaction`
+- a Wallet Standard provider with `solana:signAndSendTransaction`, plus the connected account in `walletStandardSolanaAccount` or `getConnectedWalletStandardSolanaAccount()`
+- a provider with a `signAndSendTransaction` method
 
-A Solana provider that can only `signTransaction` cannot execute trades.
+A wallet that can only sign (`signTransaction`) cannot execute trades. The trade fails with "Connected Solana wallet must support signAndSendTransaction for production swaps".
 
 When an external side does not provide `walletOptions`, the widget calls the host's connect function directly. When `walletOptions` are present, the widget can show its own wallet chooser and call the host's `connectWalletOption` logic. Each option's `availableNamespaces` should reflect the ecosystems that wallet can actually connect to.
 

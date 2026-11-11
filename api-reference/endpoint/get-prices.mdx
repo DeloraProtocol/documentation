@@ -5,3 +5,8 @@ openapi: "GET /v1/prices"
 ---
 
 Use this endpoint to read cached USD price snapshots for one token or a small batch of tokens.
+
+- Pass token addresses. Symbols are not resolved: a symbol returns an entry without `priceUSD`. Use [Get token](/api-reference/endpoint/get-token) to find a token's address.
+- A batch request takes up to 50 `chainId:tokenAddress` entries in `tokens`.
+- `priceStatus` is `live` when the price is fresh and decision-grade, and `delayed` when it is display-only or older. Do not use a `delayed` price for value-loss checks or to convert a USD amount into a token amount.
+- A stale price is returned immediately with `stale: true`; `refreshing: true` means a background refresh is scheduled or running.

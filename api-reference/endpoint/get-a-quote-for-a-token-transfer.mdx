@@ -6,6 +6,31 @@ openapi: "GET /v1/quotes"
 
 Request an exact-input quote for a same-chain swap or cross-chain transfer. The response includes estimated output amounts, executable `calldata`, fees, and optional non-blocking `warnings`.
 
-## Automatic slippage
+## Amounts
 
-Set `slippageMode=auto` to use Delora's route-specific automatic slippage policy. When it is supplied, it takes precedence over a numeric `slippage` value.
+- `amount` is what the user sends, in base units, before Delora and integrator fees.
+- `inputAmount` is what the route receives after those fees are deducted from `amount`.
+- `outputAmount` is the estimate to show the user. `isSimulatedAmount` is `true` when it was measured by simulating the returned transaction.
+- `minOutputAmount` is the minimum the transaction accepts. Show `outputAmount` as the expected amount, not this floor.
+
+## Execute the quote
+
+- **EVM origin:** send `calldata.to`, `calldata.data`, and `calldata.value` from `senderAddress`. For an ERC-20 input, first approve `approvalAddress` to spend at least the full `amount`, not only `inputAmount`. See the [EVM transaction flow](/examples/transaction-flow/ethereum).
+- **Solana origin:** `calldata.data` is a base64-encoded serialized transaction, and `transactionSize` gives its size. See the [Solana transaction flow](/examples/transaction-flow/solana).
+
+`executionRoute` describes the route the returned transaction executes. Its token fields can differ from the request; for example, an adapter can represent a native token as `0xeeee…eeee`. When the route swaps the input before bridging it, `sourceSwapProvider` names that exchange. When it converts the bridged token on arrival, `destinationSwapProvider` identifies that conversion.
+
+## Slippage
+
+- Without `slippage` or `slippageMode`, the route uses 0.5% (`0.005`).
+- A numeric `slippage` applies to the whole route, not to each step.
+- `slippageMode=auto` lets Delora choose the tolerance for each pair: tighter for stablecoin pairs, wider for other pairs. It takes precedence over a numeric `slippage` value.
+- `minOutputAmount` in the response is the floor that results from the chosen tolerance.
+
+## Choose providers
+
+`includeBridges`, `includeExchanges`, `excludeBridges`, and `excludeExchanges` take adapter keys from [`/v1/tools`](/api-reference/endpoint/get-tools). Excluded exchanges are also not used for the source swap of a Relay or Eco route or for a Relay destination conversion.
+
+## When no route is found
+
+When no adapter can serve the request, the API returns `422`. The code is `AMOUNT_TOO_LOW` when a provider reported the amount below its minimum, and `NO_AVAILABLE_QUOTES` otherwise. When Delora collected per-route reasons, `details.failures` lists why each adapter or route dropped out; treat it as optional. See [API errors](/api-reference/errors#quote-errors).

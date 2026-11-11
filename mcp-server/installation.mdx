@@ -131,9 +131,9 @@ if your MCP client supports custom HTTP headers.
 Add the MCP server:
 
 ``` bash
-claude mcp add delora npx -- -y @deloraprotocol/mcp@latest
-# OR
-claude mcp add delora --transport http http://127.0.0.1:3000/mcp
+claude mcp add delora -- npx -y @deloraprotocol/mcp@latest
+# OR, for a local server running in HTTP mode
+claude mcp add --transport http delora http://127.0.0.1:3000/mcp
 ```
 
 Verify the connection:
@@ -163,7 +163,7 @@ Add to `.vscode/mcp.json` in your workspace:
 
 ``` json
 {
-  "mcpServers": {
+  "servers": {
     "delora": {
       "type": "stdio",
       "command": "npx",
@@ -217,37 +217,35 @@ The hosted endpoint works without local setup. If your MCP client supports custo
 
 Below are setup instructions for supported AI tools.
 
-### Claude Desktop
+### Claude Desktop and claude.ai
 
-Add to your Claude Desktop configuration file:
+Add the hosted server as a custom connector:
 
-* macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-* Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+1. Open **Settings → Connectors** and choose **Add custom connector**.
+2. Enter a name, such as `Delora`, and the URL `https://mcp.delora.build/mcp`.
+3. Under **Authentication**, keep **No sign-in**. Delora MCP does not use OAuth.
+4. Optional: to use your API key, choose **Add header** under **Request headers**, enter `x-api-key` as the name and your key as the value.
 
-``` json
-{
-  "mcpServers": {
-    "delora": {
-      "type": "http",
-      "url": "https://mcp.delora.build/mcp"
-    }
-  }
-}
-```
+On Team and Enterprise plans, an Owner adds the connector under **Organization settings → Connectors**, and members then connect to it.
+
+Custom connectors reach the server from Anthropic's servers, not from your computer. To run Delora MCP locally in Claude Desktop instead, add the `npx` command from [Run the Delora MCP Package Locally](#1-run-the-delora-mcp-package-locally) to `claude_desktop_config.json`.
 
 ### Claude Code
 
 Add via CLI:
 
 ``` bash
-claude mcp add delora --transport http --url https://mcp.delora.build/mcp
+claude mcp add --transport http delora https://mcp.delora.build/mcp
+
+# With an API key
+claude mcp add --transport http delora https://mcp.delora.build/mcp --header "x-api-key: YOUR_API_KEY"
 ```
 
 Or create a `.mcp.json` file in your project root:
 
 ``` json
 {
-  "servers": {
+  "mcpServers": {
     "delora": {
       "type": "http",
       "url": "https://mcp.delora.build/mcp"
@@ -275,8 +273,8 @@ Add to `.cursor/mcp.json` (project-level) or `~/.cursor/mcp.json` (global):
 You can verify that the MCP server is running correctly using the [MCP Inspector](https://github.com/modelcontextprotocol/inspector):
 
 ``` bash
-npx @modelcontextprotocol/inspector --url https://mcp.delora.build/mcp
+npx @modelcontextprotocol/inspector
 ```
 
-This will open a web UI at `http://localhost:6274` where you can browse and interact with all available tools.
+This opens the Inspector's web UI. Choose the Streamable HTTP transport, enter `https://mcp.delora.build/mcp`, and connect to browse and call the available tools.
 Alternatively, you can test your AI tool by sending a simple request to the server. If it is configured correctly, it will respond with the expected tool outputs.

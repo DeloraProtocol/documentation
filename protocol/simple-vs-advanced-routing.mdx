@@ -11,7 +11,7 @@ Delora API provides two ways to request execution paths: **`/v1/quotes`** and **
 The `/v1/quotes` endpoint is designed for **ease of integration and smooth UX**.
 
 - Returns a single, optimized route (swap, bridge, or a combination).
-- Can include **multi-step flows** (e.g., bridge + swap), but the complexity is abstracted away.
+- Can combine a **swap on the origin chain with a bridge** in one transaction; the complexity is abstracted away.
 - Provides **ready-to-sign transaction data**, so the user only needs to confirm one execution.
 - Best choice for dApps that want one-click integration without handling multiple steps.
 
@@ -46,9 +46,13 @@ The `/v1/advanced/routes` endpoint is designed for **flexibility and transparenc
 ### Example
 
 - **`With /v1/quotes`**:\
-  User wants to send USDC from Solana and receive DAI on Base. Delora may internally build a route = _USDC (Solana) → Bridge → USDC (Base) → Swap → DAI (Base)_.\
+  A user sends ETH on Base and wants USDC on Arbitrum. Delora can package a swap on Base (ETH → USDC, for example through OKX) and a bridge to Arbitrum (for example Across) into one transaction. The response names the bridge in `adapter` and the swap in `sourceSwapProvider`.\
   The integrator only gets **one packaged transaction** for the user to sign.
 - **`With /v1/advanced/routes`**:\
-  The same request returns **several possible multi-step routes**, e.g.:
-  - Route 1: Bridge via Wormhole + Swap on Uniswap.
-  - Route 2: Bridge via Stargate + Swap on Curve.
+  The same request returns **several ranked routes**, each with its own steps, for example:
+  - Route 1: a Relay bridge that delivers USDC on Arbitrum.
+  - Route 2: a NEAR Intents bridge that delivers USDC on Arbitrum.
+
+  The integrator picks a route and populates each step with `/v1/advanced/stepTransaction`.
+
+Swaps that Delora composes run on the origin chain, before the bridge. A different token on the destination chain comes from the bridge's own route, or from one of a few reviewed destination conversions, which `destinationSwapProvider` reports.

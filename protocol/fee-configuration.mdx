@@ -11,11 +11,11 @@ Any dApp, wallet, or platform using Delora’s API can define custom fees and au
 
 When requesting quotes or executing transactions via the Delora API, you can pass a fee parameter: _0.01 = 1%_
 
-Delora adds this fee to the route, and it is distributed automatically via the Fee Pool infrastructure
+Delora deducts this fee from the `amount` the user sends, so the quote's `inputAmount` is already net of it. The fee is then distributed automatically through the Fee Pool infrastructure.
 
 ### EVM
 
-Fees are accumulated in the Fee Pool smart contract. Only the designated fee wallet can claim accrued fees. Once a wallet is registered, all collected fees are locked to it and cannot be transferred. If you later change the fee wallet, new fees will accrue to the new wallet.
+Fees are accumulated in the Fee Pool smart contract, credited to the fee wallet configured at the time of each transaction. Only that wallet can claim them, and neither you nor Delora can move them to another wallet. If you later change the fee wallet, new fees accrue to the new wallet, while fees already accrued stay claimable only by the previous wallet. Keep access to the previous wallet until you have claimed them.
 
 ### Solana
 
@@ -29,10 +29,6 @@ Make sure that:
 </Danger>
 
 If these conditions are not met, the transaction will still proceed, but the integrator fee may be skipped. In such cases, the API will return a warning. See [Warnings](/api-reference/warnings) for more details.
-
-### Other networks (coming soon)
-
-On Sui, fees will be sent directly to the designated wallet without requiring manual claims.
 
 ### Setting up a fee wallet
 

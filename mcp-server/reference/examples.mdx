@@ -51,14 +51,22 @@ These examples show how to use the Delora MCP tools: typical prompts, tool argum
 
 ```json
 {
-  "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
   "symbol": "USDC",
   "decimals": 6,
   "chainId": 1,
   "name": "USD Coin",
   "coinKey": "USDC",
-  "priceUSD": "1.00",
-  "logoURI": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png"
+  "verificationStatus": "verified",
+  "logoURI": "https://github.com/trustwallet/assets/blob/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png?raw=true",
+  "priceUSD": "0.9998185920000001",
+  "priceUpdatedAt": "2026-11-06T13:32:46.000Z",
+  "priceSource": "defillama",
+  "priceStale": false,
+  "priceTier": "hot",
+  "priceValidUntil": "2026-11-06T13:34:08.000Z",
+  "priceQuality": "verified",
+  "priceStatus": "live"
 }
 ```
 
@@ -68,7 +76,7 @@ These examples show how to use the Delora MCP tools: typical prompts, tool argum
 
 **Tool called:** `get_tokens` with `chains: "1"` or `chainTypes: "EVM"`
 
-**Response (key structure):** Object keyed by chain ID, each value an array of token objects (address, symbol, decimals, chainId, name, coinKey, priceUSD, logoURI).
+**Response (key structure):** Object keyed by chain ID, each value an array of token objects (address, symbol, decimals, chainId, name, coinKey, verificationStatus, logoURI, and price fields such as priceUSD and priceStatus when a price is available).
 
 ### Get a Cross-Chain Quote
 
@@ -89,38 +97,58 @@ These examples show how to use the Delora MCP tools: typical prompts, tool argum
 }
 ```
 
-**Response (example from Delora API):**
+**Response (real response, trimmed):**
 
 ```json
 {
-  "inputAmount": "1000000",
-  "outputAmount": "998400",
+  "inputAmount": "998500",
+  "outputAmount": "974693",
+  "isSimulatedAmount": false,
+  "executionRoute": {
+    "originChainId": 1,
+    "destinationChainId": 42161,
+    "originCurrency": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    "destinationCurrency": "0xaf88d065e77c8cc2239327c5edb3a432268e5831",
+    "senderAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+    "receiverAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64"
+  },
+  "minOutputAmount": "969820",
+  "estimatedTimeSec": 1,
   "adapter": "RELAY",
   "calldata": {
-    "to": "0x12B797D9d7947c4cb97e87178182835e31530597",
-    "data": "0x736eac0b...",
-    "value": "0"
+    "to": "0x8FE04AcCD609b7Aa08a03Ef7cfa2B04E2A1A5d3d",
+    "value": "0x00",
+    "data": "0xa3443faa..."
   },
   "fees": {
-    "total": { "amount": "534942", "currencySymbol": "USDC", "chainId": 42161, "decimals": 6 },
+    "total": { "amount": "47614", "currencySymbol": "USDC", "currencyAddress": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48", "chainId": 1, "decimals": 6 },
     "breakdown": [
-      { "type": "gas", "amount": "494502800000", "currencySymbol": "ETH", "amountUsd": "0.001475" },
-      { "type": "relayer", "amount": "267471", "currencySymbol": "USDC", "amountUsd": "0.267404" }
+      { "type": "gas", "amount": "26648326785536", "currencySymbol": "ETH", "chainId": 1, "decimals": 18, "amountUsd": "0.059400" },
+      { "type": "relayer", "amount": "23807", "currencySymbol": "USDC", "chainId": 1, "decimals": 6, "amountUsd": "0.023802" },
+      { "type": "relayerGas", "amount": "3704", "currencySymbol": "USDC", "chainId": 1, "decimals": 6, "amountUsd": "0.003703" },
+      { "type": "relayerService", "amount": "20103", "currencySymbol": "USDC", "chainId": 1, "decimals": 6, "amountUsd": "0.020099" }
     ],
-    "totalUsd": "0.536283"
+    "totalUsd": "0.107004"
   },
-  "gas": { "gasPrice": "0x018e2d98" }
+  "warnings": [],
+  "gas": {
+    "maxFeePerGas": "0x7e5f2622",
+    "maxPriorityFeePerGas": "0x6b49d200"
+  },
+  "approvalAddress": "0x8FE04AcCD609b7Aa08a03Ef7cfa2B04E2A1A5d3d"
 }
 ```
 
 Key points:
 
-* **`outputAmount`**: Estimated amount on the destination chain (in smallest units).
-* **`calldata`**: Transaction payload to sign and submit with your wallet.
-* **`fees`**: Total and breakdown (gas, relayer, etc.) in USD and token amounts.
+* **`inputAmount`**: The requested `amount` after Delora and integrator fees are deducted.
+* **`outputAmount`**: Estimated amount on the destination chain (in smallest units). `isSimulatedAmount` says whether it was measured by simulating the transaction.
+* **`minOutputAmount`**: The minimum the transaction accepts. Show `outputAmount` as the expected amount.
+* **`calldata`**: Transaction payload to sign and submit with your wallet. For an ERC-20 input, first approve `approvalAddress` to spend the full `amount`.
+* **`fees`**: Provider and network costs (gas, relayer, etc.). `breakdown` lists each cost with its token amount and `amountUsd`. `totalUsd` sums the USD values of every item. `total` is not a grand total: it sums only the items in the most common currency of the breakdown, so here it leaves out the ETH gas. Delora and integrator fees are not in `fees`; they are the difference between `amount` and `inputAmount`.
 * **`warnings`**: Optional non-blocking issues that do not prevent Delora from returning a quote.
 
-### Same-Chain Swap Quote (1 ETH on Arbitrum via OpenOcean)
+### Same-Chain Swap Quote (1 ETH to WETH on Arbitrum)
 
 **Prompt:** "Quote swapping 1 ETH to WETH on Arbitrum"
 
@@ -139,38 +167,36 @@ Key points:
 }
 ```
 
-**Response (real example):**
+**Response (real response, trimmed):**
 
 ```json
 {
-  "inputAmount": "1000000000000000000",
-  "outputAmount": "1000000000000000000",
-  "adapter": "OPENOCEAN",
+  "inputAmount": "998500000000000000",
+  "outputAmount": "998500000000000000",
+  "isSimulatedAmount": true,
+  "executionRoute": {
+    "originChainId": 42161,
+    "destinationChainId": 42161,
+    "originCurrency": "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "destinationCurrency": "0x82af49447d8a07e3bd95bd0d56f35241523fbab1",
+    "senderAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64",
+    "receiverAddress": "0x6352a56caadc4f1e25cd6c75970fa768a3304e64"
+  },
+  "minOutputAmount": "993507500000000000",
+  "adapter": "OKX",
   "calldata": {
     "to": "0x12B797D9d7947c4cb97e87178182835e31530597",
-    "data": "0x736eac0be10f54fae4480b1105d487e4e9f1d48f45d05a4083b63923992d8ad49893307a...",
+    "data": "0x736eac0b...",
     "value": "0x0de0b6b3a7640000"
   },
-  "fees": {
-    "total": {
-      "amount": "534942",
-      "currencySymbol": "USDC",
-      "currencyAddress": "0xaf88d065e77c8cC2239327c5EDb3a432268e5831",
-      "chainId": 42161,
-      "decimals": 6
-    },
-    "breakdown": [
-      { "type": "gas", "amount": "494502800000", "currencySymbol": "ETH", "currencyAddress": "0x0000000000000000000000000000000000000000", "chainId": 42161, "decimals": 18, "amountUsd": "0.001475" },
-      { "type": "relayer", "amount": "267471", "currencySymbol": "USDC", "currencyAddress": "0xaf88d065e77c8cC2239327c5EDb3a432268e5831", "chainId": 42161, "decimals": 6, "amountUsd": "0.267404" }
-    ]
-  },
+  "warnings": [],
   "gas": {
-    "gasPrice": "0x016ec2a0"
+    "gasPrice": "0x016eb940"
   }
 }
 ```
 
-Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amount is in wei (18 decimals); `0x82af49447d8a07e3bd95bd0d56f35241523fbab1` is WETH on Arbitrum.
+Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amount is in wei (18 decimals); `0x82af49447d8a07e3bd95bd0d56f35241523fbab1` is WETH on Arbitrum. `executionRoute` shows the route the selected adapter executes, so its token fields can differ from the request: here the adapter represents native ETH as `0xeeee…eeee`.
 
 ### List Available Bridges and Exchanges
 
@@ -184,10 +210,10 @@ Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amou
 {
   "exchanges": [
     {
-      "key": "OPENOCEAN",
-      "name": "OpenOcean",
-      "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/openocean.png",
-      "supportedChains": ["1", "56", "10", "137", "42161", "8453", "130", "146", "999", "9745", "1329", "43114", "59144", "80094"]
+      "key": "KYBERSWAP",
+      "name": "KyberSwap",
+      "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/kyberswap.svg",
+      "supportedChains": ["1", "10", "56", "130", "137", "143", "146", "999", "4326", "4663", "5000", "5042", "8453", "9745", "42161", "43114", "59144", "80094"]
     }
   ],
   "bridges": [
@@ -195,7 +221,7 @@ Use `0x0000000000000000000000000000000000000000` for native currency (ETH). Amou
       "key": "ACROSS",
       "name": "Across",
       "logoURI": "https://raw.githubusercontent.com/DeloraProtocol/types/main/src/assets/icons/bridges/across.svg",
-      "supportedChains": ["1", "10", "56", "137", "59144", "8453", "42161", "130", "324", "480", "999", "1135", "34443", "534352", "81457", "9745", "1868"]
+      "supportedChains": ["1", "10", "56", "130", "137", "143", "480", "999", "1868", "4326", "4663", "5042", "8453", "9745", "42161", "57073", "81457", "534352"]
     }
   ]
 }
