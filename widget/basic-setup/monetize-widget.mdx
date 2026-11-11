@@ -17,10 +17,7 @@ The widget exposes two quote-level monetization inputs: `integrator` and `fee`.
 
 ## How it works
 
-Both values are forwarded to Delora `/v1/quotes` requests:
-
-- `integrator` is sent as the `integrator` query parameter
-- `fee` is sent as the `fee` query parameter
+Both values are forwarded with every route request: as query parameters on `/v1/quotes`, and as body fields on `/v1/advanced/routes`, which the widget uses in the `swap-only` and `bridge-only` modes and as a fallback in the default mode. The fee therefore applies whichever endpoint finds the route.
 
 The widget itself does not calculate payouts locally. It simply forwards the values to the Delora API and executes the quote it receives back.
 

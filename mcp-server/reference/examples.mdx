@@ -145,7 +145,7 @@ Key points:
 * **`outputAmount`**: Estimated amount on the destination chain (in smallest units). `isSimulatedAmount` says whether it was measured by simulating the transaction.
 * **`minOutputAmount`**: The minimum the transaction accepts. Show `outputAmount` as the expected amount.
 * **`calldata`**: Transaction payload to sign and submit with your wallet. For an ERC-20 input, first approve `approvalAddress` to spend the full `amount`.
-* **`fees`**: Total and breakdown (gas, relayer, etc.) in USD and token amounts.
+* **`fees`**: Provider and network costs (gas, relayer, etc.). `breakdown` lists each cost with its token amount and `amountUsd`. `totalUsd` sums the USD values of every item. `total` is not a grand total: it sums only the items in the most common currency of the breakdown, so here it leaves out the ETH gas. Delora and integrator fees are not in `fees`; they are the difference between `amount` and `inputAmount`.
 * **`warnings`**: Optional non-blocking issues that do not prevent Delora from returning a quote.
 
 ### Same-Chain Swap Quote (1 ETH to WETH on Arbitrum)

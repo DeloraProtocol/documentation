@@ -8,7 +8,7 @@ Request an exact-input quote for a same-chain swap or cross-chain transfer. The 
 
 ## Amounts
 
-- `amount` is what the user pays, in base units, before Delora and integrator fees.
+- `amount` is what the user sends, in base units, before Delora and integrator fees.
 - `inputAmount` is what the route receives after those fees are deducted from `amount`.
 - `outputAmount` is the estimate to show the user. `isSimulatedAmount` is `true` when it was measured by simulating the returned transaction.
 - `minOutputAmount` is the minimum the transaction accepts. Show `outputAmount` as the expected amount, not this floor.

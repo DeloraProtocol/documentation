@@ -11,7 +11,7 @@ Any dApp, wallet, or platform using Delora’s API can define custom fees and au
 
 When requesting quotes or executing transactions via the Delora API, you can pass a fee parameter: _0.01 = 1%_
 
-Delora adds this fee to the route, and it is distributed automatically via the Fee Pool infrastructure
+Delora deducts this fee from the `amount` the user sends, so the quote's `inputAmount` is already net of it. The fee is then distributed automatically through the Fee Pool infrastructure.
 
 ### EVM
 
