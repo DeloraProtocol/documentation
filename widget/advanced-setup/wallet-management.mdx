@@ -93,7 +93,7 @@ The built-in picker discovers installed browser wallets instead of requiring a D
 - Installed wallets are listed first. WalletConnect stays available as a QR and mobile option, and known wallets that are not installed are collapsed under **Need a wallet?** with links to their official install pages.
 - When one installed wallet reports both an EVM and a Solana provider, the widget combines them into one multichain row only if both report the same name and icon.
 
-By default, every compatible installed wallet is shown, including wallets that are not on Delora's list. When `config.wallets.include` is set, discovery is limited to known wallets so that your allowlist holds. Set `config.walletDiscovery.injected` (EVM) or `config.walletDiscovery.walletStandard` (Solana) to `"all"` or `"known-only"` to choose explicitly.
+By default, every compatible installed wallet is shown, including wallets that are not on Delora's list. When `config.wallets.include` is set, discovery is limited to known wallets so that your allowlist holds. Set `config.walletDiscovery.injected` (EVM) or `config.walletDiscovery.walletStandard` (Solana) to `"all"` or `"known-only"` to choose explicitly. `"all"` overrides the allowlist for unlisted wallets: they appear even when `include` is set, and neither `include` nor `exclude` can hide them.
 
 ### Wallet consent
 

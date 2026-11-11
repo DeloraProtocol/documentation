@@ -322,7 +322,7 @@
             }
           },
           "422": {
-            "description": "No route can serve the request. `details.failures` lists why each adapter or route dropped out.",
+            "description": "No route can serve the request. `code` is `AMOUNT_TOO_LOW` when a provider reported the amount below its minimum, otherwise `NO_AVAILABLE_QUOTES`. `details.failures`, when present, lists why each adapter or route dropped out.",
             "content": {
               "application/json": {
                 "schema": {
@@ -3410,7 +3410,7 @@
                   },
                   "failures": {
                     "type": "array",
-                    "description": "Returned with `NO_AVAILABLE_QUOTES`: one entry per adapter or route that could not serve the request.",
+                    "description": "Optional. Included with `NO_AVAILABLE_QUOTES` or `AMOUNT_TOO_LOW` when per-route reasons were collected: one entry per adapter or route that could not serve the request. Can be empty.",
                     "items": {
                       "$ref": "#/components/schemas/QuoteFailureDto"
                     }

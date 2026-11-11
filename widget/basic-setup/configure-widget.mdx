@@ -115,7 +115,8 @@ Some requests go from the user's browser directly to third parties, not through 
 - the RPC endpoints of the supported chains: your `rpcUrls`, the `rpcUrls` returned by `/v1/chains`, and the widget's built-in fallbacks
 - bridge status APIs used to follow a cross-chain transfer to completion: `api.relay.link`, `app.across.to`, `explorer-api.mayan.finance`, `api.symbiosis.finance`, `1click.chaindefuser.com` (NEAR Intents), and `backend.gas.zip`
 - WalletConnect, when the user connects through it
-- `fonts.googleapis.com` and `fonts.gstatic.com`, only if you import `@deloraprotocol/widget/fonts.css`
+
+If you import `@deloraprotocol/widget/fonts.css`, it loads the Roboto font from Google Fonts. Allow `https://fonts.googleapis.com` in `style-src`, because the stylesheet imports CSS from there, and `https://fonts.gstatic.com` in `font-src`, because the font files come from there. Neither host needs `connect-src`.
 
 ## RPC endpoints
 
@@ -179,7 +180,7 @@ The checkbox always links Delora's own [Terms of Use](https://delora.build/docum
 Use `config.wallets` to control the widget-managed wallet picker. These three
 fields have independent purposes:
 
-- `include` is an allowlist. When present, only listed wallets are eligible.
+- `include` is an allowlist. When present, only listed wallets from the supported list below are eligible. Installed wallets that are not on that list are hidden too, unless you set `walletDiscovery` to `"all"` (see below).
 - `exclude` is a denylist. It removes listed wallets and takes precedence over `include`.
 - `order` moves listed, enabled wallets to the front in the specified order. It does not hide unlisted wallets.
 
@@ -223,12 +224,13 @@ Supported wallet ids are:
 - `coinbase-wallet`
 - `magic-eden`
 
-The picker also shows other installed browser wallets that it discovers. When `wallets.include` is set, discovery is limited to known wallets so that your allowlist holds. Use `walletDiscovery` to change that:
+The picker also shows other installed browser wallets that it discovers. When `wallets.include` is set, discovery defaults to `"known-only"`, so only listed wallets appear and your allowlist holds.
+
+Setting `walletDiscovery` to `"all"` overrides that. Every discovered wallet that is not on the supported list then appears, even with an allowlist. `include` and `exclude` still filter the supported wallets, but they cannot filter these unlisted ones. Without an allowlist, `"all"` is already the default. Setting it explicitly looks like this:
 
 ```tsx
 <TradeWidget
   config={{
-    wallets: { include: ["metamask", "phantom"] },
     walletDiscovery: {
       injected: "all", // EIP-6963 EVM wallets
       walletStandard: "all", // Wallet Standard Solana wallets
@@ -236,6 +238,8 @@ The picker also shows other installed browser wallets that it discovers. When `w
   }}
 />
 ```
+
+Only combine `walletDiscovery: "all"` with `wallets.include` when you want the listed supported wallets plus every unlisted installed wallet.
 
 Wallet filtering also applies to persisted built-in sessions, so an excluded or
 non-included wallet is not restored automatically. Namespace compatibility still

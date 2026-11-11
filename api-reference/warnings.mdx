@@ -32,7 +32,7 @@ type QuoteWarning = {
 
 `SOLANA_INSUFFICIENT_BALANCE`: Solana simulation indicates that the sender does not have enough balance to execute the route. This can mean insufficient SOL for rent or fees, or insufficient token balance for the swap. The quote is still returned for UI display.
 
-`SOLANA_SIMULATION_FAILED`: No longer returned. When a Solana simulation fails for a reason other than a recognized insufficient-balance case, Delora skips that route and returns the next executable one. If no route can be executed, the request fails with `422` `NO_AVAILABLE_QUOTES`, and `details.failures` contains `SIMULATION_REVERTED` entries. See [API errors](/api-reference/errors#quote-errors).
+`SOLANA_SIMULATION_FAILED`: No longer returned. When a Solana simulation rejects a route for a reason other than a recognized insufficient-balance case, Delora usually skips that route and tries the next one. If no route can be executed, the request typically fails with `422` `NO_AVAILABLE_QUOTES`, and `details.failures`, when present, may contain `SIMULATION_REVERTED` or other failure codes. This is not a guaranteed error contract: a rejected route can be reported with a different code or status, and other failures, such as an exhausted simulation time budget or an unexpected RPC error, can be returned as their own errors. See [API errors](/api-reference/errors#quote-errors).
 
 ### Example
 

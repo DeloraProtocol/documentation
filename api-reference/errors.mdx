@@ -42,10 +42,15 @@ These apply to `GET /v1/quotes`, `POST /v1/advanced/routes`, and `POST /v1/advan
 | HTTP status | When it occurs | Client action |
 | --- | --- | --- |
 | `400` | A parameter is missing or invalid, for example an address that does not match the chain, or `fee` without `integrator`. | Correct the request; do not retry unchanged. |
-| `422` | No bridge or exchange can serve the request (`NO_AVAILABLE_QUOTES`). | Check `details.failures`. Try another amount, token, or route; retrying unchanged rarely helps. |
+| `422` | No route can serve the request. The code is `NO_AVAILABLE_QUOTES`, or `AMOUNT_TOO_LOW` when a provider reported the amount below its minimum. | Check `details.failures` when present. Try another amount, token, or route; retrying unchanged rarely helps. |
 | `429` | The request limit was exceeded. | Back off and retry later. |
 
-When the code is `NO_AVAILABLE_QUOTES`, `details.failures` lists why each adapter or route dropped out:
+A `422` from these endpoints uses one of two codes:
+
+- `AMOUNT_TOO_LOW`: route discovery found no route, and at least one provider reported the amount below its minimum. `message` is that provider's message, and `details.failures` lists every provider that dropped out.
+- `NO_AVAILABLE_QUOTES`: no route can serve the request for any other reason.
+
+`details.failures` is included only when Delora collected per-route reasons, and it can be an empty array. It is absent when `POST /v1/advanced/routes` finds no route, so rely on `code` and `message` and treat `failures` as optional. When present, it lists why each adapter or route dropped out:
 
 ```json
 {

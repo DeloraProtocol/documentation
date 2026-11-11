@@ -33,4 +33,4 @@ Request an exact-input quote for a same-chain swap or cross-chain transfer. The 
 
 ## When no route is found
 
-When no adapter can serve the request, the API returns `422` with code `NO_AVAILABLE_QUOTES`. `details.failures` lists why each adapter or route dropped out. See [API errors](/api-reference/errors#quote-errors).
+When no adapter can serve the request, the API returns `422`. The code is `AMOUNT_TOO_LOW` when a provider reported the amount below its minimum, and `NO_AVAILABLE_QUOTES` otherwise. When Delora collected per-route reasons, `details.failures` lists why each adapter or route dropped out; treat it as optional. See [API errors](/api-reference/errors#quote-errors).
