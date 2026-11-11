@@ -15,7 +15,7 @@ Delora deducts this fee from the `amount` the user sends, so the quote's `inputA
 
 ### EVM
 
-Fees are accumulated in the Fee Pool smart contract. Only the designated fee wallet can claim accrued fees. Once a wallet is registered, all collected fees are locked to it and cannot be transferred. If you later change the fee wallet, new fees will accrue to the new wallet.
+Fees are accumulated in the Fee Pool smart contract, credited to the fee wallet configured at the time of each transaction. Only that wallet can claim them, and neither you nor Delora can move them to another wallet. If you later change the fee wallet, new fees accrue to the new wallet, while fees already accrued stay claimable only by the previous wallet. Keep access to the previous wallet until you have claimed them.
 
 ### Solana
 
